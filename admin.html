@@ -158,7 +158,10 @@ _supabase.channel('orders-inserts')
       console.log('📦 وصول طلب جديد:', payload.new);
       playNotification();
       showOrderToast(payload.new.customer_name || 'عميل جديد');
+      // تحديث فوري للإحصائيات والعدادات
       if (typeof fetchStats === 'function') fetchStats();
+      // زيادة العداد فوراً
+      lastOrderCount++;
   })
   .subscribe(async status => {
       console.log('حالة قناة Realtime:', status);
@@ -168,6 +171,8 @@ _supabase.channel('orders-inserts')
           const { count } = await _supabase.from('orders').select('id', { count: 'exact', head: true });
           lastOrderCount = count || 0;
           console.log(`📊 عدد الطلبات الحالي: ${lastOrderCount}`);
+          // تحديث الإحصائيات بعد الاشتراك
+          if (typeof fetchStats === 'function') setTimeout(fetchStats, 500);
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.warn('⚠️ فشل اتصال Realtime، تفعيل النظام البديل...');
           startFallbackPolling();
@@ -770,11 +775,11 @@ async function logout() {
             .filter(o => o.status === 'تم التوصيل')
             .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
 
-          // عدد الطلبات قيد التنفيذ
-          const newOrders = salesData.filter(o => o.status === 'قيد المعالجة' || o.status === 'جاري التجهيز').length;
+          // عدد الطلبات الكلي (ليس فقط قيد التنفيذ)
+          const totalOrders = salesData.length;
 
           document.getElementById("stat-revenue").innerHTML = `${totalSales} <small class="text-sm text-slate-400">ج.م</small>`;
-          document.getElementById("stat-orders").innerText = newOrders;
+          document.getElementById("stat-orders").innerText = totalOrders;
 
           // رسم أحدث 3 طلبات في الجدول
           const tbody = document.getElementById("recent-orders-body");
@@ -794,12 +799,16 @@ async function logout() {
               statusClass = "bg-red-100 text-red-600";
             }
 
+            // تحسين عرض اسم العميل - استخدام الاسم الكامل أو جزء منه
+            const displayName = o.customer_name ? (o.customer_name.length > 20 ? o.customer_name.substring(0, 20) + '...' : o.customer_name) : "غير محدد";
+            const initial = o.customer_name ? o.customer_name.charAt(0) : "ع";
+
             return `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">${(o.customer_name || "ع").charAt(0)}</div>
-                                <span class="text-sm font-bold text-slate-800">${o.customer_name || "عميل"}</span>
+                                <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">${initial}</div>
+                                <span class="text-sm font-bold text-slate-800">${displayName}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-sm font-medium text-slate-600" dir="ltr">${o.customer_phone || "-"}</td>
@@ -817,12 +826,17 @@ async function logout() {
         today.setHours(0, 0, 0, 0);
         const todayISO = today.toISOString();
 
-        const { count: visitorsCount } = await _supabase
+        const { count: visitorsCount, error: vError } = await _supabase
           .from('visitors')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', todayISO);
 
-        document.getElementById("stat-visitors").innerText = visitorsCount || 0;
+        if (vError) {
+          console.warn('⚠️ لا يمكن جلب عدد الزوار:', vError.message);
+          document.getElementById("stat-visitors").innerText = "0";
+        } else {
+          document.getElementById("stat-visitors").innerText = visitorsCount || 0;
+        }
 
       } catch (e) {
         console.error("خطأ في الاتصال بسوبابيز:", e);
@@ -1219,55 +1233,75 @@ async function logout() {
 
     function showGiftsSection() {
       const giftsSection = document.getElementById('gifts-section');
-      giftsSection.style.display = 'block';
-      giftsSection.scrollIntoView({ behavior: 'smooth' });
-      fetchGifts();
+      if (giftsSection) {
+        giftsSection.style.display = 'block';
+        giftsSection.scrollIntoView({ behavior: 'smooth' });
+        fetchGifts();
+      } else {
+        console.error('❌ قسم الهدايا غير موجود في الصفحة');
+      }
     }
 
     async function fetchGifts() {
       const list = document.getElementById('gifts-list');
-      const { data, error } = await _supabase.from('gifts').select('*').order('created_at', { ascending: false });
-
-      if (error || !data || data.length === 0) {
-        list.innerHTML = `<p class="text-slate-400 text-sm col-span-3 text-center py-8">لا توجد هدايا مضافة حتى الآن</p>`;
+      if (!list) {
+        console.error('❌ عنصر gifts-list غير موجود');
         return;
       }
+      
+      try {
+        const { data, error } = await _supabase.from('gifts').select('*').order('created_at', { ascending: false });
 
-      list.innerHTML = data.map(g => `
-        <div class="relative border-2 ${g.is_active ? 'border-primary/20 bg-primary/5' : 'border-slate-200 bg-slate-50'} rounded-2xl p-5 flex flex-col gap-3 transition-all">
-          <div class="absolute top-3 left-3">
-            <span class="text-[10px] font-black px-2 py-1 rounded-full ${g.is_active ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-500'}">
-              ${g.is_active ? '● نشط' : '● متوقف'}
-            </span>
-          </div>
-          <div class="flex items-center gap-3 mt-4">
-            <div class="w-14 h-14 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-              ${g.gift_img
-                ? `<img src="${g.gift_img}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.style.display='none'">`
-                : `<span class="material-symbols-outlined text-slate-300">card_giftcard</span>`}
+        if (error) {
+          console.error('خطأ في جلب الهدايا:', error);
+          list.innerHTML = `<p class="text-red-500 text-sm col-span-3 text-center py-8">حدث خطأ أثناء تحميل الهدايا</p>`;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          list.innerHTML = `<p class="text-slate-400 text-sm col-span-3 text-center py-8">لا توجد هدايا مضافة حتى الآن</p>`;
+          return;
+        }
+
+        list.innerHTML = data.map(g => `
+          <div class="relative border-2 ${g.is_active ? 'border-primary/20 bg-primary/5' : 'border-slate-200 bg-slate-50'} rounded-2xl p-5 flex flex-col gap-3 transition-all">
+            <div class="absolute top-3 left-3">
+              <span class="text-[10px] font-black px-2 py-1 rounded-full ${g.is_active ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-500'}">
+                ${g.is_active ? '● نشط' : '● متوقف'}
+              </span>
             </div>
-            <div>
-              <p class="font-bold text-slate-800 text-sm">${g.gift_name}</p>
-              <p class="text-xs text-slate-400 mt-0.5">🎁 هدية مجانية</p>
+            <div class="flex items-center gap-3 mt-4">
+              <div class="w-14 h-14 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                ${g.gift_img
+                  ? `<img src="${g.gift_img}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.style.display='none'">`
+                  : `<span class="material-symbols-outlined text-slate-300">card_giftcard</span>`}
+              </div>
+              <div>
+                <p class="font-bold text-slate-800 text-sm">${g.gift_name}</p>
+                <p class="text-xs text-slate-400 mt-0.5">🎁 هدية مجانية</p>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-slate-100 text-xs text-slate-600 font-medium">
+              <span class="text-primary font-black">الشرط:</span> اشتري
+              <span class="font-black text-slate-800"> ${g.trigger_qty}</span> قطع من
+              <span class="font-black text-slate-800"> ${g.trigger_product_name}</span>
+            </div>
+            <div class="flex gap-2 mt-1">
+              <button onclick="toggleGift('${g.id}', ${g.is_active})"
+                class="flex-1 py-2 rounded-xl text-xs font-bold transition-all ${g.is_active ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}">
+                ${g.is_active ? 'إيقاف' : 'تفعيل'}
+              </button>
+              <button onclick="deleteGift('${g.id}')"
+                class="flex-1 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-all">
+                حذف
+              </button>
             </div>
           </div>
-          <div class="bg-white rounded-xl p-3 border border-slate-100 text-xs text-slate-600 font-medium">
-            <span class="text-primary font-black">الشرط:</span> اشتري
-            <span class="font-black text-slate-800"> ${g.trigger_qty}</span> قطع من
-            <span class="font-black text-slate-800"> ${g.trigger_product_name}</span>
-          </div>
-          <div class="flex gap-2 mt-1">
-            <button onclick="toggleGift('${g.id}', ${g.is_active})"
-              class="flex-1 py-2 rounded-xl text-xs font-bold transition-all ${g.is_active ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}">
-              ${g.is_active ? 'إيقاف' : 'تفعيل'}
-            </button>
-            <button onclick="deleteGift('${g.id}')"
-              class="flex-1 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-all">
-              حذف
-            </button>
-          </div>
-        </div>
-      `).join('');
+        `).join('');
+      } catch (err) {
+        console.error('خطأ غير متوقع في fetchGifts:', err);
+        list.innerHTML = `<p class="text-red-500 text-sm col-span-3 text-center py-8">حدث خطأ غير متوقع</p>`;
+      }
     }
 
     async function toggleGift(id, currentState) {

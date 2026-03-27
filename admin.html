@@ -824,7 +824,8 @@ async function logout() {
       }
     }
 
-    window.onload = function() {
+    // استخدام DOMContentLoaded بدلاً من window.onload لتحسين الأداء
+    document.addEventListener('DOMContentLoaded', function() {
       // جعل جميع الدوال متاحة عالمياً لاستدعائها من HTML
       window.closeGiftModal = closeGiftModal;
       window.fetchStats = fetchStats;
@@ -838,10 +839,13 @@ async function logout() {
       window.deleteGift = deleteGift;
       window.openGiftModal = openGiftModal;
       
-      fetchStats(); // جلب الإحصائيات
-      initGifts();  // تحضير الـ Modal والـ Form
-      initCharts(); // تهيئة الرسوم البيانية
-    };
+      // تحميل الإحصائيات والرسوم البيانية بشكل غير متزامن
+      requestAnimationFrame(() => {
+        fetchStats(); // جلب الإحصائيات
+        initGifts();  // تحضير الـ Modal والـ Form
+        initCharts(); // تهيئة الرسوم البيانية
+      });
+    });
 
     // متغيرات عامة للرسوم البيانية
     let salesChartInstance = null;

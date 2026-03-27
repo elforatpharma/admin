@@ -1,6 +1,7 @@
 -- ==========================================
 -- SQL Schema لإصلاح جميع مشاكل نظام الفرات فارما
 -- تاريخ الإنشاء: 2025
+-- ملاحظة: قم بتنفيذ هذا الملف كاملاً في Supabase SQL Editor
 -- ==========================================
 
 -- ==========================================
@@ -22,7 +23,10 @@ CREATE INDEX IF NOT EXISTS idx_gifts_created ON gifts(created_at DESC);
 
 -- تعليقات على جدول الهدايا
 COMMENT ON TABLE gifts IS 'هدايا العروض الخاصة للعملاء';
-COMMENT ON COLUMN gifts.min_order_value IS 'أقل قيمة طلب للحصول على الهدية';
+COMMENT ON COLUMN gifts.gift_name IS 'اسم الهدية';
+COMMENT ON COLUMN gifts.gift_img IS 'رابط صورة الهدية';
+COMMENT ON COLUMN gifts.trigger_product_name IS 'المنتج المطلوب للحصول على الهدية';
+COMMENT ON COLUMN gifts.trigger_qty IS 'الكمية المطلوبة من المنتج';
 
 -- ==========================================
 -- 2. جدول المنتجات (Products)
@@ -37,6 +41,10 @@ CREATE TABLE IF NOT EXISTS products (
   category TEXT,
   image_url TEXT,
   barcode TEXT UNIQUE,
+  priority INTEGER DEFAULT 0,
+  badge TEXT,
+  old_price NUMERIC(10, 2),
+  img TEXT,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -47,11 +55,16 @@ CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
 CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode);
+CREATE INDEX IF NOT EXISTS idx_products_priority ON products(priority DESC);
 
 -- تعليقات على جدول المنتجات
 COMMENT ON TABLE products IS 'منتجات المتجر المتاحة للبيع';
 COMMENT ON COLUMN products.stock IS 'الكمية المتوفرة في المخزون';
 COMMENT ON COLUMN products.cost IS 'سعر التكلفة لحساب الأرباح';
+COMMENT ON COLUMN products.priority IS 'أولوية ظهور المنتج (الأعلى يظهر أولاً)';
+COMMENT ON COLUMN products.badge IS 'شارة مميزة للمنتج (مثل: جديد، خصم)';
+COMMENT ON COLUMN products.old_price IS 'السعر القديم قبل الخصم';
+COMMENT ON COLUMN products.img IS 'رابط صورة المنتج';
 
 -- ==========================================
 -- 3. جدول الطلبات (Orders)
@@ -111,6 +124,11 @@ CREATE TABLE IF NOT EXISTS customers (
 CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
 CREATE INDEX IF NOT EXISTS idx_customers_active ON customers(is_active);
 
+-- تعليقات على جدول العملاء
+COMMENT ON TABLE customers IS 'بيانات العملاء';
+COMMENT ON COLUMN customers.total_orders IS 'إجمالي عدد الطلبات المكتملة';
+COMMENT ON COLUMN customers.total_spent IS 'إجمالي المبالغ المنفقة';
+
 -- ==========================================
 -- 5. جدول الكوبونات (Coupons)
 -- ==========================================
@@ -131,8 +149,37 @@ CREATE TABLE IF NOT EXISTS coupons (
 CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
 CREATE INDEX IF NOT EXISTS idx_coupons_active_expiry ON coupons(is_active, expiry_date);
 
+-- تعليقات على جدول الكوبونات
+COMMENT ON TABLE coupons IS 'كوبونات الخصم المتاحة في المتجر';
+COMMENT ON COLUMN coupons.code IS 'كود الكوبون الفريد';
+COMMENT ON COLUMN coupons.discount_percentage IS 'نسبة الخصم من 1 إلى 99';
+COMMENT ON COLUMN coupons.expiry_date IS 'تاريخ انتهاء صلاحية الكوبون';
+COMMENT ON COLUMN coupons.is_active IS 'حالة الكوبون (نشط/متوقف)';
+COMMENT ON COLUMN coupons.usage_count IS 'عدد مرات استخدام الكوبون';
+COMMENT ON COLUMN coupons.max_usage IS 'الحد الأقصى لاستخدام الكوبون (NULL = غير محدود)';
+
 -- ==========================================
--- 6. إعدادات النظام (Settings)
+-- 6. جدول الزوار (Visitors) - لتتبع زيارات الموقع
+-- ==========================================
+CREATE TABLE IF NOT EXISTS visitors (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  visit_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  visit_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  ip_address TEXT,
+  user_agent TEXT,
+  page_url TEXT,
+  session_id TEXT
+);
+
+-- فهارس لجدول الزوار
+CREATE INDEX IF NOT EXISTS idx_visitors_date ON visitors(visit_date);
+CREATE INDEX IF NOT EXISTS idx_visitors_session ON visitors(session_id);
+
+-- تعليقات على جدول الزوار
+COMMENT ON TABLE visitors IS 'تتبع زوار الموقع والصفحات';
+
+-- ==========================================
+-- 7. إعدادات النظام (Settings)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS settings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -160,6 +207,7 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE visitors ENABLE ROW LEVEL SECURITY;
 
 -- سياسات الصلاحيات الموحدة للمصادقين
 -- سياسة القراءة (SELECT)
@@ -169,6 +217,7 @@ CREATE POLICY "authenticated_read_all" ON orders FOR SELECT TO authenticated USI
 CREATE POLICY "authenticated_read_all" ON customers FOR SELECT TO authenticated USING (true);
 CREATE POLICY "authenticated_read_all" ON coupons FOR SELECT TO authenticated USING (true);
 CREATE POLICY "authenticated_read_all" ON settings FOR SELECT TO authenticated USING (true);
+CREATE POLICY "authenticated_read_all" ON visitors FOR SELECT TO authenticated USING (true);
 
 -- سياسة الإدراج (INSERT)
 CREATE POLICY "authenticated_insert_all" ON gifts FOR INSERT TO authenticated WITH CHECK (true);
@@ -177,6 +226,7 @@ CREATE POLICY "authenticated_insert_all" ON orders FOR INSERT TO authenticated W
 CREATE POLICY "authenticated_insert_all" ON customers FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "authenticated_insert_all" ON coupons FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "authenticated_insert_all" ON settings FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "authenticated_insert_all" ON visitors FOR INSERT TO authenticated WITH CHECK (true);
 
 -- سياسة التحديث (UPDATE)
 CREATE POLICY "authenticated_update_all" ON gifts FOR UPDATE TO authenticated USING (true);
@@ -185,6 +235,7 @@ CREATE POLICY "authenticated_update_all" ON orders FOR UPDATE TO authenticated U
 CREATE POLICY "authenticated_update_all" ON customers FOR UPDATE TO authenticated USING (true);
 CREATE POLICY "authenticated_update_all" ON coupons FOR UPDATE TO authenticated USING (true);
 CREATE POLICY "authenticated_update_all" ON settings FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "authenticated_update_all" ON visitors FOR UPDATE TO authenticated USING (true);
 
 -- سياسة الحذف (DELETE)
 CREATE POLICY "authenticated_delete_all" ON gifts FOR DELETE TO authenticated USING (true);
@@ -193,24 +244,32 @@ CREATE POLICY "authenticated_delete_all" ON orders FOR DELETE TO authenticated U
 CREATE POLICY "authenticated_delete_all" ON customers FOR DELETE TO authenticated USING (true);
 CREATE POLICY "authenticated_delete_all" ON coupons FOR DELETE TO authenticated USING (true);
 CREATE POLICY "authenticated_delete_all" ON settings FOR DELETE TO authenticated USING (true);
+CREATE POLICY "authenticated_delete_all" ON visitors FOR DELETE TO authenticated USING (true);
 
 -- ==========================================
 -- بيانات تجريبية (اختياري - للحذف عند الإنتاج)
 -- ==========================================
 
 -- إضافة هدايا تجريبية
-INSERT INTO gifts (name, description, min_order_value, is_active) VALUES
-  ('عينة مجانية', 'عينة منتج مجانية للطلبات فوق 500 جنيه', 500, true),
-  ('كوبون خصم 10%', 'كوبون خصم 10% للطلب القادم', 1000, true),
-  ('هدية خاصة', 'هدية حصرية للطلبات فوق 2000 جنيه', 2000, true)
+INSERT INTO gifts (gift_name, gift_img, trigger_product_name, trigger_qty, is_active) VALUES
+  ('عينة مجانية', 'https://example.com/sample.png', 'أي منتج', 1, true),
+  ('كوبون خصم 10%', 'https://example.com/coupon.png', 'مجموعة متكاملة', 2, true),
+  ('هدية خاصة', 'https://example.com/gift.png', 'العناية بالبشرة', 3, true)
 ON CONFLICT DO NOTHING;
 
 -- إضافة منتجات تجريبية
-INSERT INTO products (name, description, price, cost, stock, category, is_active) VALUES
-  ('بانادول إكسترا', 'مسكن للألم وخافض للحرارة', 45.00, 30.00, 100, 'مسكنات', true),
-  ('أوجمنتين 1جم', 'مضاد حيوي واسع الطيف', 85.00, 60.00, 50, 'مضادات حيوية', true),
-  ('فيتامين C', 'مكمل غذائي مناعي', 120.00, 80.00, 75, 'فيتامينات', true),
-  ('شراب كحة', 'مهدئ للسعال', 35.00, 20.00, 200, 'أدوية برد', true)
+INSERT INTO products (name, description, price, cost, stock, category, img, badge, old_price, is_active) VALUES
+  ('بانادول إكسترا', 'مسكن للألم وخافض للحرارة', 45.00, 30.00, 100, 'مسكنات', 'https://example.com/panadol.png', 'الأكثر مبيعاً 🔥', 50.00, true),
+  ('أوجمنتين 1جم', 'مضاد حيوي واسع الطيف', 85.00, 60.00, 50, 'مضادات حيوية', 'https://example.com/augmentin.png', NULL, NULL, true),
+  ('فيتامين C', 'مكمل غذائي مناعي', 120.00, 80.00, 75, 'فيتامينات', 'https://example.com/vitc.png', 'جديد ✨', NULL, true),
+  ('شراب كحة', 'مهدئ للسعال', 35.00, 20.00, 200, 'أدوية برد', 'https://example.com/cough.png', NULL, 40.00, true)
+ON CONFLICT DO NOTHING;
+
+-- إضافة كوبونات تجريبية
+INSERT INTO coupons (code, discount_percentage, expiry_date, description, is_active, max_usage) VALUES
+  ('WELCOME20', 20, '2025-12-31', 'خصم ترحيبي للعملاء الجدد', true, 100),
+  ('SUMMER15', 15, '2025-09-30', 'خصم الصيف', true, NULL),
+  ('FLASH30', 30, '2025-06-30', 'عرض فلاش محدود', true, 50)
 ON CONFLICT DO NOTHING;
 
 -- ==========================================
@@ -225,8 +284,15 @@ BEGIN
   IF TG_OP = 'INSERT' AND NEW.status = 'تم التوصيل' THEN
     UPDATE customers 
     SET total_orders = total_orders + 1,
-        total_spent = total_spent + NEW.final_total
+        total_spent = total_spent + NEW.final_total,
+        updated_at = NOW()
     WHERE phone = NEW.customer_phone;
+    
+    -- إذا لم يكن العميل موجوداً، ننشئه
+    IF NOT FOUND THEN
+      INSERT INTO customers (name, phone, total_orders, total_spent, created_at, updated_at)
+      VALUES (NEW.customer_name, NEW.customer_phone, 1, NEW.final_total, NOW(), NOW());
+    END IF;
   END IF;
   
   -- تعديل الإحصائيات عند تغيير حالة الطلب
@@ -234,12 +300,19 @@ BEGIN
     IF OLD.status != 'تم التوصيل' AND NEW.status = 'تم التوصيل' THEN
       UPDATE customers 
       SET total_orders = total_orders + 1,
-          total_spent = total_spent + NEW.final_total
+          total_spent = total_spent + NEW.final_total,
+          updated_at = NOW()
       WHERE phone = NEW.customer_phone;
+      
+      IF NOT FOUND THEN
+        INSERT INTO customers (name, phone, total_orders, total_spent, created_at, updated_at)
+        VALUES (NEW.customer_name, NEW.customer_phone, 1, NEW.final_total, NOW(), NOW());
+      END IF;
     ELSIF OLD.status = 'تم التوصيل' AND NEW.status != 'تم التوصيل' THEN
       UPDATE customers 
       SET total_orders = GREATEST(0, total_orders - 1),
-          total_spent = GREATEST(0, total_spent - OLD.final_total)
+          total_spent = GREATEST(0, total_spent - OLD.final_total),
+          updated_at = NOW()
       WHERE phone = NEW.customer_phone;
     END IF;
   END IF;
@@ -255,6 +328,90 @@ CREATE TRIGGER trg_update_customer_stats
   FOR EACH ROW
   EXECUTE FUNCTION update_customer_stats();
 
+-- دالة لتحديث timestamp تلقائياً
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- تطبيق التحديث التلقائي على الجداول
+DROP TRIGGER IF EXISTS trg_products_updated_at ON products;
+CREATE TRIGGER trg_products_updated_at
+  BEFORE UPDATE ON products
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_orders_updated_at ON orders;
+CREATE TRIGGER trg_orders_updated_at
+  BEFORE UPDATE ON orders
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_customers_updated_at ON customers;
+CREATE TRIGGER trg_customers_updated_at
+  BEFORE UPDATE ON customers
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_coupons_updated_at ON coupons;
+CREATE TRIGGER trg_coupons_updated_at
+  BEFORE UPDATE ON coupons
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_settings_updated_at ON settings;
+CREATE TRIGGER trg_settings_updated_at
+  BEFORE UPDATE ON settings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- دالة لحساب الخصم وتطبيق الكوبون
+CREATE OR REPLACE FUNCTION apply_coupon(p_order_total NUMERIC, p_coupon_code TEXT)
+RETURNS TABLE (
+  valid BOOLEAN,
+  discount_amount NUMERIC,
+  final_total NUMERIC,
+  message TEXT
+) AS $$
+DECLARE
+  v_coupon RECORD;
+BEGIN
+  -- البحث عن الكوبون
+  SELECT * INTO v_coupon
+  FROM coupons
+  WHERE code = p_coupon_code
+    AND is_active = true
+    AND expiry_date >= CURRENT_DATE;
+  
+  -- التحقق من وجود الكوبون
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT false, 0::NUMERIC, p_order_total, 'الكوبون غير صالح أو منتهي الصلاحية';
+    RETURN;
+  END IF;
+  
+  -- التحقق من الحد الأقصى للاستخدام
+  IF v_coupon.max_usage IS NOT NULL AND v_coupon.usage_count >= v_coupon.max_usage THEN
+    RETURN QUERY SELECT false, 0::NUMERIC, p_order_total, 'تم استنفاد عدد استخدامات الكوبون';
+    RETURN;
+  END IF;
+  
+  -- حساب الخصم
+  discount_amount := (p_order_total * v_coupon.discount_percentage) / 100;
+  final_total := p_order_total - discount_amount;
+  
+  -- زيادة عدد الاستخدامات
+  UPDATE coupons
+  SET usage_count = usage_count + 1,
+      updated_at = NOW()
+  WHERE id = v_coupon.id;
+  
+  RETURN QUERY SELECT true, discount_amount, final_total, 'تم تطبيق الكوبون بنجاح';
+END;
+$$ LANGUAGE plpgsql;
+
 -- دالة لحذف البيانات القديمة (صيانة دورية)
 CREATE OR REPLACE FUNCTION cleanup_old_data(days_to_keep INTEGER DEFAULT 365)
 RETURNS VOID AS $$
@@ -264,11 +421,11 @@ BEGIN
   WHERE status = 'ملغي' 
     AND created_at < NOW() - (days_to_keep || ' days')::INTERVAL;
   
-  -- تحديث سجل الصيانة
-  UPDATE settings 
-  SET value = jsonb_set(value, '{last_cleanup}', to_jsonb(NOW()::text))
-  WHERE key = 'system_maintenance';
+  -- حذف سجلات الزوار القديمة
+  DELETE FROM visitors
+  WHERE visit_date < CURRENT_DATE - (days_to_keep || ' days')::INTERVAL;
   
+  -- تحديث سجل الصيانة
   INSERT INTO settings (key, value, description)
   VALUES ('system_maintenance', '{"last_cleanup": "' || NOW()::text || '"}', 'آخر عملية صيانة')
   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
@@ -293,20 +450,47 @@ ORDER BY sale_date DESC;
 -- عرض المنتجات الأكثر مبيعاً
 CREATE OR REPLACE VIEW top_selling_products AS
 SELECT 
+  p.id,
   p.name,
   p.category,
-  COUNT(oi.value->>'id') as times_sold,
-  SUM((oi.value->>'quantity')::INTEGER) as total_quantity
-FROM orders o,
-  JSONB_ARRAY_ELEMENTS(o.items) oi
+  p.img,
+  COUNT(DISTINCT o.id) as times_sold,
+  COALESCE(SUM((oi.value->>'quantity')::INTEGER), 0) as total_quantity
+FROM orders o
+CROSS JOIN LATERAL JSONB_ARRAY_ELEMENTS(o.items) oi
 JOIN products p ON oi.value->>'id' = p.id::TEXT
 WHERE o.status = 'تم التوصيل'
-GROUP BY p.id, p.name, p.category
+GROUP BY p.id, p.name, p.category, p.img
 ORDER BY total_quantity DESC
 LIMIT 10;
 
+-- عرض إحصائيات المحافظ
+CREATE OR REPLACE VIEW governorate_stats AS
+SELECT 
+  governorate,
+  COUNT(*) as order_count,
+  SUM(final_total) as total_revenue,
+  AVG(final_total) as avg_order_value
+FROM orders
+WHERE status = 'تم التوصيل'
+  AND governorate IS NOT NULL
+GROUP BY governorate
+ORDER BY order_count DESC;
+
+-- عرض حالة المخزون
+CREATE OR REPLACE VIEW inventory_status AS
+SELECT 
+  category,
+  COUNT(*) as product_count,
+  SUM(stock) as total_stock,
+  SUM(CASE WHEN stock = 0 THEN 1 ELSE 0 END) as out_of_stock,
+  SUM(CASE WHEN stock > 0 AND stock < 10 THEN 1 ELSE 0 END) as low_stock
+FROM products
+WHERE is_active = true
+GROUP BY category;
+
 -- ==========================================
--- ملاحظات هامة
+-- ملاحظات هامة للتطبيق
 -- ==========================================
 /*
 لتطبيق هذا المخطط:
@@ -319,13 +503,27 @@ LIMIT 10;
 
 3. لإنشاء Storage Buckets:
    - products: لتخزين صور المنتجات
+     Policy: Allow authenticated users to upload and read
    - gifts: لتخزين صور الهدايا
+     Policy: Allow authenticated users to upload and read
 
-4. لحل مشكلة وميض الوضع المظلم:
+4. لإعداد Authentication:
+   - فعل Email/Password authentication
+   - أضف المستخدمين المصرح لهم
+
+5. لحل مشكلة وميض الوضع المظلم:
    - أضف class="dark" إلى وسم HTML إذا كان محفوظاً في localStorage
    - أو استخدم script قبل تحميل Tailwind CSS
 
-5. للتأكد من عمل الرسوم البيانية:
+6. للتأكد من عمل الرسوم البيانية:
    - تحقق من وجود بيانات في جدول orders
    - تأكد من أن حالة الطلبات تحتوي على 'تم التوصيل'
+
+7. لتفعيل نظام الكوبونات:
+   - تأكد من وجود بيانات في جدول coupons
+   - استخدم دالة apply_coupon() لحساب الخصم
+
+8. لتفعيل تتبع الزوار:
+   - أضف كود JavaScript في كل صفحة يسجل الزيارات
+   - مثال: INSERT INTO visitors (session_id, page_url) VALUES (...)
 */

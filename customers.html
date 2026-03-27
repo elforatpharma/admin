@@ -33,15 +33,11 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
     <script>
-        // إعدادات الاتصال بسوبابيز
-        const supabaseUrl = 'https://sidtdxchiqiogfkwbdui.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZHRkeGNoaXFpb2dma3diZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTEyMTAsImV4cCI6MjA4OTY4NzIxMH0.QF1-67Qu2HfWJt3ANSegM87fykOYQBwqC7ggLG8LTVU';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
         // وظيفة إجبار المستخدم على تسجيل الدخول
         async function forceAuth() {
-            const {  { session } } = await _supabase.auth.getSession();
+            const { data: { session } } = await _supabase.auth.getSession();
 
             // لو مفيش جلسة نشطة، ابعته لصفحة اللوجن فوراً
             if (!session) {

@@ -30,7 +30,7 @@
   <script>
     // وظيفة حماية الصفحة
     async function forceAuth() {
-      const {  { session } } = await _supabase.auth.getSession();
+      const { data: { session } } = await _supabase.auth.getSession();
       if (!session) window.location.href = 'index.html';
     }
     // استدعاء الدالة مع await لضمان التنفيذ الصحيح
@@ -640,14 +640,14 @@ async function logout() {
 
         // 1. رفع الصورة إلى Supabase Storage
         const fileName = `${Date.now()}-${file.name}`;
-        const {  imgData, error: imgError } = await _supabase.storage
+        const { data: imgData, error: imgError } = await _supabase.storage
           .from('products')
           .upload(`uploads/${fileName}`, file);
 
         if (imgError) throw imgError;
 
         // الحصول على رابط الصورة العام
-        const {  { publicUrl } } = _supabase.storage
+        const { data: { publicUrl } } = _supabase.storage
           .from('products')
           .getPublicUrl(`uploads/${fileName}`);
 
@@ -824,7 +824,7 @@ async function logout() {
       if (!ctx) return;
 
       // جلب بيانات المبيعات
-      const {  orders } = await _supabase
+      const { data: orders } = await _supabase
         .from('orders')
         .select('total, status, created_at')
         .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -891,7 +891,7 @@ async function logout() {
       if (!ctx) return;
 
       // جلب تفاصيل الطلبات مع المنتجات
-      const {  orders } = await _supabase
+      const { data: orders } = await _supabase
         .from('orders')
         .select('items, status')
         .eq('status', 'تم التوصيل');
@@ -955,7 +955,7 @@ async function logout() {
       if (!container) return;
 
       // جلب بيانات المناطق من الطلبات
-      const {  orders } = await _supabase
+      const { data: orders } = await _supabase
         .from('orders')
         .select('governate, city, total');
 
@@ -1016,7 +1016,7 @@ async function logout() {
 
     // دالة التصدير العامة
     async function exportData(format) {
-      const {  orders } = await _supabase
+      const { data: orders } = await _supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
@@ -1120,7 +1120,7 @@ async function logout() {
             const fileName = `gifts/${Date.now()}-${file.name}`;
             const { error: uploadError } = await _supabase.storage.from('products').upload(fileName, file);
             if (!uploadError) {
-              const {  { publicUrl } } = _supabase.storage.from('products').getPublicUrl(fileName);
+              const { data: { publicUrl } } = _supabase.storage.from('products').getPublicUrl(fileName);
               imgUrl = publicUrl;
             }
           }

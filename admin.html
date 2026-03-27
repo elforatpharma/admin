@@ -108,11 +108,8 @@ window.addEventListener('DOMContentLoaded', () => {
         document.removeEventListener('click', enableAudioOnClick);
     }, { once: false });
 
-    // جلب الهدايا عند تحميل الصفحة
-    if (typeof fetchGifts === 'function') {
-        fetchGifts();
-        console.log('🎁 تم تحميل الهدايا');
-    }
+    // جلب الهدايا عند تحميل الصفحة - سيتم استدعاؤها عبر window.onload
+    console.log('🎁 نظام الهدايا جاهز للتحميل');
 });
 
 // 3. الاستماع للطلبات الجديدة عبر Realtime
@@ -719,9 +716,9 @@ async function logout() {
         document.getElementById("stat-products").innerText = productsCount || 0;
 
         // 2. جلب إحصائيات الطلبات متوافقة مع مسميات الأعمدة
-        const {  salesData, error: oError } = await _supabase
+        const { data: salesData, error: oError } = await _supabase
           .from('orders')
-          .select('"customerName", total, status, phone, created_at')
+          .select('customerName, total, status, phone, created_at')
           .order('created_at', { ascending: false });
 
         if (!oError && salesData) {
@@ -790,10 +787,21 @@ async function logout() {
     }
 
     window.onload = function() {
-      window.closeGiftModal = closeGiftModal; // جعل الدالة متاحة عالمياً
+      // جعل جميع الدوال متاحة عالمياً لاستدعائها من HTML
+      window.closeGiftModal = closeGiftModal;
+      window.fetchStats = fetchStats;
+      window.initCharts = initCharts;
+      window.updateSalesChart = updateSalesChart;
+      window.updateTopProductsChart = updateTopProductsChart;
+      window.updateDeliveryAreasChart = updateDeliveryAreasChart;
+      window.fetchGifts = fetchGifts;
+      window.showGiftsSection = showGiftsSection;
+      window.toggleGift = toggleGift;
+      window.deleteGift = deleteGift;
+      window.openGiftModal = openGiftModal;
+      
       fetchStats(); // جلب الإحصائيات
       initGifts();  // تحضير الـ Modal والـ Form
-      // fetchGifts() يتم استدعاؤها الآن في DOMContentLoaded
       initCharts(); // تهيئة الرسوم البيانية
     };
 
@@ -1224,6 +1232,10 @@ async function logout() {
         document.getElementById('gift-form').reset();
       }, 300);
     }
+    // جعل الدوال متاحة عالمياً
+    window.toggleGift = toggleGift;
+    window.deleteGift = deleteGift;
+    window.openGiftModal = openGiftModal;
     window.closeGiftModal = closeGiftModal;
 
   </script>

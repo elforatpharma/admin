@@ -1,10 +1,23 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="light">
 
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>لوحة التحكم - الفرات فارما</title>
+  
+  <!-- منع وميض الوضع المظلم -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+  
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
     rel="stylesheet" />
@@ -84,6 +97,24 @@ async function enableAudio() {
         document.getElementById('audio-status').textContent = '🔕 فشل التفعيل';
         document.getElementById('audio-status').className = 'text-xs font-bold text-red-500 flex items-center gap-1';
     }
+}
+
+// دالة تبديل الوضع المظلم/الفاتح
+function toggleTheme() {
+  const html = document.documentElement;
+  const icon = document.getElementById('theme-icon');
+  
+  if (html.classList.contains('dark')) {
+    html.classList.remove('dark');
+    html.classList.add('light');
+    localStorage.setItem('theme', 'light');
+    if (icon) icon.textContent = 'light_mode';
+  } else {
+    html.classList.remove('light');
+    html.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+    if (icon) icon.textContent = 'dark_mode';
+  }
 }
 
 // إضافة مستمع الأحداث بعد تحميل الصفحة
@@ -316,6 +347,9 @@ async function logout() {
         <div class="flex items-center gap-4">
           <button id="audio-status" class="text-xs font-bold text-orange-500 flex items-center gap-1 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-2 rounded-lg transition-all" onclick="enableAudio()" title="اضغط لتفعيل التنبيهات الصوتية">
             🔕 اضغط لتفعيل التنبيهات
+          </button>
+          <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="تبديل الوضع المظلم">
+            <span id="theme-icon" class="material-symbols-outlined">light_mode</span>
           </button>
           <script src="imageUploader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -411,7 +411,9 @@ async function logout() {
                 <option value="90">آخر 3 شهر</option>
               </select>
             </div>
-            <canvas id="salesChart" height="200"></canvas>
+            <div style="position: relative; height: 300px;">
+              <canvas id="salesChart"></canvas>
+            </div>
           </div>
 
           <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
@@ -421,7 +423,9 @@ async function logout() {
                 المنتجات الأكثر مبيعاً
               </h3>
             </div>
-            <canvas id="topProductsChart" height="200"></canvas>
+            <div style="position: relative; height: 300px;">
+              <canvas id="topProductsChart"></canvas>
+            </div>
           </div>
         </div>
 
@@ -882,6 +886,14 @@ async function logout() {
           }
         }
       });
+
+      // إعادة ضبط ارتفاع الكانفاس بعد الرسم
+      setTimeout(() => {
+        const canvas = document.getElementById('salesChart');
+        if (canvas && canvas.parentElement) {
+          canvas.parentElement.style.height = '300px';
+        }
+      }, 100);
     }
 
     // تحديث رسم المنتجات الأكثر مبيعاً
@@ -946,6 +958,14 @@ async function logout() {
           }
         }
       });
+
+      // إعادة ضبط ارتفاع الكانفاس بعد الرسم
+      setTimeout(() => {
+        const canvas = document.getElementById('topProductsChart');
+        if (canvas && canvas.parentElement) {
+          canvas.parentElement.style.height = '300px';
+        }
+      }, 100);
     }
 
     // تحديث مناطق التوصيل

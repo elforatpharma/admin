@@ -767,7 +767,7 @@ async function logout() {
         // 2. جلب إحصائيات الطلبات متوافقة مع مسميات الأعمدة
         const { data: salesData, error: oError } = await _supabase
           .from('orders')
-          .select('customer_name, customerName, total, status, customer_phone, phone, governate, city, created_at')
+          .select('customer_name, customerName, total, status, customer_phone, phone, governate, city, customer_address, created_at')
           .order('created_at', { ascending: false });
 
         if (!oError && salesData) {
@@ -806,8 +806,8 @@ async function logout() {
             const displayName = customerName ? (customerName.length > 20 ? customerName.substring(0, 20) + '...' : customerName) : "غير محدد";
             const initial = customerName ? customerName.charAt(0) : "ع";
             
-            // عرض منطقة التوصيل (المحافظة أو المدينة)
-            const deliveryArea = o.governate || o.city || "غير محدد";
+            // عرض منطقة التوصيل (العنوان أولاً، ثم المحافظة أو المدينة)
+            const deliveryArea = o.customer_address || o.governate || o.city || "غير محدد";
 
             return `
                     <tr class="hover:bg-slate-50 transition-colors">

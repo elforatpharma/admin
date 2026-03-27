@@ -822,14 +822,17 @@ async function logout() {
         }
 
         // 3. جلب عدد الزوار اليوم من جدول visitors المخصص
+        // استخدام تاريخ نصي بصيغة YYYY-MM-DD لتجنب مشاكل التوقيت
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayISO = today.toISOString();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${year}-${month}-${day}`;
 
         const { count: visitorsCount, error: vError } = await _supabase
           .from('visitors')
           .select('*', { count: 'exact', head: true })
-          .gte('created_at', todayISO);
+          .gte('created_at', todayStr);
 
         if (vError) {
           console.warn('⚠️ لا يمكن جلب عدد الزوار:', vError.message);

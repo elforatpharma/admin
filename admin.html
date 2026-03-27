@@ -1208,7 +1208,9 @@ async function logout() {
     }
 
     function showGiftsSection() {
-      document.getElementById('gifts-section').scrollIntoView({ behavior: 'smooth' });
+      const giftsSection = document.getElementById('gifts-section');
+      giftsSection.style.display = 'block';
+      giftsSection.scrollIntoView({ behavior: 'smooth' });
       fetchGifts();
     }
 

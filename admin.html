@@ -152,7 +152,7 @@ _supabase.channel('orders-inserts')
   }, payload => {
       console.log('📦 وصول طلب جديد:', payload.new);
       playNotification();
-      showOrderToast(payload.new.customerName || 'عميل جديد');
+      showOrderToast(payload.new.customer_name || 'عميل جديد');
       if (typeof fetchStats === 'function') fetchStats();
   })
   .subscribe(async status => {
@@ -756,7 +756,7 @@ async function logout() {
         // 2. جلب إحصائيات الطلبات متوافقة مع مسميات الأعمدة
         const { data: salesData, error: oError } = await _supabase
           .from('orders')
-          .select('customerName, total, status, phone, created_at')
+          .select('customer_name, total, status, customer_phone, created_at')
           .order('created_at', { ascending: false });
 
         if (!oError && salesData) {
@@ -766,7 +766,7 @@ async function logout() {
             .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
 
           // عدد الطلبات قيد التنفيذ
-          const newOrders = salesData.filter(o => o.status === 'قيد التنفيذ').length;
+          const newOrders = salesData.filter(o => o.status === 'قيد المعالجة' || o.status === 'جاري التجهيز').length;
 
           document.getElementById("stat-revenue").innerHTML = `${totalSales} <small class="text-sm text-slate-400">ج.م</small>`;
           document.getElementById("stat-orders").innerText = newOrders;
@@ -781,7 +781,7 @@ async function logout() {
           const recent = salesData.slice(0, 3);
           tbody.innerHTML = recent.map(o => {
             let statusClass = "bg-amber-100 text-amber-600";
-            let statusText = o.status || "قيد التنفيذ";
+            let statusText = o.status || "قيد المعالجة";
 
             if (statusText === "تم التوصيل" || statusText === "مكتمل") {
               statusClass = "bg-green-100 text-green-600";
@@ -793,11 +793,11 @@ async function logout() {
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">${(o.customerName || "ع").charAt(0)}</div>
-                                <span class="text-sm font-bold text-slate-800">${o.customerName || "عميل"}</span>
+                                <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">${(o.customer_name || "ع").charAt(0)}</div>
+                                <span class="text-sm font-bold text-slate-800">${o.customer_name || "عميل"}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-sm font-medium text-slate-600" dir="ltr">${o.phone || "-"}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-slate-600" dir="ltr">${o.customer_phone || "-"}</td>
                         <td class="px-6 py-4">
                             <span class="px-3 py-1 ${statusClass} text-[10px] font-bold rounded-full">${statusText}</span>
                         </td>
@@ -1011,13 +1011,13 @@ async function logout() {
       // جلب بيانات المناطق من الطلبات
       const { data: orders } = await _supabase
         .from('orders')
-        .select('governate, city, total');
+        .select('governorate, city, total');
 
       // حساب الطلبات والمبيعات لكل منطقة
       const areasData = {};
       if (orders) {
         orders.forEach(order => {
-          const area = order.governate || order.city || 'غير محدد';
+          const area = order.governorate || order.city || 'غير محدد';
           if (!areasData[area]) {
             areasData[area] = { orders: 0, revenue: 0 };
           }
@@ -1086,11 +1086,11 @@ async function logout() {
           headers.join(','),
           ...orders.map(o => [
             o.id,
-            `"${o.customerName || ''}"`,
-            `"${o.phone || ''}"`,
-            `"${o.governate || ''}"`,
+            `"${o.customer_name || ''}"`,
+            `"${o.customer_phone || ''}"`,
+            `"${o.governorate || ''}"`,
             `"${o.city || ''}"`,
-            `"${o.address || ''}"`,
+            `"${o.customer_address || ''}"`,
             o.total,
             `"${o.status || ''}"`,
             new Date(o.created_at).toLocaleDateString('ar-EG')
@@ -1110,11 +1110,11 @@ async function logout() {
         orders.forEach(o => {
           ws_data.push([
             o.id,
-            o.customerName || '',
-            o.phone || '',
-            o.governate || '',
+            o.customer_name || '',
+            o.customer_phone || '',
+            o.governorate || '',
             o.city || '',
-            o.address || '',
+            o.customer_address || '',
             o.total,
             o.status || '',
             new Date(o.created_at).toLocaleDateString('ar-EG')
@@ -1135,7 +1135,7 @@ async function logout() {
 
         let y = 50;
         orders.slice(0, 20).forEach((o, i) => {
-          doc.text(`${i + 1}. ${o.customerName || 'عميل'} - ${o.phone} - ${o.total} ج.م`, 200, y, { align: 'right' });
+          doc.text(`${i + 1}. ${o.customer_name || 'عميل'} - ${o.customer_phone} - ${o.total} ج.م`, 200, y, { align: 'right' });
           y += 10;
         });
 

@@ -1050,7 +1050,7 @@ async function logout() {
       const areasData = {};
       if (orders) {
         orders.forEach(order => {
-          const area = order.governate || order.city || 'غير محدد';
+          const area = order.customer_address || order.governate || order.city || 'غير محدد';
           if (!areasData[area]) {
             areasData[area] = { orders: 0, revenue: 0 };
           }

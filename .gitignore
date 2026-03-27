@@ -1,1 +1,53 @@
-Nothing should be ignored based on the provided file changes. The only modified file is `inventory.html`, which is a source file and should not be added to .gitignore.
+```
+# Dependencies
+node_modules/
+
+# Environment variables
+.env.local
+.env
+
+# Build artifacts
+dist/
+build/
+*.js.map
+
+# Cache directories
+.vite/
+.cache/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage reports
+coverage/
+htmlcov/
+*.coverage
+
+# Python related (if applicable)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Distribution / packaging
+*.tar.gz
+*.whl
+
+# Testing
+.mypy_cache/
+.pytest_cache/
+.nyc_output/
+coverage.xml
+```

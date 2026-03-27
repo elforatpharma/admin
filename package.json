@@ -1,0 +1,33 @@
+{
+  "name": "elforat-pharma",
+  "version": "2.0.0",
+  "description": "نظام إدارة الفرات فارما - Elforat Pharma Management System",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "lint": "eslint . --ext .js,.ts",
+    "format": "prettier --write \"**/*.{js,ts,json,md}\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.32",
+    "eslint": "^9.28.0",
+    "prettier": "^3.5.3",
+    "terser": "^5.46.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.2"
+  },
+  "keywords": [
+    "pharmacy",
+    "management",
+    "system",
+    "syria",
+    "deir-ez-zor"
+  ],
+  "author": "Elforat Pharma Team",
+  "license": "ISC"
+}

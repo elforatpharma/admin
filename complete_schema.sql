@@ -8,13 +8,12 @@
 -- ==========================================
 CREATE TABLE IF NOT EXISTS gifts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  image_url TEXT,
-  min_order_value NUMERIC(10, 2) DEFAULT 0,
+  gift_name TEXT NOT NULL,
+  gift_img TEXT,
+  trigger_product_name TEXT NOT NULL,
+  trigger_qty INTEGER DEFAULT 1,
   is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- فهارس لجدول الهدايا
@@ -62,7 +61,7 @@ CREATE TABLE IF NOT EXISTS orders (
   customer_name TEXT NOT NULL,
   customer_phone TEXT NOT NULL,
   customer_address TEXT,
-  governate TEXT,
+  governorate TEXT,
   city TEXT,
   items JSONB NOT NULL DEFAULT '[]'::jsonb,
   total NUMERIC(10, 2) NOT NULL CHECK (total >= 0),
@@ -82,7 +81,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_phone);
-CREATE INDEX IF NOT EXISTS idx_orders_governate ON orders(governate);
+CREATE INDEX IF NOT EXISTS idx_orders_governorate ON orders(governorate);
 CREATE INDEX IF NOT EXISTS idx_orders_total ON orders(total);
 
 -- تعليقات على جدول الطلبات
@@ -99,7 +98,7 @@ CREATE TABLE IF NOT EXISTS customers (
   phone TEXT UNIQUE NOT NULL,
   email TEXT,
   address TEXT,
-  governate TEXT,
+  governorate TEXT,
   city TEXT,
   total_orders INTEGER DEFAULT 0,
   total_spent NUMERIC(10, 2) DEFAULT 0,

@@ -259,8 +259,8 @@ async function fetchOrders() {
         filtered.map(o => `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-50 dark:border-slate-800 transition-all">
                 <td class="px-6 py-4 font-mono text-xs font-bold text-primary">#${o.id.toString().slice(-4)}</td>
-                <td class="px-6 py-4 font-bold text-sm">${o.customerName || 'عميل'}</td>
-                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400" dir="ltr">${o.phone || '-'}</td>
+                <td class="px-6 py-4 font-bold text-sm">${o.customer_name || 'عميل'}</td>
+                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400" dir="ltr">${o.customer_phone || '-'}</td>
                 <td class="px-6 py-4 max-w-[220px]">
                     ${Array.isArray(o.items) && o.items.length > 0
                         ? o.items.map(item => `

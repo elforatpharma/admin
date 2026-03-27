@@ -767,7 +767,7 @@ async function logout() {
         // 2. جلب إحصائيات الطلبات متوافقة مع مسميات الأعمدة
         const { data: salesData, error: oError } = await _supabase
           .from('orders')
-          .select('customer_name, total, status, customer_phone, governorate, city, created_at')
+          .select('customer_name, total, status, customer_phone, governate, city, created_at')
           .order('created_at', { ascending: false });
 
         if (!oError && salesData) {
@@ -805,7 +805,7 @@ async function logout() {
             const initial = o.customer_name ? o.customer_name.charAt(0) : "ع";
             
             // عرض منطقة التوصيل (المحافظة أو المدينة)
-            const deliveryArea = o.governorate || o.city || "غير محدد";
+            const deliveryArea = o.governate || o.city || "غير محدد";
 
             return `
                     <tr class="hover:bg-slate-50 transition-colors">
@@ -827,23 +827,18 @@ async function logout() {
         }
 
         // 3. جلب عدد الزوار اليوم من جدول visitors المخصص
-        // استخدام تاريخ نصي بصيغة YYYY-MM-DD لتجنب مشاكل التوقيت
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const todayStr = `${year}-${month}-${day}`;
-
-        const { count: visitorsCount, error: vError } = await _supabase
+        // ملاحظة: جدول visitors يحتوي فقط على id و count، لذا نعرض إجمالي الزوار
+        const { data: visitorsData, error: vError } = await _supabase
           .from('visitors')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', todayStr);
+          .select('count');
 
         if (vError) {
           console.warn('⚠️ لا يمكن جلب عدد الزوار:', vError.message);
           document.getElementById("stat-visitors").innerText = "0";
         } else {
-          document.getElementById("stat-visitors").innerText = visitorsCount || 0;
+          // جمع كل قيم count من السجلات
+          const totalVisitors = visitorsData.reduce((sum, v) => sum + (v.count || 0), 0);
+          document.getElementById("stat-visitors").innerText = totalVisitors || 0;
         }
 
       } catch (e) {
@@ -1053,7 +1048,7 @@ async function logout() {
       const areasData = {};
       if (orders) {
         orders.forEach(order => {
-          const area = order.governorate || order.city || 'غير محدد';
+          const area = order.governate || order.city || 'غير محدد';
           if (!areasData[area]) {
             areasData[area] = { orders: 0, revenue: 0 };
           }
@@ -1124,7 +1119,7 @@ async function logout() {
             o.id,
             `"${o.customer_name || ''}"`,
             `"${o.customer_phone || ''}"`,
-            `"${o.governorate || ''}"`,
+            `"${o.governate || ''}"`,
             `"${o.city || ''}"`,
             `"${o.customer_address || ''}"`,
             o.total,
@@ -1148,7 +1143,7 @@ async function logout() {
             o.id,
             o.customer_name || '',
             o.customer_phone || '',
-            o.governorate || '',
+            o.governate || '',
             o.city || '',
             o.customer_address || '',
             o.total,

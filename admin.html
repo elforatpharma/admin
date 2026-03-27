@@ -107,6 +107,12 @@ window.addEventListener('DOMContentLoaded', () => {
         // إزالة المستمع بعد التفعيل الأول
         document.removeEventListener('click', enableAudioOnClick);
     }, { once: false });
+
+    // جلب الهدايا عند تحميل الصفحة
+    if (typeof fetchGifts === 'function') {
+        fetchGifts();
+        console.log('🎁 تم تحميل الهدايا');
+    }
 });
 
 // 3. الاستماع للطلبات الجديدة عبر Realtime
@@ -787,7 +793,7 @@ async function logout() {
       window.closeGiftModal = closeGiftModal; // جعل الدالة متاحة عالمياً
       fetchStats(); // جلب الإحصائيات
       initGifts();  // تحضير الـ Modal والـ Form
-      fetchGifts(); // إضافة هذا السطر لجلب الهدايا وعرضها فوراً
+      // fetchGifts() يتم استدعاؤها الآن في DOMContentLoaded
       initCharts(); // تهيئة الرسوم البيانية
     };
 
@@ -986,16 +992,19 @@ async function logout() {
     function exportToCSV() {
       exportData('csv');
     }
+    window.exportToCSV = exportToCSV;
 
     // تصدير البيانات إلى Excel
     function exportToExcel() {
       exportData('excel');
     }
+    window.exportToExcel = exportToExcel;
 
     // تصدير البيانات إلى PDF
     function exportToPDF() {
       exportData('pdf');
     }
+    window.exportToPDF = exportToPDF;
 
     // دالة التصدير العامة
     async function exportData(format) {
@@ -1078,6 +1087,7 @@ async function logout() {
     function exportDeliveryReport() {
       exportData('excel');
     }
+    window.exportDeliveryReport = exportDeliveryReport;
 
     // ==========================================
     // إدارة الهدايا - Gifts Management
@@ -1204,7 +1214,6 @@ async function logout() {
       }, 10);
     }
     function closeGiftModal() {
-    window.closeGiftModal = closeGiftModal;
       const m = document.getElementById('gift-modal');
       const mc = document.getElementById('gift-modal-content');
       m.classList.add('opacity-0');
@@ -1215,6 +1224,7 @@ async function logout() {
         document.getElementById('gift-form').reset();
       }, 300);
     }
+    window.closeGiftModal = closeGiftModal;
 
   </script>
 

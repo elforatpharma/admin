@@ -205,7 +205,7 @@
         async function analyzeCustomers() {
             const listContainer = document.getElementById('loyal-customers-list');
             try {
-                const {  orders, error } = await _supabase.from('orders').select('*');
+                const {  orders, error } = await _supabase.from('orders').select('customer_name, customerName, customer_phone, phone, total, created_at');
                 if (error) throw error;
 
                 if (!orders || orders.length === 0) {

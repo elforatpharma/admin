@@ -30,7 +30,7 @@
     <script src="supabaseClient.js"></script>
     <script>
         async function checkAuth() {
-            const { data: { session } } = await _supabase.auth.getSession();
+            const { data } = await _supabase.auth.getSession(); const session = data.session;
             if (!session) window.location.href = 'index.html';
         }
         checkAuth();
@@ -298,8 +298,8 @@
             if (file) {
                 const fileName = `${Date.now()}-${file.name}`;
                 await _supabase.storage.from('products').upload(`uploads/${fileName}`, file);
-                const {  { publicUrl } } = _supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
-                updateData.img = publicUrl;
+                const { data } = _supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
+                updateData.img = data.publicUrl;
             }
             const { error } = await _supabase.from('products').update(updateData).eq('id', id);
             if (error) throw error;
@@ -408,7 +408,7 @@
     <script src="supabaseClient.js"></script>
     <script>
         async function checkAuth() {
-            const {  { session } } = await _supabase.auth.getSession();
+            const { data } = await _supabase.auth.getSession(); const session = data.session;
             if (!session) window.location.href = 'index.html';
         }
         checkAuth();
@@ -676,8 +676,8 @@
             if (file) {
                 const fileName = `${Date.now()}-${file.name}`;
                 await _supabase.storage.from('products').upload(`uploads/${fileName}`, file);
-                const {  { publicUrl } } = _supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
-                updateData.img = publicUrl;
+                const { data } = _supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
+                updateData.img = data.publicUrl;
             }
             const { error } = await _supabase.from('products').update(updateData).eq('id', id);
             if (error) throw error;

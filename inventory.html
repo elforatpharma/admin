@@ -1,0 +1,758 @@
+--- inventory.html (原始)
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>المخزون - الفرات فارما</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#ec135b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221016",
+                    },
+                    fontFamily: { display: ["Tajawal", "sans-serif"] },
+                },
+            },
+        };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = 'https://sidtdxchiqiogfkwbdui.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZHRkeGNoaXFpb2dma3diZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTEyMTAsImV4cCI6MjA4OTY4NzIxMH0.QF1-67Qu2HfWJt3ANSegM87fykOYQBwqC7ggLG8LTVU';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function checkAuth() {
+            const {  { session } } = await _supabase.auth.getSession();
+            if (!session) window.location.href = 'index.html';
+        }
+        checkAuth();
+
+        async function logout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+    </script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+
+        <aside class="w-64 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex flex-col shrink-0">
+            <div class="p-6 flex items-center gap-3">
+                <img src="logo.png" alt="الفرات فارما" class="h-12 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+                <div>
+                    <h1 class="text-lg font-bold leading-none text-primary">الفرات فارما</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">إدارة المتجر</p>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-2 mt-4">
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="admin.html">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>الرئيسية</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="orders.html">
+                    <span class="material-symbols-outlined">shopping_bag</span>
+                    <span>الطلبات</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white font-medium" href="inventory.html">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    <span>المخزون</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="customers.html">
+                    <span class="material-symbols-outlined">group</span>
+                    <span>العملاء</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button onclick="logout()" class="w-full flex items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-red-50 hover:text-red-500 transition-all group text-right">
+                    <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">أ.ف</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold truncate text-slate-700 group-hover:text-red-500">الفرات فارما</p>
+                        <p class="text-xs text-slate-500 truncate">تسجيل خروج</p>
+                    </div>
+                    <span class="material-symbols-outlined text-slate-400 group-hover:text-red-500">logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark relative">
+            <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-8 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">إدارة المنتجات</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">التحكم في مخزون وأسعار المنتجات وتحديثها</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="admin.html" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        <span>إضافة منتج</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="p-8 max-w-[1400px] mx-auto space-y-8">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto min-h-[400px]">
+                        <table class="w-full text-right">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                                    <th class="px-6 py-4 text-center w-20">ترتيب</th>
+                                    <th class="px-6 py-4">المنتج</th>
+                                    <th class="px-6 py-4">القسم</th>
+                                    <th class="px-6 py-4 text-center">السعر</th>
+                                    <th class="px-6 py-4 text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tr><td colspan="5" class="text-center py-20 text-slate-400 animate-pulse font-bold">جاري تحميل المخزون...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <p class="text-slate-500 text-sm font-bold mb-1">إجمالي المنتجات</p>
+                        <h3 id="stat-total-products" class="text-3xl font-black text-slate-900 dark:text-slate-100">0</h3>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <p class="text-slate-500 text-sm font-bold mb-1">الأقسام النشطة</p>
+                        <h3 id="stat-categories" class="text-3xl font-black text-slate-900 dark:text-slate-100">0</h3>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 hidden flex-col items-center justify-center z-[100] p-4 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 w-full max-w-xl shadow-2xl border border-slate-200 dark:border-slate-800 transform transition-all overflow-y-auto max-h-[90vh]">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100">تعديل بيانات المنتج</h2>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined">close</span></button>
+            </div>
+
+            <form id="edit-form" onsubmit="submitEditForm(event)" class="space-y-6">
+                <input type="hidden" id="edit-id">
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 px-1">اسم المنتج</label>
+                    <input type="text" id="edit-name" name="name" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold" required>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 px-1">السعر الحالي (ج.م)</label>
+                        <input type="number" id="edit-price" name="price" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 px-1">السعر القديم</label>
+                        <input type="number" id="edit-oldPrice" name="oldPrice" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 px-1">القسم</label>
+                        <select id="edit-category" name="category" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold">
+                            <option value="العناية بالبشرة">العناية بالبشرة</option>
+                            <option value="العناية بالشعر">العناية بالشعر</option>
+                            <option value="مستحضرات تجميل">مستحضرات تجميل</option>
+                            <option value="مجموعات متكاملة">مجموعات متكاملة</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 px-1">الشارة (Badge)</label>
+                        <input type="text" id="edit-badge" name="badge" placeholder="مثال: جديد ✨" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 px-1">تحديث الصورة</label>
+                    <div class="relative group">
+                        <input type="file" name="image" class="w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    </div>
+                </div>
+
+                <div class="pt-6 flex gap-3">
+                    <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">حفظ التغييرات</button>
+                    <button type="button" onclick="closeEditModal()" class="px-8 bg-slate-100 dark:bg-slate-800 text-slate-500 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-all">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    let products = [];
+
+    async function load() {
+        const tbody = document.getElementById('inventory-body');
+        try {
+            const { data, error } = await _supabase.from('products').select('*').order('priority', { ascending: false });
+            if (error) throw error;
+            products = data || [];
+            updateStats();
+            render();
+        } catch(e) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-red-500 font-bold">فشل جلب بيانات المخزون.</td></tr>`;
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('stat-total-products').innerText = products.length;
+        const categories = [...new Set(products.map(p => p.category))];
+        document.getElementById('stat-categories').innerText = categories.length;
+    }
+
+    function render() {
+        const tbody = document.getElementById('inventory-body');
+        if (products.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-slate-400 font-bold">المخزون فارغ تماماً حالياً</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = products.map((p, i) => `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-50 dark:border-slate-800 transition-all">
+                <td class="px-6 py-4">
+                    <div class="flex flex-col gap-1 items-center">
+                        <button onclick="move(${i},-1)" class="${i===0?'invisible':''} size-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-primary hover:text-white transition-all text-slate-400"><span class="material-symbols-outlined text-[18px]">expand_less</span></button>
+                        <button onclick="move(${i},1)" class="${i===products.length-1?'invisible':''} size-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-primary hover:text-white transition-all text-slate-400"><span class="material-symbols-outlined text-[18px]">expand_more</span></button>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-4">
+                        <div class="size-14 rounded-2xl bg-white border border-slate-100 p-1 flex-shrink-0 relative shadow-sm">
+                            <img src="${p.img}" class="w-full h-full object-contain mix-blend-multiply">
+                            ${p.badge ? `<span class="absolute -top-2 -right-2 bg-primary text-[8px] text-white px-1.5 py-0.5 rounded-full font-black shadow-lg shadow-primary/30">${p.badge}</span>` : ''}
+                        </div>
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-100">${p.name}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-xs font-bold text-slate-500">${p.category}</td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex flex-col items-center">
+                        <span class="font-black text-primary text-sm">${p.price} ج.م</span>
+                        ${p.oldPrice ? `<span class="text-[10px] text-slate-400 line-through">${p.oldPrice} ج.م</span>` : ''}
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex gap-2 justify-center">
+                        <button onclick="openEdit('${p.id}')" class="size-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all shadow-sm" title="تعديل">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+                        <button onclick="del('${p.id}','${p.name}')" class="size-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all shadow-sm" title="حذف">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>`).join('');
+    }
+
+    function openEdit(id) {
+        const p = products.find(x => x.id === id);
+        document.getElementById('edit-id').value = p.id;
+        document.getElementById('edit-name').value = p.name;
+        document.getElementById('edit-price').value = p.price;
+        document.getElementById('edit-oldPrice').value = p.oldPrice || '';
+        document.getElementById('edit-category').value = p.category;
+        document.getElementById('edit-badge').value = p.badge || '';
+        const modal = document.getElementById('edit-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('edit-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    async function submitEditForm(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const oldText = btn.innerText;
+        btn.innerText = "جاري الحفظ...";
+        btn.disabled = true;
+
+        const id = document.getElementById('edit-id').value;
+        const file = e.target.image.files[0];
+        let updateData = {
+            name: document.getElementById('edit-name').value,
+            price: Number(document.getElementById('edit-price').value),
+            oldPrice: document.getElementById('edit-oldPrice').value ? Number(document.getElementById('edit-oldPrice').value) : null,
+            category: document.getElementById('edit-category').value,
+            badge: document.getElementById('edit-badge').value
+        };
+
+        try {
+            if (file) {
+                const fileName = `${Date.now()}-${file.name}`;
+                await _supabase.storage.from('products').upload(`uploads/${fileName}`, file);
+                const {  { publicUrl } } = _supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
+                updateData.img = publicUrl;
+            }
+            const { error } = await _supabase.from('products').update(updateData).eq('id', id);
+            if (error) throw error;
+            closeEditModal();
+            await load();
+            Swal.fire({ title: 'تم التحديث!', icon: 'success', confirmButtonColor: '#ec135b' });
+        } catch(err) {
+            Swal.fire({ title: 'خطأ في التحديث', icon: 'error', confirmButtonColor: '#ec135b' });
+        } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    }
+
+    async function del(id, name) {
+        const r = await Swal.fire({
+            title: 'هل أنت متأكد؟',
+            text: `سيتم حذف "${name}" نهائياً من قاعدة بيانات المتجر!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ec135b',
+            cancelButtonColor: '#cbd5e1',
+            confirmButtonText: 'نعم، احذفه فوراً',
+            cancelButtonText: 'إلغاء'
+        });
+
+        if (r.isConfirmed) {
+            try {
+                const { error } = await _supabase.from('products').delete().eq('id', id);
+                if (error) throw error;
+                await load();
+                Swal.fire({ title: 'تم الحذف بنجاح!', icon: 'success', confirmButtonColor: '#ec135b' });
+            } catch(e) {
+                Swal.fire({ title: 'فشل في الحذف', icon: 'error', confirmButtonColor: '#ec135b' });
+            }
+        }
+    }
+
+    async function move(i, dir) {
+        const targetIndex = i + dir;
+        if (targetIndex < 0 || targetIndex >= products.length) return;
+
+        const currentProduct = products[i];
+        const targetProduct = products[targetIndex];
+
+        // خدعة "تبديل القيم" لضمان حركة واحدة فقط
+        const currentP = currentProduct.priority || 0;
+        const targetP = targetProduct.priority || 0;
+
+        // إذا كانت القيم متساوية، بنجبر واحد منهم يزيد عشان ينفصلوا عن بعض
+        let finalCurrentP = targetP;
+        let finalTargetP = currentP;
+
+        if (currentP === targetP) {
+            finalCurrentP = dir === -1 ? currentP + 1 : currentP - 1;
+        }
+
+        try {
+            // تحديث المنتجين في نفس الوقت (Promise.all) لسرعة الأداء
+            await Promise.all([
+                _supabase.from('products').update({ priority: finalCurrentP }).eq('id', currentProduct.id),
+                _supabase.from('products').update({ priority: finalTargetP }).eq('id', targetProduct.id)
+            ]);
+
+            // إعادة تحميل البيانات من السيرفر للتأكد من الترتيب الجديد
+            await load();
+        } catch (err) {
+            console.error("Error in reordering:", err);
+        }
+    }
+
+    window.onload = load;
+    </script>
+</body>
+</html>
+
++++ inventory.html (修改后)
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>المخزون - الفرات فارما</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#ec135b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221016",
+                    },
+                    fontFamily: { display: ["Tajawal", "sans-serif"] },
+                },
+            },
+        };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+    <script>
+        async function checkAuth() {
+            const {  { session } } = await _supabase.auth.getSession();
+            if (!session) window.location.href = 'index.html';
+        }
+        checkAuth();
+
+        async function logout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+    </script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+
+        <aside class="w-64 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex flex-col shrink-0">
+            <div class="p-6 flex items-center gap-3">
+                <img src="logo.png" alt="الفرات فارما" class="h-12 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+                <div>
+                    <h1 class="text-lg font-bold leading-none text-primary">الفرات فارما</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">إدارة المتجر</p>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-2 mt-4">
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="admin.html">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>الرئيسية</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="orders.html">
+                    <span class="material-symbols-outlined">shopping_bag</span>
+                    <span>الطلبات</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white font-medium" href="inventory.html">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    <span>المخزون</span>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="customers.html">
+                    <span class="material-symbols-outlined">group</span>
+                    <span>العملاء</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button onclick="logout()" class="w-full flex items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-red-50 hover:text-red-500 transition-all group text-right">
+                    <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">أ.ف</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold truncate text-slate-700 group-hover:text-red-500">الفرات فارما</p>
+                        <p class="text-xs text-slate-500 truncate">تسجيل خروج</p>
+                    </div>
+                    <span class="material-symbols-outlined text-slate-400 group-hover:text-red-500">logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark relative">
+            <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-8 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">إدارة المنتجات</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">التحكم في مخزون وأسعار المنتجات وتحديثها</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="admin.html" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        <span>إضافة منتج</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="p-8 max-w-[1400px] mx-auto space-y-8">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto min-h-[400px]">
+                        <table class="w-full text-right">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                                    <th class="px-6 py-4 text-center w-20">ترتيب</th>
+                                    <th class="px-6 py-4">المنتج</th>
+                                    <th class="px-6 py-4">القسم</th>
+                                    <th class="px-6 py-4 text-center">السعر</th>
+                                    <th class="px-6 py-4 text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tr><td colspan="5" class="text-center py-20 text-slate-400 animate-pulse font-bold">جاري تحميل المخزون...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <p class="text-slate-500 text-sm font-bold mb-1">إجمالي المنتجات</p>
+                        <h3 id="stat-total-products" class="text-3xl font-black text-slate-900 dark:text-slate-100">0</h3>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <p class="text-slate-500 text-sm font-bold mb-1">الأقسام النشطة</p>
+                        <h3 id="stat-categories" class="text-3xl font-black text-slate-900 dark:text-slate-100">0</h3>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 hidden flex-col items-center justify-center z-[100] p-4 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 w-full max-w-xl shadow-2xl border border-slate-200 dark:border-slate-800 transform transition-all overflow-y-auto max-h-[90vh]">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100">تعديل بيانات المنتج</h2>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined">close</span></button>
+            </div>
+
+            <form id="edit-form" onsubmit="submitEditForm(event)" class="space-y-6">
+                <input type="hidden" id="edit-id">
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 px-1">اسم المنتج</label>
+                    <input type="text" id="edit-name" name="name" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold" required>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 px-1">السعر الحالي (ج.م)</label>
+                        <input type="number" id="edit-price" name="price" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 px-1">السعر القديم</label>
+                        <input type="number" id="edit-oldPrice" name="oldPrice" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 px-1">القسم</label>
+                        <select id="edit-category" name="category" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold">
+                            <option value="العناية بالبشرة">العناية بالبشرة</option>
+                            <option value="العناية بالشعر">العناية بالشعر</option>
+                            <option value="مستحضرات تجميل">مستحضرات تجميل</option>
+                            <option value="مجموعات متكاملة">مجموعات متكاملة</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 px-1">الشارة (Badge)</label>
+                        <input type="text" id="edit-badge" name="badge" placeholder="مثال: جديد ✨" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 outline-none focus:border-primary transition-all font-bold">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 px-1">تحديث الصورة</label>
+                    <div class="relative group">
+                        <input type="file" name="image" class="w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    </div>
+                </div>
+
+                <div class="pt-6 flex gap-3">
+                    <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">حفظ التغييرات</button>
+                    <button type="button" onclick="closeEditModal()" class="px-8 bg-slate-100 dark:bg-slate-800 text-slate-500 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-all">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    let products = [];
+
+    async function load() {
+        const tbody = document.getElementById('inventory-body');
+        try {
+            const { data, error } = await _supabase.from('products').select('*').order('priority', { ascending: false });
+            if (error) throw error;
+            products = data || [];
+            updateStats();
+            render();
+        } catch(e) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-red-500 font-bold">فشل جلب بيانات المخزون.</td></tr>`;
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('stat-total-products').innerText = products.length;
+        const categories = [...new Set(products.map(p => p.category))];
+        document.getElementById('stat-categories').innerText = categories.length;
+    }
+
+    function render() {
+        const tbody = document.getElementById('inventory-body');
+        if (products.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-slate-400 font-bold">المخزون فارغ تماماً حالياً</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = products.map((p, i) => `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-50 dark:border-slate-800 transition-all">
+                <td class="px-6 py-4">
+                    <div class="flex flex-col gap-1 items-center">
+                        <button onclick="move(${i},-1)" class="${i===0?'invisible':''} size-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-primary hover:text-white transition-all text-slate-400"><span class="material-symbols-outlined text-[18px]">expand_less</span></button>
+                        <button onclick="move(${i},1)" class="${i===products.length-1?'invisible':''} size-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-primary hover:text-white transition-all text-slate-400"><span class="material-symbols-outlined text-[18px]">expand_more</span></button>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-4">
+                        <div class="size-14 rounded-2xl bg-white border border-slate-100 p-1 flex-shrink-0 relative shadow-sm">
+                            <img src="${p.img}" class="w-full h-full object-contain mix-blend-multiply">
+                            ${p.badge ? `<span class="absolute -top-2 -right-2 bg-primary text-[8px] text-white px-1.5 py-0.5 rounded-full font-black shadow-lg shadow-primary/30">${p.badge}</span>` : ''}
+                        </div>
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-100">${p.name}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-xs font-bold text-slate-500">${p.category}</td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex flex-col items-center">
+                        <span class="font-black text-primary text-sm">${p.price} ج.م</span>
+                        ${p.oldPrice ? `<span class="text-[10px] text-slate-400 line-through">${p.oldPrice} ج.م</span>` : ''}
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex gap-2 justify-center">
+                        <button onclick="openEdit('${p.id}')" class="size-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all shadow-sm" title="تعديل">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+                        <button onclick="del('${p.id}','${p.name}')" class="size-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all shadow-sm" title="حذف">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>`).join('');
+    }
+
+    function openEdit(id) {
+        const p = products.find(x => x.id === id);
+        document.getElementById('edit-id').value = p.id;
+        document.getElementById('edit-name').value = p.name;
+        document.getElementById('edit-price').value = p.price;
+        document.getElementById('edit-oldPrice').value = p.oldPrice || '';
+        document.getElementById('edit-category').value = p.category;
+        document.getElementById('edit-badge').value = p.badge || '';
+        const modal = document.getElementById('edit-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('edit-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    async function submitEditForm(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const oldText = btn.innerText;
+        btn.innerText = "جاري الحفظ...";
+        btn.disabled = true;
+
+        const id = document.getElementById('edit-id').value;
+        const file = e.target.image.files[0];
+        let updateData = {
+            name: document.getElementById('edit-name').value,
+            price: Number(document.getElementById('edit-price').value),
+            oldPrice: document.getElementById('edit-oldPrice').value ? Number(document.getElementById('edit-oldPrice').value) : null,
+            category: document.getElementById('edit-category').value,
+            badge: document.getElementById('edit-badge').value
+        };
+
+        try {
+            if (file) {
+                const fileName = `${Date.now()}-${file.name}`;
+                await _supabase.storage.from('products').upload(`uploads/${fileName}`, file);
+                const {  { publicUrl } } = _supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
+                updateData.img = publicUrl;
+            }
+            const { error } = await _supabase.from('products').update(updateData).eq('id', id);
+            if (error) throw error;
+            closeEditModal();
+            await load();
+            Swal.fire({ title: 'تم التحديث!', icon: 'success', confirmButtonColor: '#ec135b' });
+        } catch(err) {
+            Swal.fire({ title: 'خطأ في التحديث', icon: 'error', confirmButtonColor: '#ec135b' });
+        } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    }
+
+    async function del(id, name) {
+        const r = await Swal.fire({
+            title: 'هل أنت متأكد؟',
+            text: `سيتم حذف "${name}" نهائياً من قاعدة بيانات المتجر!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ec135b',
+            cancelButtonColor: '#cbd5e1',
+            confirmButtonText: 'نعم، احذفه فوراً',
+            cancelButtonText: 'إلغاء'
+        });
+
+        if (r.isConfirmed) {
+            try {
+                const { error } = await _supabase.from('products').delete().eq('id', id);
+                if (error) throw error;
+                await load();
+                Swal.fire({ title: 'تم الحذف بنجاح!', icon: 'success', confirmButtonColor: '#ec135b' });
+            } catch(e) {
+                Swal.fire({ title: 'فشل في الحذف', icon: 'error', confirmButtonColor: '#ec135b' });
+            }
+        }
+    }
+
+    async function move(i, dir) {
+        const targetIndex = i + dir;
+        if (targetIndex < 0 || targetIndex >= products.length) return;
+
+        const currentProduct = products[i];
+        const targetProduct = products[targetIndex];
+
+        // خدعة "تبديل القيم" لضمان حركة واحدة فقط
+        const currentP = currentProduct.priority || 0;
+        const targetP = targetProduct.priority || 0;
+
+        // إذا كانت القيم متساوية، بنجبر واحد منهم يزيد عشان ينفصلوا عن بعض
+        let finalCurrentP = targetP;
+        let finalTargetP = currentP;
+
+        if (currentP === targetP) {
+            finalCurrentP = dir === -1 ? currentP + 1 : currentP - 1;
+        }
+
+        try {
+            // تحديث المنتجين في نفس الوقت (Promise.all) لسرعة الأداء
+            await Promise.all([
+                _supabase.from('products').update({ priority: finalCurrentP }).eq('id', currentProduct.id),
+                _supabase.from('products').update({ priority: finalTargetP }).eq('id', targetProduct.id)
+            ]);
+
+            // إعادة تحميل البيانات من السيرفر للتأكد من الترتيب الجديد
+            await load();
+        } catch (err) {
+            console.error("Error in reordering:", err);
+        }
+    }
+
+    window.onload = load;
+    </script>
+</body>
+</html>

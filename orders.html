@@ -1,0 +1,587 @@
+--- orders.html (原始)
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>إدارة الطلبات - الفرات فارما</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec135b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221016",
+                    },
+                    fontFamily: { "display": ["Tajawal", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // إعدادات الاتصال بسوبابيز
+        const supabaseUrl = 'https://sidtdxchiqiogfkwbdui.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZHRkeGNoaXFpb2dma3diZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTEyMTAsImV4cCI6MjA4OTY4NzIxMH0.QF1-67Qu2HfWJt3ANSegM87fykOYQBwqC7ggLG8LTVU';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // وظيفة إجبار المستخدم على تسجيل الدخول
+        async function forceAuth() {
+            const {  { session } } = await _supabase.auth.getSession();
+
+            // لو مفيش جلسة نشطة، ابعته لصفحة اللوجن فوراً
+            if (!session) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        forceAuth();
+
+        async function logout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+    </script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex h-screen overflow-hidden">
+
+    <aside class="w-64 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex flex-col shrink-0">
+        <div class="p-6 flex items-center gap-3">
+            <img src="logo.png" alt="الفرات فارما" class="h-12 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+            <div>
+                <h1 class="text-lg font-bold leading-none text-primary">الفرات فارما</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">إدارة المتجر</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="admin.html">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>الرئيسية</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white font-medium" href="orders.html">
+                <span class="material-symbols-outlined">shopping_bag</span>
+                <span>الطلبات</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="inventory.html">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <span>المخزون</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="customers.html">
+                <span class="material-symbols-outlined">group</span>
+                <span>العملاء</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+            <button onclick="logout()" class="w-full flex items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-red-50 hover:text-red-500 transition-all group text-right">
+                <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">أ.ف</div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold truncate text-slate-700 group-hover:text-red-500"> الفرات فارما</p>
+                    <p class="text-xs text-slate-500 truncate">تسجيل خروج</p>
+                </div>
+                <span class="material-symbols-outlined text-slate-400 group-hover:text-red-500">logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark relative">
+        <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-8 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+            <div>
+                <h2 class="text-2xl font-bold tracking-tight">إدارة الطلبات</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">متابعة وحذف وتحديث طلبات العملاء</p>
+            </div>
+            <button onclick="fetchOrders()" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/90 shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-[18px]">refresh</span> تحديث
+            </button>
+        </header>
+
+        <div class="p-8 space-y-8 max-w-[1400px] mx-auto">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="flex border-b border-slate-200 dark:border-slate-800 px-6 gap-8 overflow-x-auto">
+                    <button onclick="renderOrders('الكل')" id="tab-all" class="flex items-center gap-2 border-b-2 border-primary text-primary pb-4 pt-5 whitespace-nowrap transition-all">
+                        <span class="text-sm font-bold">الكل</span>
+                        <span id="count-all" class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="renderOrders('قيد التنفيذ')" id="tab-pending" class="flex items-center gap-2 border-b-2 border-transparent text-slate-500 pb-4 pt-5 whitespace-nowrap transition-all">
+                        <span class="text-sm font-bold">قيد التنفيذ</span>
+                        <span id="count-pending" class="bg-amber-100 text-amber-600 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="renderOrders('تم التوصيل')" id="tab-delivered" class="flex items-center gap-2 border-b-2 border-transparent text-slate-500 pb-4 pt-5 whitespace-nowrap transition-all">
+                        <span class="text-sm font-bold">تم التوصيل</span>
+                        <span id="count-delivered" class="bg-green-100 text-green-600 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto min-h-[400px]">
+                    <table class="w-full text-right">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                                <th class="px-6 py-4">معرف الطلب</th>
+                                <th class="px-6 py-4">العميل</th>
+                                <th class="px-6 py-4">الهاتف</th>
+                                <th class="px-6 py-4">المنتجات</th>
+                                <th class="px-6 py-4">التاريخ</th>
+                                <th class="px-6 py-4">الإجمالي</th>
+                                <th class="px-6 py-4">الحالة</th>
+                                <th class="px-6 py-4 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tr><td colspan="8" class="text-center py-10 text-slate-400">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <p class="text-slate-500 text-sm font-bold mb-1">الأرباح الفعلية (تم التوصيل)</p>
+                    <h3 id="stat-revenue" class="text-3xl font-black text-slate-900 dark:text-slate-100">0 <small class="text-sm text-slate-400">ج.م</small></h3>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <p class="text-slate-500 text-sm font-bold mb-1">إجمالي عدد الطلبات</p>
+                    <h3 id="stat-count" class="text-3xl font-black text-slate-900 dark:text-slate-100">0</h3>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+let allOrders = [];
+    let currentFilter = 'الكل';
+
+// استبدل دالة fetchOrders في ملف orders.html بهذا الكود
+async function fetchOrders() {
+    try {
+        const { data, error } = await _supabase.from('orders').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        allOrders = data;
+        renderOrders(currentFilter);
+    } catch (error) {
+        document.getElementById('orders-table-body').innerHTML = `<tr><td colspan="8" class="text-center py-20 text-red-500 font-bold">فشل جلب الطلبات.</td></tr>`;
+    }
+}
+
+    // حذف طلب من سوبابيز
+    async function deleteOrder(id) {
+        const result = await Swal.fire({
+            title: 'هل أنت متأكد؟',
+            text: "سيتم حذف هذا الطلب نهائياً من قاعدة البيانات!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ec135b',
+            confirmButtonText: 'نعم، احذفه'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const { error } = await _supabase.from('orders').delete().eq('id', id);
+                if (!error) {
+                    allOrders = allOrders.filter(o => o.id !== id);
+                    renderOrders(currentFilter);
+                    Swal.fire('تم الحذف!', '', 'success');
+                }
+            } catch (e) { Swal.fire('خطأ!', 'فشل الحذف', 'error'); }
+        }
+    }
+
+    // تحديث حالة الطلب (تم التوصيل / ملغي)
+    async function updateStatus(id, newStatus) {
+        try {
+            const { error } = await _supabase
+                .from('orders')
+                .update({ status: newStatus })
+                .eq('id', id);
+
+            if (!error) {
+                const index = allOrders.findIndex(o => o.id === id);
+                if(index !== -1) {
+                    allOrders[index].status = newStatus;
+                    renderOrders(currentFilter);
+                }
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function getStatusStyle(status) {
+        const s = (status || 'قيد التنفيذ').trim();
+        if (s === 'تم التوصيل') return 'bg-green-100 text-green-700 border-green-200';
+        if (s === 'ملغي') return 'bg-red-100 text-red-700 border-red-200';
+        return 'bg-amber-100 text-amber-700 border-amber-200';
+    }
+
+    function renderOrders(filter) {
+        currentFilter = filter;
+        const tbody = document.getElementById('orders-table-body');
+
+        document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+            btn.classList.remove('border-primary', 'text-primary');
+            btn.classList.add('border-transparent', 'text-slate-500');
+        });
+        const activeTabId = filter === 'الكل' ? 'tab-all' : (filter === 'قيد التنفيذ' ? 'tab-pending' : 'tab-delivered');
+        document.getElementById(activeTabId).classList.add('border-primary', 'text-primary');
+
+        let pending = 0, delivered = 0, deliveredRev = 0;
+        allOrders.forEach(o => {
+            const s = (o.status || 'قيد التنفيذ').trim();
+            if (s === 'تم التوصيل') {
+                delivered++;
+                deliveredRev += parseFloat(o.total) || 0;
+            } else if (s === 'قيد التنفيذ') {
+                pending++;
+            }
+        });
+
+        document.getElementById('count-all').innerText = allOrders.length;
+        document.getElementById('count-pending').innerText = pending;
+        document.getElementById('count-delivered').innerText = delivered;
+        document.getElementById('stat-revenue').innerHTML = `${deliveredRev} <small class="text-sm text-slate-400">ج.م</small>`;
+        document.getElementById('stat-count').innerText = allOrders.length;
+
+        const filtered = filter === 'الكل' ? allOrders : allOrders.filter(o => (o.status || 'قيد التنفيذ').trim() === filter);
+
+        tbody.innerHTML = filtered.length === 0 ? `<tr><td colspan="8" class="text-center py-20 text-slate-400">لا توجد طلبات حالياً</td></tr>` :
+        filtered.map(o => `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-50 dark:border-slate-800 transition-all">
+                <td class="px-6 py-4 font-mono text-xs font-bold text-primary">#${o.id.toString().slice(-4)}</td>
+                <td class="px-6 py-4 font-bold text-sm">${o.customerName || 'عميل'}</td>
+                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400" dir="ltr">${o.phone || '-'}</td>
+                <td class="px-6 py-4 max-w-[220px]">
+                    ${Array.isArray(o.items) && o.items.length > 0
+                        ? o.items.map(item => `
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <span class="inline-flex items-center justify-center bg-primary/10 text-primary text-[9px] font-black rounded-full w-4 h-4 shrink-0">${item.qty || 1}</span>
+                                <span class="text-[10px] font-bold text-slate-700 leading-tight truncate max-w-[170px]" title="${item.name || ''}">${item.name || '-'}</span>
+                                ${item.isGift ? '<span class="text-[9px] text-green-500 font-black shrink-0">🎁</span>' : ''}
+                            </div>`).join('')
+                        : '<span class="text-[10px] text-slate-400">—</span>'
+                    }
+                </td>
+                <td class="px-6 py-4 text-[10px] text-slate-500">${o.date || '-'}</td>
+                <td class="px-6 py-4 font-black text-sm">${o.total || 0} ج.م</td>
+                <td class="px-6 py-4">
+                    <select onchange="updateStatus('${o.id}', this.value)" class="text-[10px] font-bold rounded-lg px-2 py-1 border outline-none cursor-pointer ${getStatusStyle(o.status)}">
+                        <option value="قيد التنفيذ" ${(o.status || 'قيد التنفيذ') === 'قيد التنفيذ' ? 'selected' : ''}>⏳ قيد التنفيذ</option>
+                        <option value="تم التوصيل" ${o.status === 'تم التوصيل' ? 'selected' : ''}>✅ تم التوصيل</option>
+                        <option value="ملغي" ${o.status === 'ملغي' ? 'selected' : ''}>❌ ملغي</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <button onclick="deleteOrder('${o.id}')" class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all mx-auto">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    window.onload = fetchOrders;
+</script>
+</body>
+</html>
+
++++ orders.html (修改后)
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>إدارة الطلبات - الفرات فارما</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec135b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221016",
+                    },
+                    fontFamily: { "display": ["Tajawal", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+    <script>
+        // وظيفة إجبار المستخدم على تسجيل الدخول
+        async function forceAuth() {
+            const {  { session } } = await _supabase.auth.getSession();
+
+            // لو مفيش جلسة نشطة، ابعته لصفحة اللوجن فوراً
+            if (!session) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        forceAuth();
+
+        async function logout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+    </script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex h-screen overflow-hidden">
+
+    <aside class="w-64 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex flex-col shrink-0">
+        <div class="p-6 flex items-center gap-3">
+            <img src="logo.png" alt="الفرات فارما" class="h-12 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+            <div>
+                <h1 class="text-lg font-bold leading-none text-primary">الفرات فارما</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">إدارة المتجر</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="admin.html">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>الرئيسية</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white font-medium" href="orders.html">
+                <span class="material-symbols-outlined">shopping_bag</span>
+                <span>الطلبات</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="inventory.html">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <span>المخزون</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400" href="customers.html">
+                <span class="material-symbols-outlined">group</span>
+                <span>العملاء</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+            <button onclick="logout()" class="w-full flex items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-red-50 hover:text-red-500 transition-all group text-right">
+                <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">أ.ف</div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold truncate text-slate-700 group-hover:text-red-500"> الفرات فارما</p>
+                    <p class="text-xs text-slate-500 truncate">تسجيل خروج</p>
+                </div>
+                <span class="material-symbols-outlined text-slate-400 group-hover:text-red-500">logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark relative">
+        <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-8 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+            <div>
+                <h2 class="text-2xl font-bold tracking-tight">إدارة الطلبات</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">متابعة وحذف وتحديث طلبات العملاء</p>
+            </div>
+            <button onclick="fetchOrders()" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary/90 shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-[18px]">refresh</span> تحديث
+            </button>
+        </header>
+
+        <div class="p-8 space-y-8 max-w-[1400px] mx-auto">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="flex border-b border-slate-200 dark:border-slate-800 px-6 gap-8 overflow-x-auto">
+                    <button onclick="renderOrders('الكل')" id="tab-all" class="flex items-center gap-2 border-b-2 border-primary text-primary pb-4 pt-5 whitespace-nowrap transition-all">
+                        <span class="text-sm font-bold">الكل</span>
+                        <span id="count-all" class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="renderOrders('قيد التنفيذ')" id="tab-pending" class="flex items-center gap-2 border-b-2 border-transparent text-slate-500 pb-4 pt-5 whitespace-nowrap transition-all">
+                        <span class="text-sm font-bold">قيد التنفيذ</span>
+                        <span id="count-pending" class="bg-amber-100 text-amber-600 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="renderOrders('تم التوصيل')" id="tab-delivered" class="flex items-center gap-2 border-b-2 border-transparent text-slate-500 pb-4 pt-5 whitespace-nowrap transition-all">
+                        <span class="text-sm font-bold">تم التوصيل</span>
+                        <span id="count-delivered" class="bg-green-100 text-green-600 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto min-h-[400px]">
+                    <table class="w-full text-right">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                                <th class="px-6 py-4">معرف الطلب</th>
+                                <th class="px-6 py-4">العميل</th>
+                                <th class="px-6 py-4">الهاتف</th>
+                                <th class="px-6 py-4">المنتجات</th>
+                                <th class="px-6 py-4">التاريخ</th>
+                                <th class="px-6 py-4">الإجمالي</th>
+                                <th class="px-6 py-4">الحالة</th>
+                                <th class="px-6 py-4 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tr><td colspan="8" class="text-center py-10 text-slate-400">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <p class="text-slate-500 text-sm font-bold mb-1">الأرباح الفعلية (تم التوصيل)</p>
+                    <h3 id="stat-revenue" class="text-3xl font-black text-slate-900 dark:text-slate-100">0 <small class="text-sm text-slate-400">ج.م</small></h3>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <p class="text-slate-500 text-sm font-bold mb-1">إجمالي عدد الطلبات</p>
+                    <h3 id="stat-count" class="text-3xl font-black text-slate-900 dark:text-slate-100">0</h3>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+let allOrders = [];
+    let currentFilter = 'الكل';
+
+// استبدل دالة fetchOrders في ملف orders.html بهذا الكود
+async function fetchOrders() {
+    try {
+        const { data, error } = await _supabase.from('orders').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        allOrders = data;
+        renderOrders(currentFilter);
+    } catch (error) {
+        document.getElementById('orders-table-body').innerHTML = `<tr><td colspan="8" class="text-center py-20 text-red-500 font-bold">فشل جلب الطلبات.</td></tr>`;
+    }
+}
+
+    // حذف طلب من سوبابيز
+    async function deleteOrder(id) {
+        const result = await Swal.fire({
+            title: 'هل أنت متأكد؟',
+            text: "سيتم حذف هذا الطلب نهائياً من قاعدة البيانات!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ec135b',
+            confirmButtonText: 'نعم، احذفه'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const { error } = await _supabase.from('orders').delete().eq('id', id);
+                if (!error) {
+                    allOrders = allOrders.filter(o => o.id !== id);
+                    renderOrders(currentFilter);
+                    Swal.fire('تم الحذف!', '', 'success');
+                }
+            } catch (e) { Swal.fire('خطأ!', 'فشل الحذف', 'error'); }
+        }
+    }
+
+    // تحديث حالة الطلب (تم التوصيل / ملغي)
+    async function updateStatus(id, newStatus) {
+        try {
+            const { error } = await _supabase
+                .from('orders')
+                .update({ status: newStatus })
+                .eq('id', id);
+
+            if (!error) {
+                const index = allOrders.findIndex(o => o.id === id);
+                if(index !== -1) {
+                    allOrders[index].status = newStatus;
+                    renderOrders(currentFilter);
+                }
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function getStatusStyle(status) {
+        const s = (status || 'قيد التنفيذ').trim();
+        if (s === 'تم التوصيل') return 'bg-green-100 text-green-700 border-green-200';
+        if (s === 'ملغي') return 'bg-red-100 text-red-700 border-red-200';
+        return 'bg-amber-100 text-amber-700 border-amber-200';
+    }
+
+    function renderOrders(filter) {
+        currentFilter = filter;
+        const tbody = document.getElementById('orders-table-body');
+
+        document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+            btn.classList.remove('border-primary', 'text-primary');
+            btn.classList.add('border-transparent', 'text-slate-500');
+        });
+        const activeTabId = filter === 'الكل' ? 'tab-all' : (filter === 'قيد التنفيذ' ? 'tab-pending' : 'tab-delivered');
+        document.getElementById(activeTabId).classList.add('border-primary', 'text-primary');
+
+        let pending = 0, delivered = 0, deliveredRev = 0;
+        allOrders.forEach(o => {
+            const s = (o.status || 'قيد التنفيذ').trim();
+            if (s === 'تم التوصيل') {
+                delivered++;
+                deliveredRev += parseFloat(o.total) || 0;
+            } else if (s === 'قيد التنفيذ') {
+                pending++;
+            }
+        });
+
+        document.getElementById('count-all').innerText = allOrders.length;
+        document.getElementById('count-pending').innerText = pending;
+        document.getElementById('count-delivered').innerText = delivered;
+        document.getElementById('stat-revenue').innerHTML = `${deliveredRev} <small class="text-sm text-slate-400">ج.م</small>`;
+        document.getElementById('stat-count').innerText = allOrders.length;
+
+        const filtered = filter === 'الكل' ? allOrders : allOrders.filter(o => (o.status || 'قيد التنفيذ').trim() === filter);
+
+        tbody.innerHTML = filtered.length === 0 ? `<tr><td colspan="8" class="text-center py-20 text-slate-400">لا توجد طلبات حالياً</td></tr>` :
+        filtered.map(o => `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-50 dark:border-slate-800 transition-all">
+                <td class="px-6 py-4 font-mono text-xs font-bold text-primary">#${o.id.toString().slice(-4)}</td>
+                <td class="px-6 py-4 font-bold text-sm">${o.customerName || 'عميل'}</td>
+                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400" dir="ltr">${o.phone || '-'}</td>
+                <td class="px-6 py-4 max-w-[220px]">
+                    ${Array.isArray(o.items) && o.items.length > 0
+                        ? o.items.map(item => `
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <span class="inline-flex items-center justify-center bg-primary/10 text-primary text-[9px] font-black rounded-full w-4 h-4 shrink-0">${item.qty || 1}</span>
+                                <span class="text-[10px] font-bold text-slate-700 leading-tight truncate max-w-[170px]" title="${item.name || ''}">${item.name || '-'}</span>
+                                ${item.isGift ? '<span class="text-[9px] text-green-500 font-black shrink-0">🎁</span>' : ''}
+                            </div>`).join('')
+                        : '<span class="text-[10px] text-slate-400">—</span>'
+                    }
+                </td>
+                <td class="px-6 py-4 text-[10px] text-slate-500">${o.date || '-'}</td>
+                <td class="px-6 py-4 font-black text-sm">${o.total || 0} ج.م</td>
+                <td class="px-6 py-4">
+                    <select onchange="updateStatus('${o.id}', this.value)" class="text-[10px] font-bold rounded-lg px-2 py-1 border outline-none cursor-pointer ${getStatusStyle(o.status)}">
+                        <option value="قيد التنفيذ" ${(o.status || 'قيد التنفيذ') === 'قيد التنفيذ' ? 'selected' : ''}>⏳ قيد التنفيذ</option>
+                        <option value="تم التوصيل" ${o.status === 'تم التوصيل' ? 'selected' : ''}>✅ تم التوصيل</option>
+                        <option value="ملغي" ${o.status === 'ملغي' ? 'selected' : ''}>❌ ملغي</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <button onclick="deleteOrder('${o.id}')" class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all mx-auto">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    window.onload = fetchOrders;
+</script>
+</body>
+</html>

@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>لوحة التحكم - الفرات فارما</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: { primary: "#ec135b", "background-light": "#f8f6f6", "background-dark": "#221016" },
+          fontFamily: { display: ["Tajawal", "sans-serif"] },
+          borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+        },
+      },
+    };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+
+  <script>
+    // وظيفة حماية الصفحة
+    async function forceAuth() {
+      const {  { session } } = await _supabase.auth.getSession();
+      if (!session) window.location.href = 'index.html';
+    }
+    // استدعاء الدالة مع await لضمان التنفيذ الصحيح
+    (async () => { await forceAuth(); })();
+
+// ==========================================
+// نظام الإشعارات الصوتية والمرئية
+// ==========================================
+
+// 1. إعداد صوت الإشعار (رابط مباشر وموثوق)
+const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+notificationSound.preload = 'auto';
+
+// 2. حالة النظام الصوتي
+let audioEnabled = localStorage.getItem('audioEnabled') === 'true';
+let lastOrderCount = 0;
+let fallbackInterval = null;
+
+// دالة تشغيل الصوت مع معالجة قيود المتصفح
+async function playNotification() {
+    if (!audioEnabled) return;
+
+    try {
+        notificationSound.currentTime = 0;
+        await notificationSound.play();
+        console.log("🔔 تم تشغيل صوت الإشعار");
+    } catch (error) {
+        console.warn("⚠️ المتصفح منع الصوت:", error.message);
+    }
+}
+
+// دالة تفعيل الصوت عند أول تفاعل
+async function enableAudio() {
+    try {
+        // محاولة تشغيل الصوت للتفعيل
+        await notificationSound.play();
+        notificationSound.pause();
+        notificationSound.currentTime = 0;
+
+        audioEnabled = true;
+        localStorage.setItem('audioEnabled', 'true'); // حفظ الحالة في localStorage
+
+        document.getElementById('audio-status').textContent = '🔔 التنبيهات مفعلة';
+        document.getElementById('audio-status').className = 'text-xs font-bold text-green-500 flex items-center gap-1';
+
+        // إظهار تأكيد للمستخدم
+        showOrderToast('تم تفعيل التنبيهات الصوتية ✅');
+        console.log('✅ تم تفعيل التنبيهات الصوتية');
+    } catch (err) {
+        console.error('❌ لا يمكن تفعيل الصوت:', err);
+        document.getElementById('audio-status').textContent = '🔕 فشل التفعيل';
+        document.getElementById('audio-status').className = 'text-xs font-bold text-red-500 flex items-center gap-1';
+    }
+}
+
+// إضافة مستمع الأحداث بعد تحميل الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 تم تحميل الصفحة، جاهز لتفعيل الصوت');
+
+    // استعادة حالة الزر إذا كانت التنبيهات مفعلة من جلسة سابقة
+    if (audioEnabled) {
+        const statusBtn = document.getElementById('audio-status');
+        if (statusBtn) {
+            statusBtn.textContent = '🔔 التنبيهات مفعلة';
+            statusBtn.className = 'text-xs font-bold text-green-500 flex items-center gap-1 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-2 rounded-lg transition-all';
+        }
+    }
+
+    // محاولة تفعيل الصوت تلقائياً عند أول تفاعل مع الصفحة
+    document.addEventListener('click', function enableAudioOnClick() {
+        if (!audioEnabled) {
+            enableAudio();
+        }
+        // إزالة المستمع بعد التفعيل الأول
+        document.removeEventListener('click', enableAudioOnClick);
+    }, { once: false });
+});
+
+// 3. الاستماع للطلبات الجديدة عبر Realtime
+_supabase.channel('orders-inserts')
+  .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'orders'
+  }, payload => {
+      console.log('📦 وصول طلب جديد:', payload.new);
+      playNotification();
+      showOrderToast(payload.new.customerName || 'عميل جديد');
+      if (typeof fetchStats === 'function') fetchStats();
+  })
+  .subscribe(async status => {
+      console.log('حالة قناة Realtime:', status);
+      if (status === 'SUBSCRIBED') {
+          console.log('✅ قناة التحديث الفعلي مفعلة');
+          // جلب العدد الأولي عند الاشتراك الناجح
+          const { count } = await _supabase.from('orders').select('id', { count: 'exact', head: true });
+          lastOrderCount = count || 0;
+          console.log(`📊 عدد الطلبات الحالي: ${lastOrderCount}`);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('⚠️ فشل اتصال Realtime، تفعيل النظام البديل...');
+          startFallbackPolling();
+      }
+  });
+
+// قناة لتحديثات الطلبات الأخرى
+_supabase.channel('orders-updates')
+  .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'orders'
+  }, payload => {
+      console.log('🔄 تغيير في الطلبات:', payload.eventType);
+      if (typeof fetchStats === 'function') fetchStats();
+  })
+  .subscribe();
+
+// نظام بديل: فحص دوري كل 5 ثواني
+async function startFallbackPolling() {
+    if (fallbackInterval) return;
+
+    console.log('🔄 بدء النظام البديل: فحص كل 5 ثواني');
+
+    fallbackInterval = setInterval(async () => {
+        const { count } = await _supabase.from('orders').select('id', { count: 'exact', head: true });
+        const currentCount = count || 0;
+
+        if (currentCount > lastOrderCount) {
+            console.log(`📈 اكتشاف ${currentCount - lastOrderCount} طلب جديد!`);
+            playNotification();
+            showOrderToast('طلب جديد');
+            if (typeof fetchStats === 'function') fetchStats();
+            lastOrderCount = currentCount;
+        }
+    }, 5000);
+}
+
+// دالة إظهار الإشعار المرئي
+function showOrderToast(name) {
+    // التحقق من وجود العنصر قبل الإنشاء لتجنب التكرار
+    const existingToast = document.querySelector('.order-toast-notification');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = "order-toast-notification fixed bottom-5 right-5 bg-primary text-white px-6 py-4 rounded-2xl shadow-2xl z-[100] animate-bounce font-bold flex items-center gap-2";
+    toast.innerHTML = `<span class="material-symbols-outlined">notifications_active</span> ${name.includes('✅') ? name : 'أوردر جديد: ' + name}`;
+    document.body.appendChild(toast);
+
+    console.log(`🔔 إشعار مرئي: ${name}`);
+
+    // تشغيل صوت بسيط كإشارة إضافية (بغض النظر عن حالة audioEnabled للتأكيد)
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+        console.log('🔊 تم تشغيل نغمة تأكيد');
+    } catch (e) {
+        console.warn('تعذر تشغيل النغمة الإضافية:', e.message);
+    }
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.5s';
+        setTimeout(() => toast.remove(), 500);
+    }, 5000);
+}
+
+// دالة تسجيل الخروج
+async function logout() {
+    localStorage.removeItem('audioEnabled'); // مسح حالة التنبيهات عند الخروج
+    await _supabase.auth.signOut();
+    window.location.href = 'index.html';
+}
+
+  </script>
+
+  <style>
+    body {
+      font-family: "Tajawal", sans-serif;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+
+    /* تنسيق شريط التمرير */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+  <div class="flex h-screen overflow-hidden">
+    <aside
+      class="w-64 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex flex-col shrink-0">
+      <div class="p-6 flex items-center gap-3">
+        <img src="logo.png" alt="الفرات فارما"
+          class="h-12 w-auto object-contain mix-blend-multiply dark:mix-blend-normal" />
+        <div>
+          <h1 class="text-lg font-bold leading-none text-primary">
+            الفرات فارما
+          </h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            إدارة المتجر
+          </p>
+        </div>
+      </div>
+      <nav class="flex-1 px-4 space-y-2 mt-4">
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white font-medium" href="admin.html">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>الرئيسية</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+          href="orders.html">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          <span>الطلبات</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+          href="inventory.html">
+          <span class="material-symbols-outlined">inventory_2</span>
+          <span>المخزون</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+          href="customers.html">
+          <span class="material-symbols-outlined">group</span>
+          <span>العملاء</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+          href="#" onclick="showGiftsSection()">
+          <span class="material-symbols-outlined">card_giftcard</span>
+          <span>الهدايا</span>
+        </a>
+      </nav>
+      <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+        <button onclick="logout()"
+          class="w-full flex items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-red-50 hover:text-red-500 transition-all group text-right">
+          <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+            أ.ف
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold truncate text-slate-700 group-hover:text-red-500">
+              الفرات فارما
+            </p>
+            <p class="text-xs text-slate-500 truncate">تسجيل خروج</p>
+          </div>
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-red-500">logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark relative">
+      <header
+        class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-8 py-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight">نظرة عامة</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            أداء متجرك لهذا الأسبوع
+          </p>
+        </div>
+        <div class="flex items-center gap-4">
+          <button id="audio-status" class="text-xs font-bold text-orange-500 flex items-center gap-1 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-2 rounded-lg transition-all" onclick="enableAudio()" title="اضغط لتفعيل التنبيهات الصوتية">
+            🔕 اضغط لتفعيل التنبيهات
+          </button>
+          <script src="imageUploader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+            // تحديث حالة الزر فوراً عند تحميل DOM
+            (function() {
+              const saved = localStorage.getItem('audioEnabled');
+              if (saved === 'true') {
+                const btn = document.getElementById('audio-status');
+                if (btn) {
+                  btn.textContent = '🔔 التنبيهات مفعلة';
+                  btn.className = 'text-xs font-bold text-green-500 flex items-center gap-1 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-2 rounded-lg transition-all';
+                }
+              }
+            })();
+          </script>
+          <a href="https://elforatpharma.github.io/store/" target="_blank"
+            class="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors text-slate-600 flex items-center gap-2 text-sm font-bold">
+            <span class="material-symbols-outlined text-sm">open_in_new</span>
+            فتح المتجر
+          </a>
+          <button onclick="openModal()"
+            class="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-primary/20">
+            <span class="material-symbols-outlined text-sm">add</span>
+            <span>إضافة منتج</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="p-8 space-y-8 max-w-[1400px] mx-auto">
+        <!-- قسم الإحصائيات والرسوم البيانية -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div
+            class="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+              <div class="p-2 bg-primary/10 rounded-lg text-primary">
+                <span class="material-symbols-outlined">payments</span>
+              </div>
+              <span class="text-xs font-bold text-green-500 flex items-center gap-0.5"><span
+                  class="material-symbols-outlined text-xs">trending_up</span>
+                14.2%</span>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">إجمالي المبيعات</p>
+            <p class="text-3xl font-bold mt-1" id="stat-revenue">
+              0 <small class="text-sm text-slate-400">ج.م</small>
+            </p>
+          </div>
+          <div
+            class="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+              <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                <span class="material-symbols-outlined">local_mall</span>
+              </div>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">طلبات جديدة</p>
+            <p class="text-3xl font-bold mt-1" id="stat-orders">0</p>
+          </div>
+          <div
+            class="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+              <div class="p-2 bg-purple-500/10 rounded-lg text-purple-500">
+                <span class="material-symbols-outlined">inventory_2</span>
+              </div>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">المنتجات النشطة</p>
+            <p class="text-3xl font-bold mt-1" id="stat-products">0</p>
+          </div>
+          <div
+            class="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+              <div class="p-2 bg-orange-500/10 rounded-lg text-orange-500">
+                <span class="material-symbols-outlined">group</span>
+              </div>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">الزوار اليوم</p>
+            <p class="text-3xl font-bold mt-1" id="stat-visitors">0</p>
+          </div>
+        </div>
+
+        <!-- الرسوم البيانية للمبيعات -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">trending_up</span>
+                المبيعات اليومية
+              </h3>
+              <select id="sales-period" class="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-800" onchange="updateSalesChart()">
+                <option value="7">آخر 7 أيام</option>
+                <option value="30">آخر 30 يوم</option>
+                <option value="90">آخر 3 شهر</option>
+              </select>
+            </div>
+            <canvas id="salesChart" height="200"></canvas>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">shopping_bag</span>
+                المنتجات الأكثر مبيعاً
+              </h3>
+            </div>
+            <canvas id="topProductsChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- مناطق التوصيل -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">location_on</span>
+              مناطق التوصيل الأكثر طلباً
+            </h3>
+            <button onclick="exportDeliveryReport()" class="text-sm bg-primary/10 text-primary px-4 py-2 rounded-lg font-bold hover:bg-primary/20 transition-colors flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">download</span>
+              تصدير التقرير
+            </button>
+          </div>
+          <div id="delivery-areas-chart" class="space-y-3"></div>
+        </div>
+
+        <!-- أزرار التصدير -->
+        <div class="flex flex-wrap gap-3">
+          <button onclick="exportToCSV()" class="bg-green-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-green-600 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined">description</span>
+            تصدير CSV
+          </button>
+          <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-emerald-700 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined">table_chart</span>
+            تصدير Excel
+          </button>
+          <button onclick="exportToPDF()" class="bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-red-600 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined">picture_as_pdf</span>
+            تصدير PDF
+          </button>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mt-8">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <h3 class="text-lg font-bold">أحدث الطلبات</h3>
+            <a href="orders.html" class="text-sm font-semibold text-primary hover:underline">عرض الكل</a>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-right">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                  <th class="px-6 py-4">العميل</th>
+                  <th class="px-6 py-4">رقم الهاتف</th>
+                  <th class="px-6 py-4">الحالة</th>
+                  <th class="px-6 py-4">الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr>
+                  <td colspan="4" class="text-center py-8 text-slate-400">
+                    جاري تحميل الطلبات...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- ===== سكشن إدارة الهدايا ===== -->
+        <div id="gifts-section" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">card_giftcard</span>
+                إدارة الهدايا والعروض
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">الهدايا تُضاف تلقائياً لسلة العميل عند تحقق الشرط</p>
+            </div>
+            <button onclick="openGiftModal()"
+              class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-primary/20">
+              <span class="material-symbols-outlined text-sm">add</span>
+              إضافة هدية
+            </button>
+          </div>
+          <div id="gifts-list" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <p class="text-slate-400 text-sm col-span-3 text-center py-8 animate-pulse">جاري تحميل الهدايا...</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <div id="product-modal"
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden transform scale-95 transition-transform duration-300"
+        id="modal-content">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">add_circle</span>
+            تفاصيل المنتج الجديد
+          </h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 transition-colors p-1">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form id="add-form" class="p-6 overflow-y-auto max-h-[70vh] space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-600">اسم المنتج <span class="text-red-500">*</span></label>
+              <input type="text" id="p-name" required
+                class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                placeholder="مثال: سيروم الذهب" />
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-600">السعر الحالي (ج.م) <span
+                  class="text-red-500">*</span></label>
+              <input type="number" id="p-price" required
+                class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                placeholder="بعد الخصم" />
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-600">السعر القديم (ج.م)
+                <span class="text-slate-400 font-normal">(اختياري)</span></label>
+              <input type="number" id="p-oldPrice"
+                class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                placeholder="قبل الخصم (سيتم الشطب عليه)" />
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-600">القسم</label>
+              <select id="p-cat"
+                class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white">
+                <option>العناية بالبشرة</option>
+                <option>العناية بالشعر</option>
+                <option>مستحضرات تجميل</option>
+                <option>مجموعات متكاملة</option>
+              </select>
+            </div>
+            <div class="space-y-2 md:col-span-2">
+              <label class="text-xs font-bold text-slate-600">نوع العرض (Badge)</label>
+              <select id="p-badge"
+                class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white">
+                <option value="">بدون شارة</option>
+                <option value="الأكثر مبيعاً 🔥">الأكثر مبيعاً 🔥</option>
+                <option value="جديد ✨">جديد ✨</option>
+                <option value="-20%">خصم 20%</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-600">الوصف للمتجر</label>
+              <textarea id="p-desc" rows="2"
+                class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"></textarea>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-600">المكونات الفعالة</label>
+              <textarea id="p-ingredients" rows="2"
+                class="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"></textarea>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-slate-600">صورة المنتج <span class="text-red-500">*</span></label>
+            <div id="image-drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 transition-colors cursor-pointer">
+              <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">add_photo_alternate</span>
+              <p class="text-sm text-slate-500 font-bold mb-2">اسحب وأفلت الصورة هنا أو انقر للاختيار</p>
+              <p class="text-xs text-slate-400">JPG, PNG أو WebP (بحد أقصى 5MB)</p>
+              <input type="file" id="p-img" required accept="image/*" class="hidden" />
+              <div id="image-preview" class="mt-4"></div>
+            </div>
+          </div>
+
+          <div class="pt-4 flex gap-3">
+            <button type="submit"
+              class="flex-1 bg-primary text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+              حفظ المنتج في المتجر
+            </button>
+            <button type="button" onclick="closeModal()"
+              class="px-6 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // التحكم في الـ Modal بتاع الإضافة
+    const modal = document.getElementById("product-modal");
+    const modalContent = document.getElementById("modal-content");
+
+    function openModal() {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      setTimeout(() => {
+        modal.classList.remove("opacity-0");
+        modalContent.classList.remove("scale-95");
+      }, 10);
+    }
+
+    function closeModal() {
+      modal.classList.add("opacity-0");
+      modalContent.classList.add("scale-95");
+      setTimeout(() => {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }, 300);
+    }
+
+    // إرسال المنتج لسوبابيز (رفع الصورة + حفظ البيانات)
+    document.getElementById("add-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> جاري الحفظ...';
+      btn.disabled = true;
+
+      try {
+        const file = document.getElementById("p-img").files[0];
+        if (!file) throw new Error("يرجى اختيار صورة للمنتج");
+
+        // 1. رفع الصورة إلى Supabase Storage
+        const fileName = `${Date.now()}-${file.name}`;
+        const {  imgData, error: imgError } = await _supabase.storage
+          .from('products')
+          .upload(`uploads/${fileName}`, file);
+
+        if (imgError) throw imgError;
+
+        // الحصول على رابط الصورة العام
+        const {  { publicUrl } } = _supabase.storage
+          .from('products')
+          .getPublicUrl(`uploads/${fileName}`);
+
+        // 2. حفظ بيانات المنتج في الجدول
+        const productData = {
+          name: document.getElementById("p-name").value,
+          price: Number(document.getElementById("p-price").value),
+          oldPrice: document.getElementById("p-oldPrice").value ? Number(document.getElementById("p-oldPrice").value) : null,
+          category: document.getElementById("p-cat").value,
+          badge: document.getElementById("p-badge").value,
+          description: document.getElementById("p-desc").value,
+          ingredients: document.getElementById("p-ingredients").value,
+          img: publicUrl, // الرابط الذي حصلنا عليه من الاستورج
+          created_at: new Date()
+        };
+
+        const { error: dbError } = await _supabase
+          .from('products')
+          .insert([productData]);
+
+        if (dbError) throw dbError;
+
+        // نجاح العملية
+        closeModal();
+        alert("تم إضافة المنتج بنجاح إلى متجر الفرات فارما!");
+        e.target.reset();
+        if (imageUploader) imageUploader.removeImage();
+        fetchStats(); // تحديث الأرقام في الداشبورد
+
+      } catch (error) {
+        console.error(error);
+        alert("حدث خطأ: " + (error.message || "تأكد من إعدادات سوبابيز"));
+      } finally {
+        btn.innerHTML = "حفظ المنتج في المتجر";
+        btn.disabled = false;
+      }
+    };
+
+    // تهيئة ImageUploader بعد تحميل الصفحة
+    let imageUploader;
+    window.addEventListener('DOMContentLoaded', () => {
+      const dropZone = document.getElementById('image-drop-zone');
+      const fileInput = document.getElementById('p-img');
+      const previewContainer = document.getElementById('image-preview');
+
+      if (dropZone && fileInput && previewContainer) {
+        imageUploader = new ImageUploader({
+          dropZone: dropZone,
+          fileInput: fileInput,
+          previewContainer: previewContainer,
+          maxSize: 5 * 1024 * 1024, // 5MB
+          onImageSelect: (file, imageDataUrl) => {
+            if (file) {
+              console.log('تم اختيار الصورة:', file.name);
+            }
+          }
+        });
+      }
+    });
+
+    // جلب الإحصائيات الحقيقية والطلبات الأخيرة من سوبابيز
+    async function fetchStats() {
+      try {
+        // 1. جلب عدد المنتجات بدقة
+        const { count: productsCount } = await _supabase.from('products').select('*', { count: 'exact', head: true });
+        document.getElementById("stat-products").innerText = productsCount || 0;
+
+        // 2. جلب إحصائيات الطلبات متوافقة مع مسميات الأعمدة
+        const {  salesData, error: oError } = await _supabase
+          .from('orders')
+          .select('"customerName", total, status, phone, created_at')
+          .order('created_at', { ascending: false });
+
+        if (!oError && salesData) {
+          // حساب المبيعات من الطلبات المكتملة فقط
+          const totalSales = salesData
+            .filter(o => o.status === 'تم التوصيل')
+            .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+
+          // عدد الطلبات قيد التنفيذ
+          const newOrders = salesData.filter(o => o.status === 'قيد التنفيذ').length;
+
+          document.getElementById("stat-revenue").innerHTML = `${totalSales} <small class="text-sm text-slate-400">ج.م</small>`;
+          document.getElementById("stat-orders").innerText = newOrders;
+
+          // رسم أحدث 3 طلبات في الجدول
+          const tbody = document.getElementById("recent-orders-body");
+          if (salesData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">لا توجد طلبات مسجلة حتى الآن.</td></tr>`;
+            return;
+          }
+
+          const recent = salesData.slice(0, 3);
+          tbody.innerHTML = recent.map(o => {
+            let statusClass = "bg-amber-100 text-amber-600";
+            let statusText = o.status || "قيد التنفيذ";
+
+            if (statusText === "تم التوصيل" || statusText === "مكتمل") {
+              statusClass = "bg-green-100 text-green-600";
+            } else if (statusText === "ملغي") {
+              statusClass = "bg-red-100 text-red-600";
+            }
+
+            return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">${(o.customerName || "ع").charAt(0)}</div>
+                                <span class="text-sm font-bold text-slate-800">${o.customerName || "عميل"}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-slate-600" dir="ltr">${o.phone || "-"}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 ${statusClass} text-[10px] font-bold rounded-full">${statusText}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-bold text-primary">${o.total || 0} ج.م</td>
+                    </tr>
+                  `;
+          }).join("");
+        }
+
+        // 3. جلب عدد الزوار اليوم من جدول visitors المخصص
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayISO = today.toISOString();
+
+        const { count: visitorsCount } = await _supabase
+          .from('visitors')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', todayISO);
+
+        document.getElementById("stat-visitors").innerText = visitorsCount || 0;
+
+      } catch (e) {
+        console.error("خطأ في الاتصال بسوبابيز:", e);
+      }
+    }
+
+    window.onload = function() {
+      fetchStats(); // جلب الإحصائيات
+      initGifts();  // تحضير الـ Modal والـ Form
+      fetchGifts(); // إضافة هذا السطر لجلب الهدايا وعرضها فوراً
+      initCharts(); // تهيئة الرسوم البيانية
+    };
+
+    // متغيرات عامة للرسوم البيانية
+    let salesChartInstance = null;
+    let topProductsChartInstance = null;
+
+    // تهيئة الرسوم البيانية
+    async function initCharts() {
+      await updateSalesChart();
+      await updateTopProductsChart();
+      await updateDeliveryAreasChart();
+    }
+
+    // تحديث رسم المبيعات اليومية
+    async function updateSalesChart() {
+      const days = parseInt(document.getElementById('sales-period')?.value || 7);
+      const ctx = document.getElementById('salesChart');
+
+      if (!ctx) return;
+
+      // جلب بيانات المبيعات
+      const {  orders } = await _supabase
+        .from('orders')
+        .select('total, status, created_at')
+        .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: true });
+
+      // تجميع البيانات حسب اليوم
+      const salesByDay = {};
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+        salesByDay[dateStr] = 0;
+      }
+
+      if (orders) {
+        orders.filter(o => o.status === 'تم التوصيل').forEach(order => {
+          const date = new Date(order.created_at);
+          const dateStr = date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' });
+          if (salesByDay[dateStr] !== undefined) {
+            salesByDay[dateStr] += parseFloat(order.total) || 0;
+          }
+        });
+      }
+
+      const labels = Object.keys(salesByDay);
+      const data = Object.values(salesByDay);
+
+      // تدمير الرسم القديم إذا وجد
+      if (salesChartInstance) {
+        salesChartInstance.destroy();
+      }
+
+      // إنشاء رسم جديد
+      salesChartInstance = new Chart(ctx, {
+        type: 'line',
+         {
+          labels: labels,
+          datasets: [{
+            label: 'المبيعات (ج.م)',
+             data,
+            borderColor: '#ec135b',
+            backgroundColor: 'rgba(236, 19, 91, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // تحديث رسم المنتجات الأكثر مبيعاً
+    async function updateTopProductsChart() {
+      const ctx = document.getElementById('topProductsChart');
+
+      if (!ctx) return;
+
+      // جلب تفاصيل الطلبات مع المنتجات
+      const {  orders } = await _supabase
+        .from('orders')
+        .select('items, status')
+        .eq('status', 'تم التوصيل');
+
+      // حساب مبيعات كل منتج
+      const productSales = {};
+      if (orders) {
+        orders.forEach(order => {
+          if (order.items && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+              const name = item.name || item.productName || 'منتج غير معروف';
+              productSales[name] = (productSales[name] || 0) + (item.quantity || 1);
+            });
+          }
+        });
+      }
+
+      // ترتيب المنتجات وتحويلها لأفضل 10
+      const sortedProducts = Object.entries(productSales)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+      const labels = sortedProducts.map(p => p[0].substring(0, 20));
+      const data = sortedProducts.map(p => p[1]);
+
+      // تدمير الرسم القديم إذا وجد
+      if (topProductsChartInstance) {
+        topProductsChartInstance.destroy();
+      }
+
+      // إنشاء رسم جديد
+      topProductsChartInstance = new Chart(ctx, {
+        type: 'bar',
+         {
+          labels: labels,
+          datasets: [{
+            label: 'عدد المبيعات',
+             data,
+            backgroundColor: [
+              '#ec135b', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6',
+              '#ef4444', '#06b6d4', '#84cc16', '#f97316', '#a855f7'
+            ],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    // تحديث مناطق التوصيل
+    async function updateDeliveryAreasChart() {
+      const container = document.getElementById('delivery-areas-chart');
+
+      if (!container) return;
+
+      // جلب بيانات المناطق من الطلبات
+      const {  orders } = await _supabase
+        .from('orders')
+        .select('governate, city, total');
+
+      // حساب الطلبات والمبيعات لكل منطقة
+      const areasData = {};
+      if (orders) {
+        orders.forEach(order => {
+          const area = order.governate || order.city || 'غير محدد';
+          if (!areasData[area]) {
+            areasData[area] = { orders: 0, revenue: 0 };
+          }
+          areasData[area].orders++;
+          areasData[area].revenue += parseFloat(order.total) || 0;
+        });
+      }
+
+      // ترتيب المناطق حسب عدد الطلبات
+      const sortedAreas = Object.entries(areasData)
+        .sort((a, b) => b[1].orders - a[1].orders)
+        .slice(0, 8);
+
+      // عرض النتائج
+      container.innerHTML = sortedAreas.map(([area, data], index) => {
+        const maxOrders = Math.max(...Object.values(areasData).map(a => a.orders));
+        const width = (data.orders / maxOrders) * 100;
+        const colors = ['bg-primary', 'bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-purple-500', 'bg-red-500', 'bg-cyan-500', 'bg-yellow-500'];
+
+        return `
+          <div class="flex items-center gap-4">
+            <span class="text-sm font-bold text-slate-600 w-32 truncate">${area}</span>
+            <div class="flex-1 bg-slate-100 rounded-full h-8 overflow-hidden">
+              <div class="${colors[index % colors.length]} h-full rounded-full transition-all duration-500" style="width: ${width}%"></div>
+            </div>
+            <span class="text-sm font-bold text-slate-700 w-20 text-left">${data.orders} طلب</span>
+            <span class="text-xs text-slate-500 w-24 text-left">${data.revenue.toLocaleString()} ج.م</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // تصدير البيانات إلى CSV
+    function exportToCSV() {
+      exportData('csv');
+    }
+
+    // تصدير البيانات إلى Excel
+    function exportToExcel() {
+      exportData('excel');
+    }
+
+    // تصدير البيانات إلى PDF
+    function exportToPDF() {
+      exportData('pdf');
+    }
+
+    // دالة التصدير العامة
+    async function exportData(format) {
+      const {  orders } = await _supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!orders || orders.length === 0) {
+        alert('لا توجد بيانات للتصدير');
+        return;
+      }
+
+      if (format === 'csv') {
+        const headers = ['ID', 'اسم العميل', 'رقم الهاتف', 'المحافظة', 'المدينة', 'العنوان', 'الإجمالي', 'الحالة', 'التاريخ'];
+        const csvContent = [
+          headers.join(','),
+          ...orders.map(o => [
+            o.id,
+            `"${o.customerName || ''}"`,
+            `"${o.phone || ''}"`,
+            `"${o.governate || ''}"`,
+            `"${o.city || ''}"`,
+            `"${o.address || ''}"`,
+            o.total,
+            `"${o.status || ''}"`,
+            new Date(o.created_at).toLocaleDateString('ar-EG')
+          ].join(','))
+        ].join('\n');
+
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+      }
+      else if (format === 'excel') {
+        const ws_data = [
+          ['ID', 'اسم العميل', 'رقم الهاتف', 'المحافظة', 'المدينة', 'العنوان', 'الإجمالي', 'الحالة', 'التاريخ']
+        ];
+        orders.forEach(o => {
+          ws_data.push([
+            o.id,
+            o.customerName || '',
+            o.phone || '',
+            o.governate || '',
+            o.city || '',
+            o.address || '',
+            o.total,
+            o.status || '',
+            new Date(o.created_at).toLocaleDateString('ar-EG')
+          ]);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
+        XLSX.writeFile(wb, `orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+      }
+      else if (format === 'pdf') {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ align: 'right' });
+
+        doc.text('تقرير الطلبات - الفرات فارما', 200, 20, { align: 'right' });
+        doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}`, 200, 30, { align: 'right' });
+
+        let y = 50;
+        orders.slice(0, 20).forEach((o, i) => {
+          doc.text(`${i + 1}. ${o.customerName || 'عميل'} - ${o.phone} - ${o.total} ج.م`, 200, y, { align: 'right' });
+          y += 10;
+        });
+
+        doc.save(`orders_${new Date().toISOString().split('T')[0]}.pdf`);
+      }
+
+      alert('تم تحميل الملف بنجاح!');
+    }
+
+    // تصدير تقرير مناطق التوصيل
+    function exportDeliveryReport() {
+      exportData('excel');
+    }
+
+    // ==========================================
+    // إدارة الهدايا - Gifts Management
+    // ==========================================
+
+    function initGifts() {
+      // ربط المودال بعد تحميل الـ DOM
+      window.giftModal = document.getElementById('gift-modal');
+      window.giftModalContent = document.getElementById('gift-modal-content');
+
+      document.getElementById('gift-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = 'جاري الحفظ...';
+
+        try {
+          const file = document.getElementById('g-img').files[0];
+          let imgUrl = '';
+
+          if (file) {
+            const fileName = `gifts/${Date.now()}-${file.name}`;
+            const { error: uploadError } = await _supabase.storage.from('products').upload(fileName, file);
+            if (!uploadError) {
+              const {  { publicUrl } } = _supabase.storage.from('products').getPublicUrl(fileName);
+              imgUrl = publicUrl;
+            }
+          }
+
+          const giftData = {
+            gift_name: document.getElementById('g-name').value,
+            gift_img: imgUrl,
+            trigger_product_name: document.getElementById('g-trigger-product').value,
+            trigger_qty: parseInt(document.getElementById('g-trigger-qty').value),
+            is_active: true
+          };
+
+          const { error } = await _supabase.from('gifts').insert([giftData]);
+          if (error) throw error;
+
+          closeGiftModal();
+          fetchGifts();
+          document.getElementById('gifts-section').scrollIntoView({ behavior: 'smooth' });
+
+        } catch (err) {
+          alert('حدث خطأ: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = 'حفظ الهدية';
+        }
+      };
+    }
+
+    function showGiftsSection() {
+      document.getElementById('gifts-section').scrollIntoView({ behavior: 'smooth' });
+      fetchGifts();
+    }
+
+    async function fetchGifts() {
+      const list = document.getElementById('gifts-list');
+      const { data, error } = await _supabase.from('gifts').select('*').order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        list.innerHTML = `<p class="text-slate-400 text-sm col-span-3 text-center py-8">لا توجد هدايا مضافة حتى الآن</p>`;
+        return;
+      }
+
+      list.innerHTML = data.map(g => `
+        <div class="relative border-2 ${g.is_active ? 'border-primary/20 bg-primary/5' : 'border-slate-200 bg-slate-50'} rounded-2xl p-5 flex flex-col gap-3 transition-all">
+          <div class="absolute top-3 left-3">
+            <span class="text-[10px] font-black px-2 py-1 rounded-full ${g.is_active ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-500'}">
+              ${g.is_active ? '● نشط' : '● متوقف'}
+            </span>
+          </div>
+          <div class="flex items-center gap-3 mt-4">
+            <div class="w-14 h-14 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+              ${g.gift_img
+                ? `<img src="${g.gift_img}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.style.display='none'">`
+                : `<span class="material-symbols-outlined text-slate-300">card_giftcard</span>`}
+            </div>
+            <div>
+              <p class="font-bold text-slate-800 text-sm">${g.gift_name}</p>
+              <p class="text-xs text-slate-400 mt-0.5">🎁 هدية مجانية</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl p-3 border border-slate-100 text-xs text-slate-600 font-medium">
+            <span class="text-primary font-black">الشرط:</span> اشتري
+            <span class="font-black text-slate-800"> ${g.trigger_qty}</span> قطع من
+            <span class="font-black text-slate-800"> ${g.trigger_product_name}</span>
+          </div>
+          <div class="flex gap-2 mt-1">
+            <button onclick="toggleGift('${g.id}', ${g.is_active})"
+              class="flex-1 py-2 rounded-xl text-xs font-bold transition-all ${g.is_active ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}">
+              ${g.is_active ? 'إيقاف' : 'تفعيل'}
+            </button>
+            <button onclick="deleteGift('${g.id}')"
+              class="flex-1 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-all">
+              حذف
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function toggleGift(id, currentState) {
+      await _supabase.from('gifts').update({ is_active: !currentState }).eq('id', id);
+      fetchGifts();
+    }
+
+    async function deleteGift(id) {
+      if (!confirm('هل تريد حذف هذه الهدية نهائياً؟')) return;
+      await _supabase.from('gifts').delete().eq('id', id);
+      fetchGifts();
+    }
+
+    function openGiftModal() {
+      const m = document.getElementById('gift-modal');
+      const mc = document.getElementById('gift-modal-content');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      setTimeout(() => {
+        m.classList.remove('opacity-0');
+        mc.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeGiftModal() {
+      const m = document.getElementById('gift-modal');
+      const mc = document.getElementById('gift-modal-content');
+      m.classList.add('opacity-0');
+      mc.classList.add('scale-95');
+      setTimeout(() => {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        document.getElementById('gift-form').reset();
+      }, 300);
+    }
+
+  </script>
+
+  <!-- مودال إضافة هدية -->
+  <div id="gift-modal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300"
+      id="gift-modal-content">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">card_giftcard</span>
+          إضافة هدية جديدة
+        </h3>
+        <button onclick="closeGiftModal()" class="text-slate-400 hover:text-red-500 transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="gift-form" class="p-6 space-y-5">
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-600">اسم الهدية <span class="text-red-500">*</span></label>
+          <input type="text" id="g-name" required placeholder="مثال: Body Scrub مجاناً"
+            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-slate-600">المنتج المشترط <span class="text-red-500">*</span></label>
+            <input type="text" id="g-trigger-product" required placeholder="مثال: Guzel Gold Serum"
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-slate-600">الكمية المطلوبة <span class="text-red-500">*</span></label>
+            <input type="number" id="g-trigger-qty" required min="1" value="2"
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-600">صورة الهدية <span class="text-slate-400 font-normal">(اختياري)</span></label>
+          <input type="file" id="g-img" accept="image/*"
+            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer border border-slate-200 rounded-xl p-2" />
+        </div>
+        <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-medium">
+          <span class="font-black">مثال:</span> لو كتبت "Guzel Gold Serum" والكمية "2"، أي عميل يضيف 2 قطعة منه للسلة هيتضاف الهدية تلقائياً 🎁
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+            class="flex-1 bg-primary text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+            حفظ الهدية
+          </button>
+          <button type="button" onclick="closeGiftModal()"
+            class="px-6 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all">
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+
+</html>

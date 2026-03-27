@@ -1013,9 +1013,14 @@ async function logout() {
       if (!container) return;
 
       // جلب بيانات المناطق من الطلبات
-      const { data: orders } = await _supabase
+      const { data: orders, error } = await _supabase
         .from('orders')
-        .select('governorate, city, total');
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching orders:', error);
+        return;
+      }
 
       // حساب الطلبات والمبيعات لكل منطقة
       const areasData = {};

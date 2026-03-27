@@ -1191,6 +1191,9 @@ async function logout() {
       window.giftModal = document.getElementById('gift-modal');
       window.giftModalContent = document.getElementById('gift-modal-content');
 
+      // تحميل قائمة الهدايا عند بدء التشغيل
+      fetchGifts();
+
       document.getElementById('gift-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button[type="submit"]');

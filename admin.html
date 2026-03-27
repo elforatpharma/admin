@@ -784,6 +784,7 @@ async function logout() {
     }
 
     window.onload = function() {
+      window.closeGiftModal = closeGiftModal; // جعل الدالة متاحة عالمياً
       fetchStats(); // جلب الإحصائيات
       initGifts();  // تحضير الـ Modal والـ Form
       fetchGifts(); // إضافة هذا السطر لجلب الهدايا وعرضها فوراً
@@ -845,11 +846,11 @@ async function logout() {
       // إنشاء رسم جديد
       salesChartInstance = new Chart(ctx, {
         type: 'line',
-         {
+        data: {
           labels: labels,
           datasets: [{
             label: 'المبيعات (ج.م)',
-             data,
+            data: data,
             borderColor: '#ec135b',
             backgroundColor: 'rgba(236, 19, 91, 0.1)',
             tension: 0.4,
@@ -910,11 +911,11 @@ async function logout() {
       // إنشاء رسم جديد
       topProductsChartInstance = new Chart(ctx, {
         type: 'bar',
-         {
+        data: {
           labels: labels,
           datasets: [{
             label: 'عدد المبيعات',
-             data,
+            data: data,
             backgroundColor: [
               '#ec135b', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6',
               '#ef4444', '#06b6d4', '#84cc16', '#f97316', '#a855f7'
@@ -1202,8 +1203,8 @@ async function logout() {
         mc.classList.remove('scale-95');
       }, 10);
     }
-
     function closeGiftModal() {
+    window.closeGiftModal = closeGiftModal;
       const m = document.getElementById('gift-modal');
       const mc = document.getElementById('gift-modal-content');
       m.classList.add('opacity-0');

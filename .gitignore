@@ -1,1 +1,1 @@
-Nothing should be ignored since only a source file (admin.html) was modified and no build artifacts, dependencies, or temporary files were detected in the changes.
+Nothing should be ignored based on the provided file changes. The modified files (`customers.html` and `orders.html`) are HTML source files that should be tracked in version control.

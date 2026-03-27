@@ -220,13 +220,13 @@
                 let totalRevenue = 0;
 
                 orders.forEach(order => {
-                    const phone = order.customer_phone || 'غير معروف';
+                    const phone = order.customer_phone || order.phone || 'غير معروف';
                     const total = parseFloat(order.total) || 0;
                     totalRevenue += total;
 
                     if (!customersData[phone]) {
                         customersData[phone] = {
-                            name: order.customer_name || 'عميل المتجر',
+                            name: order.customer_name || order.customerName || 'عميل المتجر',
                             phone: phone,
                             totalSpent: 0,
                             ordersCount: 0,

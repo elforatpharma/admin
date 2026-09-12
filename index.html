@@ -83,6 +83,18 @@
             </button>
         </form>
 
+        <div class="relative flex items-center w-full">
+            <div class="flex-grow border-t border-slate-200"></div>
+            <span class="flex-shrink-0 mx-4 text-slate-400 text-sm font-bold">أو</span>
+            <div class="flex-grow border-t border-slate-200"></div>
+        </div>
+
+        <button type="button" id="google-login-btn"
+            class="w-full bg-white border-2 border-slate-100 text-slate-700 py-4 rounded-[24px] font-black text-lg shadow-sm hover:bg-slate-50 hover:border-slate-200 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-6 h-6" />
+            <span>الدخول باستخدام جوجل</span>
+        </button>
+
         <p id="error-msg" class="text-sm text-red-500 font-bold hidden flex items-center justify-center gap-2">
             <span>❌</span>
             <span>عذراً، كلمة المرور غير صحيحة</span>
@@ -151,7 +163,7 @@
 
             try {
                 const { error } = await _supabase.auth.resetPasswordForEmail('ahmedsalamaahmed21@gmail.com', {
-                    redirectTo: window.location.origin + '/admin.html',
+                    redirectTo: 'https://elforatpharma.github.io/admin/update-password.html',
                 });
                 if (error) throw error;
                 alert('تم إرسال رابط استعادة كلمة المرور إلى ahmedsalamaahmed21@gmail.com');
@@ -160,6 +172,34 @@
                 alert('حدث خطأ أثناء الإرسال. تأكد من إعدادات البريد.');
             } finally {
                 btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        document.getElementById('google-login-btn').onclick = async () => {
+            const btn = document.getElementById('google-login-btn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>جاري التحويل...</span>
+            `;
+            btn.disabled = true;
+
+            try {
+                const { data, error } = await _supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: 'https://elforatpharma.github.io/admin/admin.html'
+                    }
+                });
+                if (error) throw error;
+            } catch (error) {
+                console.error("Google Login Error:", error.message);
+                alert('حدث خطأ أثناء تسجيل الدخول بحساب جوجل.');
+                btn.innerHTML = originalHtml;
                 btn.disabled = false;
             }
         };

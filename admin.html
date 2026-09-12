@@ -1,19 +1,11 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <script>
-    async function checkAuth() {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            window.location.replace('/admin/login.html');
-        }
-    }
-    checkAuth();
-</script>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>لوحة التحكم - الفرات فارما</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
   <script id="tailwind-config">
@@ -23,25 +15,39 @@
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
   <script>
-    const supabaseUrl = 'https://sidtdxchiqiogfkwbdui.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZHRkeGNoaXFpb2dma3diZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTEyMTAsImV4cCI6MjA4OTY4NzIxMH0.QF1-67Qu2HfWJt3ANSegM87fykOYQBwqC7ggLG8LTVU';
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    async function forceAuth() { const { data: { session } } = await _supabase.auth.getSession(); if (!session) window.location.href = 'index.html'; }
-    forceAuth();
+    // التحقق من الجلسة وصلاحية الآدمن قبل تحميل الصفحة
+    (async () => {
+      const { data: { session } } = await _supabase.auth.getSession();
+      if (!session) { window.location.replace('index.html'); return; }
+      if (!isAdminUser(session.user)) {
+        await _supabase.auth.signOut();
+        window.location.replace('index.html');
+      }
+    })();
+
+    // إشعارات الطلبات الجديدة
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     notificationSound.load();
     async function playNotification() { try { notificationSound.currentTime = 0; notificationSound.play().catch(()=>{}); } catch(e){} }
     _supabase.channel('orders-inserts').on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},payload=>{
-      playNotification(); showOrderToast(payload.new.customerName); if(typeof fetchStats==='function') fetchStats();
+      playNotification();
+      showOrderToast(payload.new.customerName);
+      if(typeof fetchStats==='function') fetchStats();
     }).subscribe();
     function showOrderToast(name) {
-      const t=document.createElement('div');
-      t.className="fixed bottom-5 left-5 bg-primary text-white px-6 py-4 rounded-2xl shadow-2xl z-[100] animate-bounce font-bold flex items-center gap-2";
-      t.innerHTML=`<span class="material-symbols-outlined">notifications_active</span> أوردر جديد: ${name}`;
-      document.body.appendChild(t); setTimeout(()=>t.remove(),5000);
+      const t = document.createElement('div');
+      t.className = "fixed bottom-5 left-5 bg-primary text-white px-6 py-4 rounded-2xl shadow-2xl z-[100] animate-bounce font-bold flex items-center gap-2";
+      const icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined';
+      icon.textContent = 'notifications_active';
+      const text = document.createElement('span');
+      text.textContent = ` أوردر جديد: ${name}`;
+      t.appendChild(icon); t.appendChild(text);
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 5000);
     }
-    async function logout() { await _supabase.auth.signOut(); window.location.href='index.html'; }
   </script>
   <style>
     body { font-family:"Tajawal",sans-serif; background:#f8f9fb; }
@@ -56,51 +62,11 @@
 <body class="text-gray-900 antialiased">
 <div class="flex h-screen overflow-hidden">
 
-  <!-- ===== SIDEBAR ===== -->
-  <aside class="w-64 h-screen fixed right-0 top-0 bg-white border-l border-gray-100/80 flex flex-col z-40" style="box-shadow:2px 0 24px rgba(0,0,0,.04)">
-    <div class="p-5 flex items-center gap-3 border-b border-gray-50">
-      <div class="w-10 h-10 bg-gradient-to-br from-primary to-rose-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
-        <span class="material-symbols-outlined text-[18px]">clinical_notes</span>
-      </div>
-      <div>
-        <h1 class="text-[15px] font-black leading-none text-gray-900">الفرات فارما</h1>
-        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-0.5">إدارة المتجر</p>
-      </div>
-    </div>
-    <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-      <a href="admin.html" class="nav-active flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-sm">
-        <span class="material-symbols-outlined text-[20px]">dashboard</span><span>الرئيسية</span>
-      </a>
-      <a href="orders.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-800 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">shopping_bag</span><span>الطلبات</span>
-      </a>
-      <a href="inventory.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-800 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">inventory_2</span><span>المخزون</span>
-      </a>
-      <a href="customers.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-800 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">group</span><span>العملاء</span>
-      </a>
-      <a href="#" onclick="showGiftsSection()" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-800 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">card_giftcard</span><span>الهدايا</span>
-      </a>
-    </nav>
-    <div class="p-3 border-t border-gray-50">
-      <a href="https://elforatpharma.github.io/store/" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-400 hover:bg-gray-50 text-xs font-bold tracking-wider uppercase mb-1 transition-colors">
-        <span class="material-symbols-outlined text-[16px]">open_in_new</span>فتح المتجر
-      </a>
-      <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 transition-all group text-right">
-        <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">أ.ف</div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-bold truncate text-gray-700 group-hover:text-red-500">الفرات فارما</p>
-          <p class="text-[10px] text-gray-400">تسجيل خروج</p>
-        </div>
-        <span class="material-symbols-outlined text-gray-300 group-hover:text-red-400 text-[18px]">logout</span>
-      </button>
-    </div>
-  </aside>
+  <!-- ===== SIDEBAR (يتم إنشاؤه من layout.js) ===== -->
+  <div id="sidebar-placeholder"></div>
 
   <!-- ===== MAIN CONTENT ===== -->
-  <main class="flex-1 mr-64 overflow-y-auto">
+  <main class="flex-1 lg:mr-64 overflow-y-auto">
     <!-- Top Bar -->
     <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
       <div>
@@ -181,6 +147,34 @@
           <p class="text-gray-300 text-sm col-span-3 text-center py-8 animate-pulse">جاري تحميل الهدايا...</p>
         </div>
       </div>
+
+      <!-- Coupons Section -->
+      <div id="coupons-section" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-50 flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-black text-gray-900 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">local_offer</span>إدارة كوبونات الخصم
+            </h3>
+            <p class="text-xs text-gray-400 mt-1">كوبونات تُستخدم عند الدفع لتطبيق خصم تلقائي</p>
+          </div>
+          <button onclick="openCouponModal()" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-primary/20 transition-all">
+            <span class="material-symbols-outlined text-[16px]">add</span>إضافة كوبون
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-right">
+            <thead>
+              <tr class="text-[10px] font-black uppercase tracking-widest text-gray-400" style="background:rgba(248,249,251,.8)">
+                <th class="px-6 py-4">كود الكوبون</th><th class="px-6 py-4 text-center">الخصم</th>
+                <th class="px-6 py-4">تاريخ الانتهاء</th><th class="px-6 py-4 text-center">الحالة</th><th class="px-6 py-4 text-center">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="coupons-list" class="divide-y divide-gray-50">
+              <tr><td colspan="5" class="text-center py-10 text-gray-300 text-sm animate-pulse">جاري تحميل الكوبونات...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -214,9 +208,14 @@
       <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">المكونات</label>
         <textarea id="p-ingredients" rows="2" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all resize-none"></textarea></div>
       <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">صورة المنتج <span class="text-red-400">*</span></label>
-        <div class="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:bg-gray-50 hover:border-primary/30 transition-all">
-          <span class="material-symbols-outlined text-3xl text-gray-200 block mb-2">add_photo_alternate</span>
-          <input type="file" id="p-img" required class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-bold file:text-primary cursor-pointer mx-auto" style="--tw-bg-primary:rgba(236,19,91,.08)"/>
+        <div id="image-drop-zone" class="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:bg-gray-50 hover:border-primary/30 transition-all cursor-pointer">
+          <div id="image-preview"></div>
+          <div id="image-upload-hint">
+            <span class="material-symbols-outlined text-3xl text-gray-200 block mb-2">add_photo_alternate</span>
+            <p class="text-xs text-gray-400 font-bold">اسحب الصورة هنا أو انقر للاختيار</p>
+            <p class="text-[10px] text-gray-300 mt-1">JPG، PNG أو WebP — حتى 5 ميجا</p>
+          </div>
+          <input type="file" id="p-img" accept="image/jpeg,image/png,image/webp" class="hidden" />
         </div></div>
       <div class="flex gap-3 pt-2">
         <button type="submit" class="flex-1 bg-primary text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">حفظ المنتج في المتجر</button>
@@ -255,8 +254,36 @@
   </div>
 </div>
 
+<!-- Coupon Modal -->
+<div id="coupon-modal" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] hidden items-center justify-center p-4">
+  <div id="coupon-modal-content" class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden modal-enter">
+    <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/60">
+      <h3 class="text-lg font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-primary">local_offer</span>إضافة كوبون جديد</h3>
+      <button onclick="closeCouponModal()" class="text-gray-300 hover:text-red-500 transition-colors rounded-lg p-1 hover:bg-red-50"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <form id="coupon-form" class="p-6 space-y-5">
+      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">كود الكوبون <span class="text-red-400">*</span></label>
+        <input type="text" id="c-code" required maxlength="30" placeholder="مثال: WELCOME20" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-black tracking-widest uppercase focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">نسبة الخصم % <span class="text-red-400">*</span></label>
+          <input type="number" id="c-discount" required min="1" max="99" placeholder="20" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
+        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">تاريخ الانتهاء <span class="text-red-400">*</span></label>
+          <input type="date" id="c-expiry" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
+      </div>
+      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">الوصف</label>
+        <input type="text" id="c-desc" maxlength="120" placeholder="اختياري - مثال: خصم ترحيبي" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="flex-1 bg-primary text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">حفظ الكوبون</button>
+        <button type="button" onclick="closeCouponModal()" class="px-6 bg-gray-100 text-gray-600 py-3.5 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="imageUploader.js"></script>
+<script src="layout.js"></script>
 <script>
-const modal=document.getElementById("product-modal"),modalContent=document.getElementById("modal-content");
+const modal=document.getElementById("product-modal");
 function openModal(){modal.classList.remove("hidden");modal.classList.add("flex");}
 function closeModal(){modal.classList.add("hidden");modal.classList.remove("flex");}
 
@@ -265,57 +292,125 @@ document.getElementById("add-form").onsubmit=async(e)=>{
   const btn=e.target.querySelector('button[type="submit"]');
   btn.innerHTML='<span class="material-symbols-outlined animate-spin text-sm">refresh</span> جاري الحفظ...';btn.disabled=true;
   try{
-    const file=document.getElementById("p-img").files[0];
+    let file=document.getElementById("p-img").files[0];
     if(!file) throw new Error("يرجى اختيار صورة للمنتج");
-    const fileName=`${Date.now()}-${file.name}`;
-    const{error:imgError}=await _supabase.storage.from('products').upload(`uploads/${fileName}`,file);
+    // تحويل صورة كبيرة لملف مضغوط قبل الرفع
+    if(window.resizeImage){
+      const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);
+      file=await dataUrlToBlob(dataUrl,'image/jpeg');
+    }
+    const fileName=sanitizeFileName(file.name);
+    const{error:imgError}=await _supabase.storage.from('products').upload(`uploads/${fileName}`,file,{contentType:file.type||'image/jpeg'});
     if(imgError) throw imgError;
     const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
-    const productData={name:document.getElementById("p-name").value,price:Number(document.getElementById("p-price").value),oldPrice:document.getElementById("p-oldPrice").value?Number(document.getElementById("p-oldPrice").value):null,category:document.getElementById("p-cat").value,badge:document.getElementById("p-badge").value,desc:document.getElementById("p-desc").value,ingredients:document.getElementById("p-ingredients").value,img:publicUrl,created_at:new Date()};
+    const productData={name:document.getElementById("p-name").value,price:Number(document.getElementById("p-price").value),oldPrice:document.getElementById("p-oldPrice").value?Number(document.getElementById("p-oldPrice").value):null,category:document.getElementById("p-cat").value,badge:document.getElementById("p-badge").value,desc:document.getElementById("p-desc").value,ingredients:document.getElementById("p-ingredients").value,img:publicUrl,priority:0,created_at:new Date()};
     const{error:dbError}=await _supabase.from('products').insert([productData]);
     if(dbError) throw dbError;
-    closeModal();alert("تم إضافة المنتج بنجاح!");e.target.reset();fetchStats();
-  }catch(error){alert("حدث خطأ: "+(error.message||"تأكد من إعدادات سوبابيز"));}
+    closeModal(); toast('success','تم إضافة المنتج بنجاح!'); e.target.reset(); if(imageUploader) imageUploader.removeImage(); fetchStats();
+  }catch(error){ toast('error','حدث خطأ: '+(error.message||'تأكد من إعدادات سوبابيز')); }
   finally{btn.innerHTML="حفظ المنتج في المتجر";btn.disabled=false;}
 };
 
+// ---- مكتبة رفع الصور (السحب والإفلات + المعاينة) ----
+let imageUploader=null;
+function setupImageUploader(){
+  imageUploader=new ImageUploader({
+    dropZone:document.getElementById("image-drop-zone"),
+    fileInput:document.getElementById("p-img"),
+    previewContainer:document.getElementById("image-preview"),
+    maxSize:5*1024*1024,
+    onImageSelect:(file)=>{
+      const hint=document.getElementById("image-upload-hint");
+      if(hint) hint.style.display=file?'none':'block';
+    }
+  });
+}
+
 async function fetchStats(){
   try{
-    const{count:productsCount}=await _supabase.from('products').select('*',{count:'exact',head:true});
+    const{count:productsCount}=await _supabase.from('products').select('id',{count:'exact',head:true});
     document.getElementById("stat-products").innerText=productsCount||0;
-    const{data:salesData,error:oError}=await _supabase.from('orders').select('customerName,total,status,phone,created_at,items').order('created_at',{ascending:false});
-    if(!oError&&salesData){
-      const totalSales=salesData.filter(o=>o.status==='تم التوصيل').reduce((sum,o)=>sum+(parseFloat(o.total)||0),0);
-      const newOrders=salesData.filter(o=>o.status==='قيد التنفيذ').length;
-      document.getElementById("stat-revenue").innerHTML=`${totalSales} <small class="text-sm font-medium text-gray-400">ج.م</small>`;
-      document.getElementById("stat-orders").innerText=newOrders;
-      const tbody=document.getElementById("recent-orders-body");
-      if(salesData.length===0){tbody.innerHTML=`<tr><td colspan="4" class="text-center py-8 text-gray-300 text-sm">لا توجد طلبات مسجلة حتى الآن.</td></tr>`;return;}
-      tbody.innerHTML=salesData.slice(0,5).map(o=>{
-        let sc="bg-amber-50 text-amber-600";let st=o.status||"قيد التنفيذ";
-        if(st==="تم التوصيل")sc="bg-emerald-50 text-emerald-600";
-        else if(st==="ملغي")sc="bg-red-50 text-red-500";
-        return`<tr class="hover:bg-gray-50/50 transition-colors"><td class="px-6 py-4"><div class="flex items-center gap-3"><div class="size-8 rounded-full flex items-center justify-center text-xs font-black text-primary" style="background:rgba(236,19,91,.08)">${(o.customerName||"ع").charAt(0)}</div><span class="text-sm font-bold text-gray-800">${o.customerName||"عميل"}</span></div></td><td class="px-6 py-4 text-sm text-gray-500" dir="ltr">${o.phone||"-"}</td><td class="px-6 py-4"><span class="px-3 py-1 ${sc} text-[10px] font-black rounded-full">${st}</span></td><td class="px-6 py-4 text-sm font-black text-primary">${o.total||0} ج.م</td></tr>`;
-      }).join("");
+
+    const[{data:deliveredRows,error:dErr},{count:pendingCount,error:pErr},{data:recent,error:rErr}]=await Promise.all([
+      _supabase.from('orders').select('total').eq('status','تم التوصيل'),
+      _supabase.from('orders').select('id',{count:'exact',head:true}).eq('status','قيد التنفيذ'),
+      _supabase.from('orders').select('customerName,total,status,phone,created_at').order('created_at',{ascending:false}).limit(5)
+    ]);
+
+    const totalSales=(deliveredRows||[]).reduce((sum,o)=>sum+(parseFloat(o.total)||0),0);
+    document.getElementById("stat-revenue").innerHTML=`${totalSales||0} <small class="text-sm font-medium text-gray-400">ج.م</small>`;
+    document.getElementById("stat-orders").textContent=pendingCount||0;
+
+    const tbody=document.getElementById("recent-orders-body");
+    const salesData=recent||[];
+    if(salesData.length===0){
+      tbody.innerHTML=`<tr><td colspan="4" class="text-center py-8 text-gray-300 text-sm">لا توجد طلبات مسجلة حتى الآن.</td></tr>`;
+      return;
     }
-    try{const{data:v}=await _supabase.from('visitors').select('count').limit(1).maybeSingle();document.getElementById("stat-visitors").innerText=v?v.count:0;}
-    catch(e){const up=new Set((salesData||[]).map(o=>o.phone).filter(Boolean));document.getElementById("stat-visitors").innerText=up.size;}
+    // استخدام DOM API لمنع XSS بدل innerHTML مع بيانات المستخدم
+    tbody.innerHTML='';
+    salesData.forEach(o=>{
+      const st=o.status||'قيد التنفيذ';
+      let sc='bg-amber-50 text-amber-600';
+      if(st==='تم التوصيل') sc='bg-emerald-50 text-emerald-600';
+      else if(st==='ملغي') sc='bg-red-50 text-red-500';
+
+      const tr=document.createElement('tr');
+      tr.className='hover:bg-gray-50/50 transition-colors';
+
+      const tdName=document.createElement('td'); tdName.className='px-6 py-4';
+      const nameDiv=document.createElement('div'); nameDiv.className='flex items-center gap-3';
+      const avatar=document.createElement('div'); avatar.className='size-8 rounded-full flex items-center justify-center text-xs font-black text-primary'; avatar.style.background='rgba(236,19,91,.08)';
+      avatar.textContent=(o.customerName||'ع').charAt(0);
+      const nameSpan=document.createElement('span'); nameSpan.className='text-sm font-bold text-gray-800';
+      nameSpan.textContent=o.customerName||'عميل';
+      nameDiv.appendChild(avatar); nameDiv.appendChild(nameSpan); tdName.appendChild(nameDiv);
+
+      const tdPhone=document.createElement('td'); tdPhone.className='px-6 py-4 text-sm text-gray-500'; tdPhone.dir='ltr';
+      tdPhone.textContent=o.phone||'-';
+
+      const tdStatus=document.createElement('td'); tdStatus.className='px-6 py-4';
+      const badge=document.createElement('span'); badge.className=`px-3 py-1 ${sc} text-[10px] font-black rounded-full`;
+      badge.textContent=st; tdStatus.appendChild(badge);
+
+      const tdTotal=document.createElement('td'); tdTotal.className='px-6 py-4 text-sm font-black text-primary';
+      tdTotal.textContent=`${o.total||0} ج.م`;
+
+      tr.append(tdName,tdPhone,tdStatus,tdTotal);
+      tbody.appendChild(tr);
+    });
+
+    try{const{data:v}=await _supabase.from('visitors').select('count').limit(1).maybeSingle();document.getElementById("stat-visitors").textContent=v?v.count:0;}
+    catch(e){/* تجاهل */ }
   }catch(e){console.error("خطأ:",e);}
 }
 
-window.onload=function(){fetchStats();initGifts();fetchGifts();};
+window.onload=async function(){
+  renderSidebar('admin.html');
+  setupImageUploader(); initCoupons(); initGifts();
+  const ok=await requireAdmin();
+  if(ok){fetchStats(); fetchGifts(); fetchCoupons();}
+};
 
+// ===================== الهدايا =====================
 function initGifts(){
   document.getElementById('gift-form').onsubmit=async(e)=>{
     e.preventDefault();
     const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;btn.innerHTML='جاري الحفظ...';
     try{
       const file=document.getElementById('g-img').files[0];let imgUrl='';
-      if(file){const fn=`gifts/${Date.now()}-${file.name}`;const{error:ue}=await _supabase.storage.from('products').upload(fn,file);if(!ue){const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(fn);imgUrl=publicUrl;}}
+      if(file){
+        let upFile=file;
+        if(window.resizeImage){upFile=await dataUrlToBlob(await resizeImage(await blobToDataUrl(file),800,800),'image/jpeg');}
+        const fn=`gifts/${sanitizeFileName(file.name)}`;
+        const{error:ue}=await _supabase.storage.from('products').upload(fn,upFile,{contentType:upFile.type||'image/jpeg'});
+        if(!ue){const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(fn);imgUrl=publicUrl;}
+      }
       const giftData={gift_name:document.getElementById('g-name').value,gift_img:imgUrl,trigger_product_name:document.getElementById('g-trigger-product').value,trigger_qty:parseInt(document.getElementById('g-trigger-qty').value),is_active:true};
       const{error}=await _supabase.from('gifts').insert([giftData]);if(error) throw error;
-      closeGiftModal();fetchGifts();document.getElementById('gifts-section').scrollIntoView({behavior:'smooth'});
-    }catch(err){alert('حدث خطأ: '+err.message);}
+      closeGiftModal(); fetchGifts(); toast('success','تم حفظ الهدية بنجاح!');
+      document.getElementById('gifts-section').scrollIntoView({behavior:'smooth'});
+    }catch(err){ toast('error','حدث خطأ: '+err.message); }
     finally{btn.disabled=false;btn.innerHTML='حفظ الهدية';}
   };
 }
@@ -325,30 +420,132 @@ function showGiftsSection(){document.getElementById('gifts-section').scrollIntoV
 async function fetchGifts(){
   const list=document.getElementById('gifts-list');
   const{data,error}=await _supabase.from('gifts').select('*').order('created_at',{ascending:false});
-  if(error||!data||data.length===0){list.innerHTML=`<p class="text-gray-300 text-sm col-span-3 text-center py-8">لا توجد هدايا مضافة حتى الآن</p>`;return;}
-  list.innerHTML=data.map(g=>`
+  if(error||!data||data.length===0){
+    list.innerHTML=`<p class="text-gray-300 text-sm col-span-3 text-center py-8">لا توجد هدايا مضافة حتى الآن</p>`;
+    return;
+  }
+  // استخدام escapeHtml لبيانات الهدايا
+  list.innerHTML=data.map(g=>{
+    const gid=escapeHtml(String(g.id));
+    return `
     <div class="relative border-2 ${g.is_active?'border-primary/15':'border-gray-100 bg-gray-50/50'} rounded-2xl p-5 flex flex-col gap-3 hover:shadow-md transition-all">
       <div class="absolute top-3 left-3"><span class="text-[10px] font-black px-2.5 py-1 rounded-full ${g.is_active?'bg-emerald-50 text-emerald-600':'bg-gray-100 text-gray-400'}">${g.is_active?'● نشط':'● متوقف'}</span></div>
       <div class="flex items-center gap-3 mt-4">
         <div class="w-14 h-14 rounded-xl bg-white border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-          ${g.gift_img?`<img src="${g.gift_img}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.style.display='none'">`:`<span class="material-symbols-outlined text-gray-200">card_giftcard</span>`}
+          ${g.gift_img?`<img src="${escapeHtml(g.gift_img)}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.style.display='none'">`:`<span class="material-symbols-outlined text-gray-200">card_giftcard</span>`}
         </div>
-        <div><p class="font-black text-gray-800 text-sm">${g.gift_name}</p><p class="text-xs text-gray-400 mt-0.5">🎁 هدية مجانية</p></div>
+        <div><p class="font-black text-gray-800 text-sm">${escapeHtml(g.gift_name)}</p><p class="text-xs text-gray-400 mt-0.5">🎁 هدية مجانية</p></div>
       </div>
       <div class="bg-gray-50 rounded-xl p-3 text-xs text-gray-500 font-medium border border-gray-100">
-        <span class="text-primary font-black">الشرط:</span> اشتري <span class="font-black text-gray-800">${g.trigger_qty}</span> قطع من <span class="font-black text-gray-800">${g.trigger_product_name}</span>
+        <span class="text-primary font-black">الشرط:</span> اشتري <span class="font-black text-gray-800">${escapeHtml(String(g.trigger_qty))}</span> قطع من <span class="font-black text-gray-800">${escapeHtml(g.trigger_product_name)}</span>
       </div>
       <div class="flex gap-2">
-        <button onclick="toggleGift('${g.id}',${g.is_active})" class="flex-1 py-2 rounded-xl text-xs font-black transition-all ${g.is_active?'bg-amber-50 text-amber-600 hover:bg-amber-100':'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}">${g.is_active?'إيقاف':'تفعيل'}</button>
-        <button onclick="deleteGift('${g.id}')" class="flex-1 py-2 rounded-xl text-xs font-black bg-red-50 text-red-500 hover:bg-red-100 transition-all">حذف</button>
+        <button onclick="toggleGift('${gid}',${g.is_active})" aria-label="${g.is_active?'إيقاف':'تفعيل'} الهدية" class="flex-1 py-2 rounded-xl text-xs font-black transition-all ${g.is_active?'bg-amber-50 text-amber-600 hover:bg-amber-100':'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}">${g.is_active?'إيقاف':'تفعيل'}</button>
+        <button onclick="deleteGift('${gid}')" aria-label="حذف الهدية" class="flex-1 py-2 rounded-xl text-xs font-black bg-red-50 text-red-500 hover:bg-red-100 transition-all">حذف</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function toggleGift(id,cur){await _supabase.from('gifts').update({is_active:!cur}).eq('id',id);fetchGifts();}
-async function deleteGift(id){if(!confirm('هل تريد حذف هذه الهدية؟'))return;await _supabase.from('gifts').delete().eq('id',id);fetchGifts();}
+async function deleteGift(id){
+  const ok = await confirmDialog('هل تريد حذف هذه الهدية؟','لن تتمكن من التراجع عن هذا الإجراء.','نعم، احذف');
+  if(!ok) return;
+  try{
+    const{data:gift}=await _supabase.from('gifts').select('gift_img').eq('id',id).maybeSingle();
+    await _supabase.from('gifts').delete().eq('id',id);
+    if(gift&&gift.gift_img) deleteStorageFile(gift.gift_img);
+  }catch(err){console.error(err);}
+  fetchGifts();
+  toast('success','تم حذف الهدية.');
+}
 function openGiftModal(){const m=document.getElementById('gift-modal');m.classList.remove('hidden');m.classList.add('flex');}
 function closeGiftModal(){const m=document.getElementById('gift-modal');m.classList.add('hidden');m.classList.remove('flex');document.getElementById('gift-form').reset();}
+
+// ===================== الكوبونات =====================
+function initCoupons(){
+  document.getElementById('coupon-form').onsubmit=async(e)=>{
+    e.preventDefault();
+    const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;btn.innerHTML='جاري الحفظ...';
+    try{
+      const code=document.getElementById('c-code').value.trim().toUpperCase();
+      const discount=parseInt(document.getElementById('c-discount').value,10);
+      const expiryDate=document.getElementById('c-expiry').value;
+      if(!code) throw new Error('أدخل كود الكوبون');
+      if(discount<1||discount>99) throw new Error('نسبة الخصم يجب أن تكون بين 1 و 99');
+      if(!expiryDate) throw new Error('اختر تاريخ الانتهاء');
+      const couponData={code,discount_percentage:discount,expiry_date:expiryDate,description:document.getElementById('c-desc').value.trim()||null,is_active:true};
+      const{error}=await _supabase.from('coupons').insert([couponData]);
+      if(error){
+        if(error.code==='23505') throw new Error('هذا الكود موجود بالفعل - اختر كوداً مختلفاً');
+        throw error;
+      }
+      closeCouponModal(); fetchCoupons(); toast('success','تم حفظ الكوبون بنجاح!');
+      document.getElementById('coupons-section').scrollIntoView({behavior:'smooth'});
+    }catch(err){ toast('error','حدث خطأ: '+err.message); }
+    finally{btn.disabled=false;btn.innerHTML='حفظ الكوبون';}
+  };
+}
+
+function showCouponsSection(){document.getElementById('coupons-section').scrollIntoView({behavior:'smooth'});fetchCoupons();}
+
+async function fetchCoupons(){
+  const tbody=document.getElementById('coupons-list');
+  const{data,error}=await _supabase.from('coupons').select('*').order('created_at',{ascending:false});
+  if(error){
+    toast('error','فشل تحميل الكوبونات');
+    tbody.innerHTML=`<tr><td colspan="5" class="text-center py-8 text-red-400 text-sm font-bold">تعذر تحميل الكوبونات</td></tr>`;
+    return;
+  }
+  if(!data||data.length===0){
+    tbody.innerHTML=`<tr><td colspan="5" class="text-center py-8 text-gray-300 text-sm">لا توجد كوبونات بعد</td></tr>`;
+    return;
+  }
+  const today=new Date().toISOString().split('T')[0];
+  tbody.innerHTML=data.map(c=>{
+    const cid=escapeHtml(String(c.id));
+    const code=escapeHtml(c.code);
+    const desc=escapeHtml(c.description);
+    const expired=c.expiry_date<today;
+    const statusLabel=expired?'منتهي':(c.is_active?'نشط':'متوقف');
+    const statusCls=expired?'bg-gray-100 text-gray-400':(c.is_active?'bg-emerald-50 text-emerald-600':'bg-amber-50 text-amber-600');
+    return `
+    <tr class="hover:bg-gray-50/50 transition-colors">
+      <td class="px-6 py-4">
+        <span class="font-mono font-black text-sm text-gray-800 bg-gray-100 px-3 py-1 rounded-lg" dir="ltr">${code}</span>
+        ${desc?`<p class="text-[10px] text-gray-400 mt-1">${desc}</p>`:''}
+      </td>
+      <td class="px-6 py-4 text-center font-black text-primary text-sm">-${escapeHtml(c.discount_percentage)}%</td>
+      <td class="px-6 py-4 text-xs text-gray-500" dir="ltr">${escapeHtml(c.expiry_date)}</td>
+      <td class="px-6 py-4 text-center"><span class="text-[10px] font-black px-2.5 py-1 rounded-full ${statusCls}">${statusLabel}</span></td>
+      <td class="px-6 py-4">
+        <div class="flex gap-2 justify-center">
+          ${expired?'':`<button onclick="toggleCoupon('${cid}',${c.is_active})" class="size-9 rounded-xl flex items-center justify-center transition-all shadow-sm ${c.is_active?'bg-amber-50 text-amber-500 hover:bg-amber-600 hover:text-white':'bg-emerald-50 text-emerald-500 hover:bg-emerald-600 hover:text-white'}">
+            <span class="material-symbols-outlined text-[18px]">${c.is_active?'pause':'play_arrow'}</span>
+          </button>`}
+          <button onclick="deleteCoupon('${cid}')" class="size-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function toggleCoupon(id,current){
+  const{error}=await _supabase.from('coupons').update({is_active:!current}).eq('id',id);
+  if(error){toast('error','فشل التحديث');return;}
+  fetchCoupons();
+}
+async function deleteCoupon(id){
+  const ok=await confirmDialog('هل تريد حذف هذا الكوبون؟','لن تتمكن من التراجع عن هذا الإجراء.','نعم، احذف');
+  if(!ok) return;
+  const{error}=await _supabase.from('coupons').delete().eq('id',id);
+  if(error){toast('error','فشل الحذف');return;}
+  fetchCoupons(); toast('success','تم حذف الكوبون.');
+}
+function openCouponModal(){document.getElementById('c-expiry').value=new Date().toISOString().split('T')[0];const m=document.getElementById('coupon-modal');m.classList.remove('hidden');m.classList.add('flex');}
+function closeCouponModal(){const m=document.getElementById('coupon-modal');m.classList.add('hidden');m.classList.remove('flex');document.getElementById('coupon-form').reset();}
 </script>
 </body>
 </html>

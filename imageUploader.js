@@ -56,8 +56,9 @@ class ImageUploader {
             }
         }, false);
 
-        // النقر لاختيار ملف
-        dropZone.addEventListener('click', () => {
+        // النقر لاختيار ملف (مع تجاهل النقر على أزرار المعاينة)
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.closest('[data-act]')) return;
             if (this.fileInput) {
                 this.fileInput.click();
             }
@@ -111,10 +112,10 @@ class ImageUploader {
             <div class="relative group">
                 <img src="${imageDataUrl}" alt="معاينة" class="max-h-64 rounded-xl object-contain mx-auto">
                 <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2">
-                    <button type="button" onclick="imageUploader.editImage()" class="px-4 py-2 bg-white text-slate-800 rounded-lg font-bold text-sm hover:bg-slate-100 transition-colors">
+                    <button type="button" data-act="edit" onclick="imageUploader.editImage()" class="px-4 py-2 bg-white text-slate-800 rounded-lg font-bold text-sm hover:bg-slate-100 transition-colors">
                         ✏️ تعديل
                     </button>
-                    <button type="button" onclick="imageUploader.removeImage()" class="px-4 py-2 bg-red-500 text-white rounded-lg font-bold text-sm hover:bg-red-600 transition-colors">
+                    <button type="button" data-act="remove" onclick="imageUploader.removeImage()" class="px-4 py-2 bg-red-500 text-white rounded-lg font-bold text-sm hover:bg-red-600 transition-colors">
                         🗑️ حذف
                     </button>
                 </div>
@@ -215,7 +216,32 @@ function resizeImage(imageDataUrl, maxWidth = 800, maxHeight = 800) {
     });
 }
 
+// تحويل File أو Blob إلى Data URL
+function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+// تحويل Data URL إلى Blob (للرفع بعد التصغير)
+function dataUrlToBlob(dataUrl, type = 'image/jpeg') {
+    return new Promise((resolve, reject) => {
+        const parts = dataUrl.split(',');
+        if (parts.length < 2) { reject(new Error('صيغة صورة غير صالحة')); return; }
+        const mime = (parts[0].match(/data:([^;]+)/) || [])[1] || type;
+        const byteString = atob(parts[1]);
+        const bytes = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
+        resolve(new Blob([bytes], { type: mime }));
+    });
+}
+
 // تصدير الدوال للاستخدام العام
 window.ImageUploader = ImageUploader;
 window.cropImage = cropImage;
 window.resizeImage = resizeImage;
+window.blobToDataUrl = blobToDataUrl;
+window.dataUrlToBlob = dataUrlToBlob;

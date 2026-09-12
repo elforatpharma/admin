@@ -10,14 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#ec135b"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const supabaseUrl='https://sidtdxchiqiogfkwbdui.supabase.co';
-    const supabaseKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZHRkeGNoaXFpb2dma3diZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTEyMTAsImV4cCI6MjA4OTY4NzIxMH0.QF1-67Qu2HfWJt3ANSegM87fykOYQBwqC7ggLG8LTVU';
-    const _supabase=supabase.createClient(supabaseUrl,supabaseKey);
-    async function forceAuth(){const{data:{session}}=await _supabase.auth.getSession();if(!session)window.location.href='index.html';}
-    forceAuth();
-    async function logout(){await _supabase.auth.signOut();window.location.href='index.html';}
-  </script>
+  <script src="supabaseClient.js"></script>
   <style>
     body{font-family:'Tajawal',sans-serif;background:#f8f9fb;}
     .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
@@ -28,42 +21,11 @@
 <body class="text-gray-900 antialiased min-h-screen">
 <div class="flex h-screen overflow-hidden">
 
-  <!-- Sidebar -->
-  <aside class="w-64 h-screen fixed right-0 top-0 bg-white border-l border-gray-100/80 flex flex-col z-40" style="box-shadow:2px 0 24px rgba(0,0,0,.04)">
-    <div class="p-5 flex items-center gap-3 border-b border-gray-50">
-      <div class="w-10 h-10 bg-gradient-to-br from-primary to-rose-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
-        <span class="material-symbols-outlined text-[18px]">clinical_notes</span>
-      </div>
-      <div>
-        <h1 class="text-[15px] font-black leading-none text-gray-900">الفرات فارما</h1>
-        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-0.5">إدارة المتجر</p>
-      </div>
-    </div>
-    <nav class="flex-1 px-3 py-4 space-y-0.5">
-      <a href="admin.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-800 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">dashboard</span><span>الرئيسية</span>
-      </a>
-      <a href="orders.html" class="nav-active flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-sm">
-        <span class="material-symbols-outlined text-[20px]">shopping_bag</span><span>الطلبات</span>
-      </a>
-      <a href="inventory.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-800 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">inventory_2</span><span>المخزون</span>
-      </a>
-      <a href="customers.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-800 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">group</span><span>العملاء</span>
-      </a>
-    </nav>
-    <div class="p-3 border-t border-gray-50">
-      <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 transition-all group text-right">
-        <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">أ.ف</div>
-        <div class="flex-1 min-w-0"><p class="text-sm font-bold truncate text-gray-700 group-hover:text-red-500">الفرات فارما</p><p class="text-[10px] text-gray-400">تسجيل خروج</p></div>
-        <span class="material-symbols-outlined text-gray-300 group-hover:text-red-400 text-[18px]">logout</span>
-      </button>
-    </div>
-  </aside>
+  <!-- Sidebar (يتم إنشاؤه من layout.js) -->
+  <div id="sidebar-placeholder"></div>
 
   <!-- Main -->
-  <main class="flex-1 mr-64 overflow-y-auto">
+  <main class="flex-1 lg:mr-64 overflow-y-auto">
     <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
       <div>
         <h2 class="text-xl font-black text-gray-900 tracking-tight">إدارة الطلبات</h2>
@@ -125,6 +87,7 @@
   </main>
 </div>
 
+<script src="layout.js"></script>
 <script>
 let allOrders=[],currentFilter='الكل';
 
@@ -187,37 +150,50 @@ function renderOrders(filter){
 
   if(filtered.length===0){tbody.innerHTML=`<tr><td colspan="8" class="text-center py-16 text-gray-300">لا توجد طلبات حالياً</td></tr>`;return;}
 
-  tbody.innerHTML=filtered.map(o=>`
+  tbody.innerHTML=filtered.map(o=>{
+    const id=escapeHtml(String(o.id));
+    const name=escapeHtml(o.customerName)||'عميل';
+    const phone=escapeHtml(o.phone)||'-';
+    const total=escapeHtml(o.total)||0;
+    const date=escapeHtml(o.date)||'-';
+    const curStatus=(o.status||'قيد التنفيذ').trim();
+    const itemsHtml=Array.isArray(o.items)&&o.items.length>0
+      ? o.items.map(item=>`
+        <div class="flex items-center gap-1.5 mb-1">
+          <span class="inline-flex items-center justify-center text-[9px] font-black rounded-full w-4 h-4 shrink-0 text-primary" style="background:rgba(236,19,91,.1)">${escapeHtml(String(item.qty||1))}</span>
+          <span class="text-[10px] font-bold text-gray-700 truncate max-w-[160px]">${escapeHtml(item.name)||'-'}</span>
+          ${item.isGift?'<span class="text-[9px] text-emerald-500 font-black">🎁</span>':''}
+        </div>`).join('')
+      : '<span class="text-[10px] text-gray-300">—</span>';
+    return `
     <tr class="hover:bg-gray-50/50 transition-colors">
-      <td class="px-6 py-4 font-mono text-xs font-black text-primary">#${o.id.toString().slice(-4)}</td>
-      <td class="px-6 py-4 font-bold text-sm">${o.customerName||'عميل'}</td>
-      <td class="px-6 py-4 text-xs text-gray-500" dir="ltr">${o.phone||'-'}</td>
-      <td class="px-6 py-4 max-w-[200px]">
-        ${Array.isArray(o.items)&&o.items.length>0?o.items.map(item=>`
-          <div class="flex items-center gap-1.5 mb-1">
-            <span class="inline-flex items-center justify-center text-[9px] font-black rounded-full w-4 h-4 shrink-0 text-primary" style="background:rgba(236,19,91,.1)">${item.qty||1}</span>
-            <span class="text-[10px] font-bold text-gray-700 truncate max-w-[160px]">${item.name||'-'}</span>
-            ${item.isGift?'<span class="text-[9px] text-emerald-500 font-black">🎁</span>':''}
-          </div>`).join(''):'<span class="text-[10px] text-gray-300">—</span>'}
-      </td>
-      <td class="px-6 py-4 text-[10px] text-gray-400">${o.date||'-'}</td>
-      <td class="px-6 py-4 font-black text-sm">${o.total||0} ج.م</td>
+      <td class="px-6 py-4 font-mono text-xs font-black text-primary">#${id}</td>
+      <td class="px-6 py-4 font-bold text-sm">${name}</td>
+      <td class="px-6 py-4 text-xs text-gray-500" dir="ltr">${phone}</td>
+      <td class="px-6 py-4 max-w-[200px]">${itemsHtml}</td>
+      <td class="px-6 py-4 text-[10px] text-gray-400">${date}</td>
+      <td class="px-6 py-4 font-black text-sm">${total} ج.م</td>
       <td class="px-6 py-4">
-        <select onchange="updateStatus('${o.id}',this.value)" class="text-[10px] font-bold rounded-lg px-2 py-1.5 border outline-none cursor-pointer ${getStatusStyle(o.status)}">
-          <option value="قيد التنفيذ" ${(o.status||'قيد التنفيذ')==='قيد التنفيذ'?'selected':''}>⏳ قيد التنفيذ</option>
-          <option value="تم التوصيل" ${o.status==='تم التوصيل'?'selected':''}>✅ تم التوصيل</option>
-          <option value="ملغي" ${o.status==='ملغي'?'selected':''}>❌ ملغي</option>
+        <select onchange="updateStatus('${id}',this.value)" class="text-[10px] font-bold rounded-lg px-2 py-1.5 border outline-none cursor-pointer ${getStatusStyle(o.status)}">
+          <option value="قيد التنفيذ" ${curStatus==='قيد التنفيذ'?'selected':''}>⏳ قيد التنفيذ</option>
+          <option value="تم التوصيل" ${curStatus==='تم التوصيل'?'selected':''}>✅ تم التوصيل</option>
+          <option value="ملغي" ${curStatus==='ملغي'?'selected':''}>❌ ملغي</option>
         </select>
       </td>
       <td class="px-6 py-4 text-center">
-        <button onclick="deleteOrder('${o.id}')" class="size-8 rounded-xl flex items-center justify-center text-gray-300 hover:bg-red-50 hover:text-red-500 transition-all mx-auto">
+        <button onclick="deleteOrder('${id}')" class="size-8 rounded-xl flex items-center justify-center text-gray-300 hover:bg-red-50 hover:text-red-500 transition-all mx-auto">
           <span class="material-symbols-outlined text-[18px]">delete</span>
         </button>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
-window.onload=fetchOrders;
+window.onload=async function(){
+  renderSidebar('orders.html');
+  const ok=await requireAdmin();
+  if(ok) fetchOrders();
+};
 </script>
 </body>
 </html>

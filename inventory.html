@@ -10,14 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#ec135b"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const supabaseUrl='https://sidtdxchiqiogfkwbdui.supabase.co';
-    const supabaseKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZHRkeGNoaXFpb2dma3diZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTEyMTAsImV4cCI6MjA4OTY4NzIxMH0.QF1-67Qu2HfWJt3ANSegM87fykOYQBwqC7ggLG8LTVU';
-    const _supabase=supabase.createClient(supabaseUrl,supabaseKey);
-    async function checkAuth(){const{data:{session}}=await _supabase.auth.getSession();if(!session)window.location.href='index.html';}
-    checkAuth();
-    async function logout(){await _supabase.auth.signOut();window.location.href='index.html';}
-  </script>
+  <script src="supabaseClient.js"></script>
   <style>
     body{font-family:'Tajawal',sans-serif;background:#f8f9fb;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
@@ -28,42 +21,11 @@
 <body class="text-gray-900 antialiased min-h-screen">
 <div class="flex h-screen overflow-hidden">
 
-  <!-- Sidebar -->
-  <aside class="w-64 h-screen fixed right-0 top-0 bg-white border-l border-gray-100/80 flex flex-col z-40" style="box-shadow:2px 0 24px rgba(0,0,0,.04)">
-    <div class="p-5 flex items-center gap-3 border-b border-gray-50">
-      <div class="w-10 h-10 bg-gradient-to-br from-primary to-rose-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
-        <span class="material-symbols-outlined text-[18px]">clinical_notes</span>
-      </div>
-      <div>
-        <h1 class="text-[15px] font-black leading-none text-gray-900">الفرات فارما</h1>
-        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-0.5">إدارة المتجر</p>
-      </div>
-    </div>
-    <nav class="flex-1 px-3 py-4 space-y-0.5">
-      <a href="admin.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">dashboard</span><span>الرئيسية</span>
-      </a>
-      <a href="orders.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">shopping_bag</span><span>الطلبات</span>
-      </a>
-      <a href="inventory.html" class="nav-active flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-sm">
-        <span class="material-symbols-outlined text-[20px]">inventory_2</span><span>المخزون</span>
-      </a>
-      <a href="customers.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">group</span><span>العملاء</span>
-      </a>
-    </nav>
-    <div class="p-3 border-t border-gray-50">
-      <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 transition-all group text-right">
-        <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">أ.ف</div>
-        <div class="flex-1 min-w-0"><p class="text-sm font-bold truncate text-gray-700 group-hover:text-red-500">الفرات فارما</p><p class="text-[10px] text-gray-400">تسجيل خروج</p></div>
-        <span class="material-symbols-outlined text-gray-300 group-hover:text-red-400 text-[18px]">logout</span>
-      </button>
-    </div>
-  </aside>
+  <!-- Sidebar (يتم إنشاؤه من layout.js) -->
+  <div id="sidebar-placeholder"></div>
 
   <!-- Main -->
-  <main class="flex-1 mr-64 overflow-y-auto">
+  <main class="flex-1 lg:mr-64 overflow-y-auto">
     <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
       <div>
         <h2 class="text-xl font-black text-gray-900 tracking-tight">إدارة المنتجات</h2>
@@ -169,7 +131,15 @@ function updateStats(){
 function render(){
   const tbody=document.getElementById('inventory-body');
   if(products.length===0){tbody.innerHTML=`<tr><td colspan="5" class="text-center py-16 text-gray-300 font-bold">المخزون فارغ تماماً حالياً</td></tr>`;return;}
-  tbody.innerHTML=products.map((p,i)=>`
+  tbody.innerHTML=products.map((p,i)=>{
+    const pid=escapeHtml(String(p.id));
+    const name=escapeHtml(p.name)||'منتج';
+    const cat=escapeHtml(p.category)||'-';
+    const badge=escapeHtml(p.badge);
+    const img=p.img?escapeHtml(p.img):'logo.png';
+    const price=escapeHtml(p.price)||0;
+    const oldPrice=p.oldPrice?escapeHtml(p.oldPrice):'';
+    return `
     <tr class="hover:bg-gray-50/50 transition-colors">
       <td class="px-6 py-4">
         <div class="flex flex-col gap-1 items-center">
@@ -182,28 +152,29 @@ function render(){
       <td class="px-6 py-4">
         <div class="flex items-center gap-4">
           <div class="size-14 rounded-2xl bg-white border border-gray-100 p-1 shrink-0 shadow-sm relative">
-            <img src="${p.img}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='logo.png'">
-            ${p.badge?`<span class="absolute -top-2 -right-2 bg-primary text-[8px] text-white px-1.5 py-0.5 rounded-full font-black shadow-lg shadow-primary/30">${p.badge}</span>`:''}
+            <img src="${img}" alt="${name}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='logo.png'">
+            ${badge?`<span class="absolute -top-2 -right-2 bg-primary text-[8px] text-white px-1.5 py-0.5 rounded-full font-black shadow-lg shadow-primary/30">${badge}</span>`:''}
           </div>
-          <span class="font-bold text-sm text-gray-900">${p.name}</span>
+          <span class="font-bold text-sm text-gray-900">${name}</span>
         </div>
       </td>
       <td class="px-6 py-4">
-        <span class="text-[10px] font-black px-3 py-1 rounded-full bg-gray-100 text-gray-500 uppercase tracking-wider">${p.category}</span>
+        <span class="text-[10px] font-black px-3 py-1 rounded-full bg-gray-100 text-gray-500 uppercase tracking-wider">${cat}</span>
       </td>
       <td class="px-6 py-4 text-center">
-        <span class="font-black text-primary text-sm">${p.price} ج.م</span>
-        ${p.oldPrice?`<span class="block text-[10px] text-gray-400 line-through">${p.oldPrice} ج.م</span>`:''}
+        <span class="font-black text-primary text-sm">${price} ج.م</span>
+        ${oldPrice?`<span class="block text-[10px] text-gray-400 line-through">${oldPrice} ج.م</span>`:''}
       </td>
       <td class="px-6 py-4">
         <div class="flex gap-2 justify-center">
-          <button onclick="openEdit('${p.id}')" class="size-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all shadow-sm">
+          <button onclick="openEdit('${pid}')" class="size-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all shadow-sm">
             <span class="material-symbols-outlined text-[18px]">edit</span></button>
-          <button onclick="del('${p.id}','${p.name}')" class="size-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all shadow-sm">
+          <button onclick="del('${pid}','${name.replace(/'/g,"&#039;")}')" class="size-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all shadow-sm">
             <span class="material-symbols-outlined text-[18px]">delete</span></button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 function openEdit(id){
@@ -220,10 +191,13 @@ async function submitEditForm(e){
   const old=btn.innerText;btn.innerText="جاري الحفظ...";btn.disabled=true;
   const id=document.getElementById('edit-id').value;const file=e.target.image.files[0];
   let updateData={name:document.getElementById('edit-name').value,price:Number(document.getElementById('edit-price').value),oldPrice:document.getElementById('edit-oldPrice').value?Number(document.getElementById('edit-oldPrice').value):null,category:document.getElementById('edit-category').value,badge:document.getElementById('edit-badge').value};
+  const existing=products.find(x=>x.id===id);
   try{
-    if(file){const fn=`${Date.now()}-${file.name}`;await _supabase.storage.from('products').upload(`uploads/${fn}`,file);const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fn}`);updateData.img=publicUrl;}
+    if(file){const fn=sanitizeFileName(file.name);const{error:upErr}=await _supabase.storage.from('products').upload(`uploads/${fn}`,file);if(upErr)throw upErr;const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fn}`);updateData.img=publicUrl;}
     const{error}=await _supabase.from('products').update(updateData).eq('id',id);
     if(error) throw error;
+    // حذف الصورة القديمة عند استبدالها
+    if(file&&existing&&existing.img) deleteStorageFile(existing.img);
     closeEditModal();await load();Swal.fire({title:'تم التحديث!',icon:'success',confirmButtonColor:'#ec135b'});
   }catch(err){Swal.fire({title:'خطأ في التحديث',icon:'error',confirmButtonColor:'#ec135b'});}
   finally{btn.innerText=old;btn.disabled=false;}
@@ -231,19 +205,34 @@ async function submitEditForm(e){
 
 async function del(id,name){
   const r=await Swal.fire({title:'هل أنت متأكد؟',text:`سيتم حذف "${name}" نهائياً!`,icon:'warning',showCancelButton:true,confirmButtonColor:'#ec135b',cancelButtonColor:'#e5e7eb',confirmButtonText:'نعم، احذفه',cancelButtonText:'إلغاء'});
-  if(r.isConfirmed){try{const{error}=await _supabase.from('products').delete().eq('id',id);if(error)throw error;await load();Swal.fire({title:'تم الحذف!',icon:'success',confirmButtonColor:'#ec135b'});}catch(e){Swal.fire({title:'فشل في الحذف',icon:'error',confirmButtonColor:'#ec135b'});}}
+  if(r.isConfirmed){
+    try{
+      const target=products.find(x=>x.id===id);
+      const{error}=await _supabase.from('products').delete().eq('id',id);
+      if(error)throw error;
+      // حذف صورة المنتج من التخزين إن وجدت
+      if(target&&target.img) deleteStorageFile(target.img);
+      await load();Swal.fire({title:'تم الحذف!',icon:'success',confirmButtonColor:'#ec135b'});
+    }catch(e){Swal.fire({title:'فشل في الحذف',icon:'error',confirmButtonColor:'#ec135b'});}
+  }
 }
 
 async function move(i,dir){
   const ti=i+dir;if(ti<0||ti>=products.length)return;
-  const c=products[i],t=products[ti];
-  const cp=c.priority||0,tp=t.priority||0;
-  let fcp=tp,ftp=cp;
-  if(cp===tp)fcp=dir===-1?cp+1:cp-1;
-  try{await Promise.all([_supabase.from('products').update({priority:fcp}).eq('id',c.id),_supabase.from('products').update({priority:ftp}).eq('id',t.id)]);await load();}catch(err){console.error(err);}
+  const newOrder=products.slice();
+  [newOrder[i],newOrder[ti]]=[newOrder[ti],newOrder[i]];
+  // إعادة كتابة الأولويات حسب الترتيب الجديد لضمان ثبات التصحيح
+  try{
+    await Promise.all(newOrder.map((p,idx)=>_supabase.from('products').update({priority:idx}).eq('id',p.id)));
+    await load();
+  }catch(err){console.error(err);}
 }
 
-window.onload=load;
+window.onload=async function(){
+  renderSidebar('inventory.html');
+  const ok=await requireAdmin();
+  if(ok) load();
+};
 </script>
 </body>
 </html>

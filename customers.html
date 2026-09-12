@@ -9,14 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#ec135b"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const supabaseUrl='https://sidtdxchiqiogfkwbdui.supabase.co';
-    const supabaseKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZHRkeGNoaXFpb2dma3diZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTEyMTAsImV4cCI6MjA4OTY4NzIxMH0.QF1-67Qu2HfWJt3ANSegM87fykOYQBwqC7ggLG8LTVU';
-    const _supabase=supabase.createClient(supabaseUrl,supabaseKey);
-    async function forceAuth(){const{data:{session}}=await _supabase.auth.getSession();if(!session)window.location.href='index.html';}
-    forceAuth();
-    async function logout(){await _supabase.auth.signOut();window.location.href='index.html';}
-  </script>
+  <script src="supabaseClient.js"></script>
   <style>
     body{font-family:"Tajawal",sans-serif;background:#f8f9fb;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
@@ -27,42 +20,11 @@
 <body class="text-gray-900 antialiased">
 <div class="flex h-screen overflow-hidden">
 
-  <!-- Sidebar -->
-  <aside class="w-64 h-screen fixed right-0 top-0 bg-white border-l border-gray-100/80 flex flex-col z-40" style="box-shadow:2px 0 24px rgba(0,0,0,.04)">
-    <div class="p-5 flex items-center gap-3 border-b border-gray-50">
-      <div class="w-10 h-10 bg-gradient-to-br from-primary to-rose-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
-        <span class="material-symbols-outlined text-[18px]">clinical_notes</span>
-      </div>
-      <div>
-        <h1 class="text-[15px] font-black leading-none text-gray-900">الفرات فارما</h1>
-        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-0.5">إدارة المتجر</p>
-      </div>
-    </div>
-    <nav class="flex-1 px-3 py-4 space-y-0.5">
-      <a href="admin.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">dashboard</span><span>الرئيسية</span>
-      </a>
-      <a href="orders.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">shopping_bag</span><span>الطلبات</span>
-      </a>
-      <a href="inventory.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 font-medium text-sm transition-colors">
-        <span class="material-symbols-outlined text-[20px]">inventory_2</span><span>المخزون</span>
-      </a>
-      <a href="customers.html" class="nav-active flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-sm">
-        <span class="material-symbols-outlined text-[20px]">group</span><span>العملاء</span>
-      </a>
-    </nav>
-    <div class="p-3 border-t border-gray-50">
-      <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 transition-all group text-right">
-        <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">أ.ف</div>
-        <div class="flex-1 min-w-0"><p class="text-sm font-bold truncate text-gray-700 group-hover:text-red-500">الفرات فارما</p><p class="text-[10px] text-gray-400">تسجيل خروج</p></div>
-        <span class="material-symbols-outlined text-gray-300 group-hover:text-red-400 text-[18px]">logout</span>
-      </button>
-    </div>
-  </aside>
+  <!-- Sidebar (يتم إنشاؤه من layout.js) -->
+  <div id="sidebar-placeholder"></div>
 
   <!-- Main -->
-  <main class="flex-1 mr-64 overflow-y-auto">
+  <main class="flex-1 lg:mr-64 overflow-y-auto">
     <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
       <div>
         <h2 class="text-xl font-black text-gray-900 tracking-tight">رؤى وتحليل العملاء</h2>
@@ -110,25 +72,8 @@
           <h3 class="text-base font-black mb-6 flex items-center gap-2 text-gray-900">
             <span class="material-symbols-outlined text-primary text-[20px]">pie_chart</span>اهتمامات العملاء
           </h3>
-          <div class="space-y-5">
-            <div>
-              <div class="flex justify-between text-sm font-bold mb-2 text-gray-700"><span>العناية بالبشرة</span><span class="text-primary">65%</span></div>
-              <div class="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full bg-primary rounded-full" style="width:65%;transition:width 1s ease"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between text-sm font-bold mb-2 text-gray-700"><span>العناية بالشعر</span><span style="color:rgba(236,19,91,.7)">25%</span></div>
-              <div class="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full rounded-full" style="width:25%;background:rgba(236,19,91,.6);transition:width 1s ease"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between text-sm font-bold mb-2 text-gray-700"><span>مستحضرات أخرى</span><span style="color:rgba(236,19,91,.4)">10%</span></div>
-              <div class="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full rounded-full" style="width:10%;background:rgba(236,19,91,.35);transition:width 1s ease"></div>
-              </div>
-            </div>
+          <div id="interest-bars-container" class="space-y-5">
+            <p class="text-gray-300 text-sm text-center py-4 animate-pulse">جاري حساب الاهتمامات...</p>
           </div>
         </div>
 
@@ -152,24 +97,67 @@
 <script>
 async function analyzeCustomers(){
   const listContainer=document.getElementById('loyal-customers-list');
+  const barsContainer=document.getElementById('interest-bars-container');
   try{
-    const{data:orders,error}=await _supabase.from('orders').select('*');
-    if(error) throw error;
-    if(!orders||orders.length===0){
-      document.getElementById('stat-customers').innerText=0;document.getElementById('stat-avg-orders').innerText=0;document.getElementById('stat-aov').innerText=0;
-      listContainer.innerHTML=`<p class="text-center text-gray-300 font-bold py-10">لا توجد طلبات بعد.</p>`;return;
+    const[ordersRes,productsRes]=await Promise.all([
+      _supabase.from('orders').select('*'),
+      _supabase.from('products').select('name,category')
+    ]);
+    if(ordersRes.error) throw ordersRes.error;
+    const orders=ordersRes.data||[];
+    const productsMap={};
+    (productsRes.data||[]).forEach(p=>{productsMap[p.name]=p.category;});
+    if(orders.length===0){
+      document.getElementById('stat-customers').textContent='0';
+      document.getElementById('stat-avg-orders').textContent='0';
+      document.getElementById('stat-aov').textContent='0';
+      listContainer.innerHTML='<p class="text-center text-gray-300 font-bold py-10">لا توجد طلبات بعد.</p>';
+      barsContainer.innerHTML='<p class="text-center text-gray-300 text-sm py-4">لا توجد بيانات كافية.</p>';
+      return;
     }
-    const customersData={};let totalRevenue=0;
+    const customersData={};let totalRevenue=0;const categoryCounts={};
     orders.forEach(order=>{
-      const phone=order.phone||'غير معروف';const total=parseFloat(order.total)||0;totalRevenue+=total;
+      const phone=order.phone||'غير معروف';
+      const total=parseFloat(order.total)||0;
+      totalRevenue+=total;
       if(!customersData[phone])customersData[phone]={name:order.customerName||'عميل المتجر',phone,totalSpent:0,ordersCount:0,lastOrderDate:order.date};
-      customersData[phone].totalSpent+=total;customersData[phone].ordersCount+=1;customersData[phone].lastOrderDate=order.date;
+      customersData[phone].totalSpent+=total;
+      customersData[phone].ordersCount+=1;
+      customersData[phone].lastOrderDate=order.date;
+      // عد الاهتمام بالأقسام من المنتجات المطلوبة في الطلبات
+      if(Array.isArray(order.items)){
+        order.items.forEach(item=>{
+          if(!item.name||item.isGift)return;
+          const cat=productsMap[item.name]||'أخرى';
+          categoryCounts[cat]=(categoryCounts[cat]||0)+(item.qty||1);
+        });
+      }
     });
     const customersArray=Object.values(customersData);
     const totalCustomers=customersArray.length;
-    document.getElementById('stat-customers').innerText=totalCustomers;
-    document.getElementById('stat-avg-orders').innerText=(orders.length/totalCustomers).toFixed(1);
-    document.getElementById('stat-aov').innerText=(totalRevenue/orders.length).toFixed(0);
+    document.getElementById('stat-customers').textContent=totalCustomers;
+    document.getElementById('stat-avg-orders').textContent=(orders.length/totalCustomers).toFixed(1);
+    document.getElementById('stat-aov').textContent=Math.round(totalRevenue/orders.length);
+
+    // عرض أشرطة الاهتمام ديناميكياً
+    const catEntries=Object.entries(categoryCounts).sort((a,b)=>b[1]-a[1]);
+    const maxCat=catEntries[0]?catEntries[0][1]:1;
+    if(catEntries.length>0){
+      const totalOrdered=catEntries.reduce((s,e)=>s+e[1],0);
+      barsContainer.innerHTML=catEntries.slice(0,6).map(([cat,count],idx)=>{
+        const pct=Math.round((count/totalOrdered)*100);
+        const opacity=Math.max(0.25,1-idx*0.15);
+        return `
+        <div>
+          <div class="flex justify-between text-sm font-bold mb-2 text-gray-700"><span>${escapeHtml(cat)}</span><span style="color:rgba(236,19,91,${opacity})">${pct}%</span></div>
+          <div class="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full" style="width:${pct}%;background:rgba(236,19,91,${opacity});transition:width 1s ease"></div>
+          </div>
+        </div>`;
+      }).join('');
+    } else {
+      barsContainer.innerHTML='<p class="text-center text-gray-300 text-sm py-4">لا توجد بيانات كافية.</p>';
+    }
 
     customersArray.sort((a,b)=>b.totalSpent-a.totalSpent);
     listContainer.innerHTML=customersArray.slice(0,5).map((cust,index)=>{
@@ -177,26 +165,31 @@ async function analyzeCustomers(){
       return`<div class="flex items-center justify-between py-3.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 px-3 rounded-xl transition-colors">
         <div class="flex items-center gap-3">
           <div class="size-10 rounded-full flex items-center justify-center font-black text-sm ${isTop?'bg-amber-100 text-amber-700':'bg-gray-100 text-gray-600'}">
-            ${cust.name.charAt(0)}
+            ${escapeHtml((cust.name||'عميل').charAt(0))}
           </div>
           <div>
-            <p class="text-sm font-bold text-gray-900 flex items-center gap-1">${cust.name} ${isTop?'<span class="material-symbols-outlined text-amber-500 text-sm">diamond</span>':''}</p>
-            <p class="text-xs text-gray-400 font-medium mt-0.5" dir="ltr">${cust.phone}</p>
+            <p class="text-sm font-bold text-gray-900 flex items-center gap-1">${escapeHtml(cust.name)} ${isTop?'<span class="material-symbols-outlined text-amber-500 text-sm">diamond</span>':''}</p>
+            <p class="text-xs text-gray-400 font-medium mt-0.5" dir="ltr">${escapeHtml(cust.phone)}</p>
           </div>
         </div>
         <div class="text-left">
-          <p class="text-sm font-black text-primary">${cust.totalSpent} ج.م</p>
-          <p class="text-[10px] text-gray-400 font-bold mt-0.5">${cust.ordersCount} طلبات</p>
+          <p class="text-sm font-black text-primary">${escapeHtml(cust.totalSpent)} ج.م</p>
+          <p class="text-[10px] text-gray-400 font-bold mt-0.5">${escapeHtml(cust.ordersCount)} طلبات</p>
         </div>
       </div>`;
     }).join('');
   }catch(error){
     console.error("خطأ:",error);
-    listContainer.innerHTML=`<p class="text-center text-red-400 font-bold py-10">فشل في تحليل بيانات السيرفر.</p>`;
+    listContainer.innerHTML='<p class="text-center text-red-400 font-bold py-10">فشل في تحليل بيانات السيرفر.</p>';
+    barsContainer.innerHTML='<p class="text-center text-red-400 text-sm py-4">فشل في تحليل البيانات.</p>';
   }
 }
 
-window.onload=analyzeCustomers;
+window.onload=async function(){
+  renderSidebar('customers.html');
+  const ok=await requireAdmin();
+  if(ok) analyzeCustomers();
+};
 
 _supabase.channel('customers-update')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},payload=>{analyzeCustomers();})

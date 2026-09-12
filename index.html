@@ -107,20 +107,23 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
+    <script src="supabaseClient.js"></script>
     <script>
-        const supabaseUrl = 'https://sidtdxchiqiogfkwbdui.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZHRkeGNoaXFpb2dma3diZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMTEyMTAsImV4cCI6MjA4OTY4NzIxMH0.QF1-67Qu2HfWJt3ANSegM87fykOYQBwqC7ggLG8LTVU';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
         const loginForm = document.getElementById('login-form');
         const errorMsg = document.getElementById('error-msg');
         const submitBtn = document.getElementById('submit-btn');
+        const adminEmail = ADMIN_EMAIL;
+
+        function showLoginError() {
+            errorMsg.classList.remove('hidden');
+            loginForm.classList.add('animate-shake');
+            setTimeout(() => loginForm.classList.remove('animate-shake'), 500);
+        }
 
         loginForm.onsubmit = async (e) => {
             e.preventDefault();
 
             const password = document.getElementById('password').value;
-            const email = "ahmedsalamaahmed21@gmail.com"; 
 
             submitBtn.innerHTML = `
                 <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -134,21 +137,26 @@
 
             try {
                 const { data, error } = await _supabase.auth.signInWithPassword({
-                    email: email,
+                    email: adminEmail,
                     password: password,
                 });
 
                 if (error) throw error;
 
-                localStorage.setItem('isLoggedIn', 'true');
+                // التأكد أن الحساب هو الآدمن المسموح فقط
+                if (!isAdminUser(data.user)) {
+                    await _supabase.auth.signOut();
+                    errorMsg.querySelector('span:last-child').textContent = 'عفواً، هذا الحساب غير مصرح له بالدخول';
+                    showLoginError();
+                    return;
+                }
+
                 window.location.href = 'admin.html';
 
             } catch (error) {
                 console.error("Login Error:", error.message);
-                errorMsg.classList.remove('hidden');
-                // هز الـ Form عند الخطأ
-                loginForm.classList.add('animate-shake');
-                setTimeout(() => loginForm.classList.remove('animate-shake'), 500);
+                errorMsg.querySelector('span:last-child').textContent = 'عذراً، كلمة المرور غير صحيحة';
+                showLoginError();
             } finally {
                 submitBtn.innerHTML = '<span>دخول الآدمن</span><svg class="size-5 group-hover:translate-x-[-4px] transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" /></svg>';
                 submitBtn.disabled = false;

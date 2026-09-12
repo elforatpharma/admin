@@ -1,7 +1,3 @@
---- coupons_schema.sql (原始)
-
-
-+++ coupons_schema.sql (修改后)
 -- ==========================================
 -- SQL Schema for Coupons System
 -- الفرات فارما - نظام كوبونات الخصم

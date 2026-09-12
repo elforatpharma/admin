@@ -77,6 +77,32 @@ CREATE POLICY "auth_read_visitors" ON visitors
   FOR SELECT TO authenticated USING (true);
 
 -- ============================================================
+-- 6) settings (إعدادات المتجر - المتجر يقرأ والآدمن يكتب)
+-- ============================================================
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "public_read_settings" ON settings;
+CREATE POLICY "public_read_settings" ON settings
+  FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "auth_write_settings" ON settings;
+CREATE POLICY "auth_write_settings" ON settings
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- ============================================================
+-- 7) messages (رسائل العملاء - المتجر يضيف والآدمن يدير)
+-- ============================================================
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "public_insert_messages" ON messages;
+CREATE POLICY "public_insert_messages" ON messages
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "auth_manage_messages" ON messages;
+CREATE POLICY "auth_manage_messages" ON messages
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- ============================================================
 -- ملاحظات إضافية (من لوحة Supabase Dashboard)
 -- ============================================================
 -- 1) قصر تسجيل الدخول بجوجل على أيميلك فقط:

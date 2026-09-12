@@ -52,10 +52,13 @@ function injectLayoutStyles() {
 // ---- إنشاء الـ Sidebar ديناميكياً ----
 function renderSidebar(activePage) {
   const navItems = [
-    { href: 'admin.html',     icon: 'dashboard',    label: 'الرئيسية' },
-    { href: 'orders.html',    icon: 'shopping_bag', label: 'الطلبات' },
-    { href: 'inventory.html', icon: 'inventory_2',  label: 'المخزون' },
-    { href: 'customers.html', icon: 'group',        label: 'العملاء' },
+    { href: 'admin.html',       icon: 'dashboard',    label: 'الرئيسية' },
+    { href: 'orders.html',      icon: 'shopping_bag', label: 'الطلبات' },
+    { href: 'inventory.html',   icon: 'inventory_2',  label: 'المخزون' },
+    { href: 'customers.html',   icon: 'group',        label: 'العملاء' },
+    { href: 'sales-report.html', icon: 'monitoring',   label: 'تقرير المبيعات' },
+    { href: 'messages.html',    icon: 'chat',         label: 'رسائل العملاء' },
+    { href: 'settings.html',    icon: 'settings',     label: 'إعدادات المتجر' },
   ];
 
   const navHTML = navItems.map(item => {

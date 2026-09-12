@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>إعدادات المتجر - الفرات فارما</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#ec135b"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#f8f9fb;}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
+    ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
+    .nav-active{background:linear-gradient(135deg,rgba(236,19,91,.08),rgba(236,19,91,.04));color:#ec135b;border-right:3px solid #ec135b;}
+    .input{width:100%;border:1px solid #e5e7eb;border-radius:14px;padding:12px 16px;font-size:14px;font-weight:700;background:#f9fafb;outline:none;transition:all .15s;}
+    .input:focus{border-color:rgba(236,19,91,.5);background:#fff;box-shadow:0 0 0 3px rgba(236,19,91,.08);}
+  </style>
+</head>
+<body class="text-gray-900 antialiased">
+<div class="flex h-screen overflow-hidden">
+
+  <div id="sidebar-placeholder"></div>
+
+  <main class="flex-1 lg:mr-64 overflow-y-auto">
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-black text-gray-900 tracking-tight">إعدادات المتجر</h2>
+        <p class="text-xs text-gray-400 font-medium mt-0.5">بيانات التواصل وأسعار التوصيل (متاحة للمتجر تلقائياً)</p>
+      </div>
+      <button onclick="saveSettings()" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
+        <span class="material-symbols-outlined text-[18px]">save</span>حفظ الإعدادات
+      </button>
+    </header>
+
+    <div class="p-8 max-w-[1000px] mx-auto space-y-6">
+      <form id="settings-form" onsubmit="saveSettings(event)" class="space-y-6" novalidate>
+        <!-- بيانات عامة -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/40 flex items-center justify-between">
+            <h3 class="text-sm font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[20px]">storefront</span>بيانات المتجر العامة</h3>
+          </div>
+          <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">اسم المتجر</label>
+              <input type="text" id="s-name" class="input" placeholder="الفرات فارما"/></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">هاتف المتجر</label>
+              <input type="text" id="s-phone" dir="ltr" class="input text-right" placeholder="01000000000"/></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">رقم الواتساب <span class="text-red-400">*</span></label>
+              <input type="text" id="s-whatsapp" dir="ltr" class="input text-right" placeholder="01000000000" required/></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">البريد الإلكتروني</label>
+              <input type="email" id="s-email" dir="ltr" class="input text-right" placeholder="store@example.com"/></div>
+            <div class="space-y-1.5 md:col-span-2"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">العنوان</label>
+              <input type="text" id="s-address" class="input" placeholder="العنوان الكامل للمتجر"/></div>
+          </div>
+        </div>
+
+        <!-- التوصيل -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/40 flex items-center justify-between">
+            <h3 class="text-sm font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-sky-500 text-[20px]">local_shipping</span>التوصيل</h3>
+          </div>
+          <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">رسوم التوصيل الافتراضية (ج.م)</label>
+              <input type="number" id="s-shipping" min="0" class="input" placeholder="60"/></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">توصيل مجاني فوق (ج.م)</label>
+              <input type="number" id="s-free-threshold" min="0" class="input" placeholder="500"/></div>
+            <div class="space-y-1.5 md:col-span-2"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">أسعار توصيل حسب المنطقة (JSON اختياري)</label>
+              <textarea id="s-areas" rows="4" dir="ltr" class="input text-right font-mono text-xs" placeholder='[{"area":"القاهرة","fee":70},{"area":"الجيزة","fee":70}]'></textarea>
+              <p class="text-[10px] text-gray-400 mt-1">صيغة: مصفوفة من كائنات <span dir="ltr">{"area":"الاسم","fee":"السعر"}</span> — اتركها فارغة إن ما عندكش مناطق.</p></div>
+          </div>
+        </div>
+
+        <!-- التواصل -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/40 flex items-center justify-between">
+            <h3 class="text-sm font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-amber-500 text-[20px]">share</span>روابط السوشيال ميديا</h3>
+          </div>
+          <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">فيسبوك</label>
+              <input type="url" id="s-facebook" dir="ltr" class="input text-right text-xs" placeholder="https://facebook.com/..."/></div>
+            <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">انستغرام</label>
+              <input type="url" id="s-instagram" dir="ltr" class="input text-right text-xs" placeholder="https://instagram.com/..."/></div>
+            <div class="space-y-1.5 md:col-span-2"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">ملاحظات</label>
+              <textarea id="s-notes" rows="2" class="input"></textarea></div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">حفظ الإعدادات</button>
+          <button type="button" onclick="loadSettings()" class="px-8 bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">إعادة تحميل</button>
+        </div>
+      </form>
+
+      <!-- دمج المتجر -->
+      <div class="bg-amber-50 border border-amber-100 rounded-2xl p-5">
+        <p class="text-xs font-black text-amber-700 mb-2">📌 للربط مع المتجر</p>
+        <p class="text-xs text-amber-700/80 leading-relaxed">اقرأ هذه الإعدادات من صفحة المتجر كالتالي:</p>
+        <pre dir="ltr" class="mt-3 bg-white/70 border border-amber-100 rounded-xl p-3 text-[11px] text-amber-800 overflow-x-auto font-mono">const { data } = await _supabase
+  .from('settings')
+  .select('data')
+  .eq('id', 1)
+  .single();
+// data.data.whatsapp , data.data.shipping_fee ...</pre>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="layout.js"></script>
+<script>
+const DEFAULTS={
+  store_name:'الفرات فارما',phone:'',whatsapp:'',email:'',address:'',
+  shipping_fee:60,free_shipping_threshold:500,delivery_areas:[],
+  facebook:'',instagram:'',notes:''
+};
+
+function areaString(areas){
+  if(!Array.isArray(areas)||areas.length===0)return '';
+  try{return JSON.stringify(areas,null,2);}catch(e){return '';}
+}
+
+async function loadSettings(){
+  const{data,error}=await _supabase.from('settings').select('data').eq('id',1).maybeSingle();
+  const s=error||!data?DEFAULTS:Object.assign({},DEFAULTS,data.data||{});
+  document.getElementById('s-name').value=s.store_name||'';
+  document.getElementById('s-phone').value=s.phone||'';
+  document.getElementById('s-whatsapp').value=s.whatsapp||'';
+  document.getElementById('s-email').value=s.email||'';
+  document.getElementById('s-address').value=s.address||'';
+  document.getElementById('s-shipping').value=s.shipping_fee!=null?s.shipping_fee:'';
+  document.getElementById('s-free-threshold').value=s.free_shipping_threshold!=null?s.free_shipping_threshold:'';
+  document.getElementById('s-areas').value=areaString(s.delivery_areas);
+  document.getElementById('s-facebook').value=s.facebook||'';
+  document.getElementById('s-instagram').value=s.instagram||'';
+  document.getElementById('s-notes').value=s.notes||'';
+}
+
+async function saveSettings(e){
+  if(e)e.preventDefault();
+  const btn=document.querySelector('button[type="submit"]');
+  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='<span class="material-symbols-outlined animate-spin text-sm">refresh</span> جاري الحفظ...';
+  try{
+    let delivery_areas=[];
+    const raw=document.getElementById('s-areas').value.trim();
+    if(raw){
+      try{
+        const parsed=JSON.parse(raw);
+        if(!Array.isArray(parsed))throw new Error();
+        delivery_areas=parsed;
+      }catch(err){
+        toast('error','صيغة مناطق التوصيل غير صحيحة (تأكد أنها JSON سليمة)');
+        return;
+      }
+    }
+    const data={
+      store_name:document.getElementById('s-name').value.trim()||'الفرات فارما',
+      phone:document.getElementById('s-phone').value.trim(),
+      whatsapp:document.getElementById('s-whatsapp').value.trim().replace(/\D/g,''),
+      email:document.getElementById('s-email').value.trim(),
+      address:document.getElementById('s-address').value.trim(),
+      shipping_fee:Number(document.getElementById('s-shipping').value)||0,
+      free_shipping_threshold:Number(document.getElementById('s-free-threshold').value)||0,
+      delivery_areas,
+      facebook:document.getElementById('s-facebook').value.trim(),
+      instagram:document.getElementById('s-instagram').value.trim(),
+      notes:document.getElementById('s-notes').value.trim()
+    };
+    const{error}=await _supabase.from('settings').upsert({id:1,data,updated_at:new Date().toISOString()});
+    if(error) throw error;
+    toast('success','تم حفظ إعدادات المتجر بنجاح!');
+  }catch(err){
+    console.error(err);
+    toast('error','حدث خطأ أثناء الحفظ: '+(err.message||'تأكد من جدول settings في قاعدة البيانات'));
+  }finally{
+    btn.disabled=false;btn.innerHTML=old;
+  }
+}
+
+window.onload=async function(){
+  renderSidebar('settings.html');
+  const ok=await requireAdmin();
+  if(ok) loadSettings();
+};
+</script>
+</body>
+</html>

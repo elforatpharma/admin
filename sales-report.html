@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>تقرير المبيعات - الفرات فارما</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#ec135b"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#f8f9fb;}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
+    ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
+    .nav-active{background:linear-gradient(135deg,rgba(236,19,91,.08),rgba(236,19,91,.04));color:#ec135b;border-right:3px solid #ec135b;}
+    .kpi-card{transition:transform .2s ease,box-shadow .2s ease;} .kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.06);}
+  </style>
+</head>
+<body class="text-gray-900 antialiased">
+<div class="flex h-screen overflow-hidden">
+
+  <div id="sidebar-placeholder"></div>
+
+  <main class="flex-1 lg:mr-64 overflow-y-auto">
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-black text-gray-900 tracking-tight">تقرير المبيعات</h2>
+        <p class="text-xs text-gray-400 font-medium mt-0.5">متابعة الأداء المالي للمتجر</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="loadReport(currentPeriod)" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
+          <span class="material-symbols-outlined text-[18px]">refresh</span>تحديث
+        </button>
+      </div>
+    </header>
+
+    <div class="p-8 space-y-6 max-w-[1400px] mx-auto">
+
+      <!-- Period Tabs -->
+      <div class="flex items-center gap-2 overflow-x-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-2">
+        <button onclick="setPeriod('day')" id="tab-day" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">اليوم</button>
+        <button onclick="setPeriod('week')" id="tab-week" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">آخر 7 أيام</button>
+        <button onclick="setPeriod('month')" id="tab-month" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">هذا الشهر</button>
+        <button onclick="setPeriod('days30')" id="tab-days30" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">آخر 30 يوم</button>
+        <span id="period-range" class="mr-auto text-[10px] text-gray-400 font-bold px-3"></span>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="kpi-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 rounded-xl" style="background:rgba(236,19,91,.08)"><span class="material-symbols-outlined text-primary text-[22px]">payments</span></div>
+            <span id="kpi-compare" class="text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-0.5"></span>
+          </div>
+          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider">المبيعات المكتملة</p>
+          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-revenue">0 <small class="text-sm font-medium text-gray-400">ج.م</small></p>
+          <p id="kpi-compare-note" class="text-[10px] text-gray-400 mt-1 font-medium">مقارنة بالفترة السابقة</p>
+        </div>
+        <div class="kpi-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="p-2.5 bg-blue-50 rounded-xl inline-flex mb-4"><span class="material-symbols-outlined text-blue-500 text-[22px]">local_mall</span></div>
+          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider">إجمالي الطلبات</p>
+          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-orders">0</p>
+          <p class="text-[10px] text-gray-400 mt-1 font-medium">كل الحالات في الفترة</p>
+        </div>
+        <div class="kpi-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="p-2.5 bg-violet-50 rounded-xl inline-flex mb-4"><span class="material-symbols-outlined text-violet-500 text-[22px]">verified</span></div>
+          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider">متوسط قيمة الطلب (AOV)</p>
+          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-aov">0 <small class="text-sm font-medium text-gray-400">ج.م</small></p>
+          <p class="text-[10px] text-gray-400 mt-1 font-medium">للطلبات المكتملة فقط</p>
+        </div>
+        <div class="kpi-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="p-2.5 bg-orange-50 rounded-xl inline-flex mb-4"><span class="material-symbols-outlined text-orange-500 text-[22px]">inventory</span></div>
+          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider">أفضل منتج</p>
+          <p class="text-base font-black mt-1 text-gray-900 leading-snug" id="kpi-top-product">—</p>
+          <p class="text-[10px] text-gray-400 mt-1 font-medium" id="kpi-top-product-qty"></p>
+        </div>
+      </div>
+
+      <!-- Main Chart -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-black text-gray-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[20px]">monitoring</span>المبيعات عبر الفترة
+          </h3>
+          <span class="text-[10px] text-gray-400 font-bold" id="chart-subtitle">—</span>
+        </div>
+        <div class="relative h-72"><canvas id="sales-chart"></canvas></div>
+      </div>
+
+      <!-- Top Products -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-black text-gray-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-500 text-[20px]">leaderboard</span>المنتجات الأكثر مبيعاً
+          </h3>
+        </div>
+        <div class="relative h-64" id="top-products-wrap"><canvas id="products-chart"></canvas></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="layout.js"></script>
+<script>
+const PRIMARY='#ec135b';
+let currentPeriod='week';
+let mainChart=null, productsChart=null;
+
+function fmt(n){ return Math.round(Number(n)||0).toLocaleString('en-US'); }
+function pct(a,b){ if(!b) return a>0?100:0; return Math.round(((a-b)/b)*100); }
+
+Chart.defaults.font.family='Tajawal',sans-serif;
+Chart.defaults.color='#64748b';
+
+function setPeriod(p){
+  currentPeriod=p;
+  document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('bg-primary','text-white','shadow');b.classList.add('text-gray-400');});
+  document.getElementById('tab-'+p).classList.add('bg-primary','text-white','shadow-lg','shadow-primary/20');document.getElementById('tab-'+p).classList.remove('text-gray-400');
+  loadReport(p);
+}
+
+function getPeriodDef(p){
+  const now=new Date();
+  const today0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let currentStart, days, label;
+  if(p==='day'){
+    currentStart=today0; days=1;
+    label='اليوم: '+today0.toLocaleDateString('ar-EG',{day:'numeric',month:'long',year:'numeric'});
+  }else if(p==='week'){
+    currentStart=new Date(today0.getTime()-6*86400000); days=7;
+    label='آخر 7 أيام';
+  }else if(p==='month'){
+    currentStart=new Date(now.getFullYear(),now.getMonth(),1);
+    days=Math.round((today0-currentStart)/86400000)+1;
+    label='الشهر الحالي: '+currentStart.toLocaleDateString('ar-EG',{month:'long',year:'numeric'});
+  }else{
+    currentStart=new Date(today0.getTime()-29*86400000); days=30;
+    label='آخر 30 يوم';
+  }
+  const prevStart=new Date(currentStart.getTime()-days*86400000);
+  return {currentStart,prevStart,days,label,now};
+}
+
+function bucketKey(t, isHour){
+  const d=new Date(t);
+  if(isHour) return d.getHours();
+  const c=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  return c.getTime();
+}
+
+async function loadReport(p){
+  const def=getPeriodDef(p);
+  document.getElementById('period-range').textContent=def.label;
+  const subtitles={day:'مبيعات مكتملة كل ساعة',week:'مبيعات مكتملة يومياً لآخر 7 أيام',month:'مبيعات مكتملة يومياً للشهر الحالي',days30:'مبيعات مكتملة يومياً لآخر 30 يوم'};
+  document.getElementById('chart-subtitle').textContent=subtitles[p];
+
+  const{data:orders,error}=await _supabase.from('orders')
+    .select('status,total,created_at,items')
+    .gte('created_at',def.prevStart.toISOString())
+    .order('created_at',{ascending:true});
+  const bars=document.getElementById('sales-chart');
+  if(error){ toast('error','فشل جلب بيانات المبيعات: '+(error.message||'')); return; }
+
+  const all=orders||[];
+  let curRevenue=0, prevRevenue=0, curDelivered=0, curOrders=0;
+  const productAgg={};
+  const isHour=p==='day';
+  const buckets={};
+
+  all.forEach(o=>{
+    const ms=Date.parse(o.created_at||'');
+    if(!ms) return;
+    const t=ms;
+    const total=parseFloat(o.total)||0;
+
+    if(t>=def.prevStart.getTime()&&t<def.currentStart.getTime()){
+      if(o.status==='تم التوصيل') prevRevenue+=total;
+    }
+    if(t>=def.currentStart.getTime()){
+      curOrders++;
+      if(o.status==='تم التوصيل'){
+        curRevenue+=total; curDelivered++;
+        const k=bucketKey(t,isHour);
+        buckets[k]=(buckets[k]||0)+total;
+        // تجميع المنتجات
+        if(Array.isArray(o.items)){
+          o.items.forEach(it=>{
+            if(!it.name||it.isGift)return;
+            if(!productAgg[it.name])productAgg[it.name]={qty:0,revenue:0};
+            productAgg[it.name].qty+=(it.qty||1);
+            productAgg[it.name].revenue+=total*0;
+          });
+        }
+      }else if(o.status!=='ملغي'){
+        // طلبات في الطريق/غير مكتملة نضيفها للعداد الإجمالي فقط
+        if(Array.isArray(o.items)){
+          // لا نحسبها كإيراد لكن نحتفظ بالمنتجات؟ سنحسب نصيبها من المبيعات المستقبلية. نتجاهل.
+        }
+      }
+    }
+  });
+
+  document.getElementById('kpi-revenue').innerHTML=`${fmt(curRevenue)} <small class="text-sm font-medium text-gray-400">ج.م</small>`;
+  document.getElementById('kpi-orders').textContent=fmt(curOrders);
+  document.getElementById('kpi-aov').innerHTML=`${fmt(curDelivered?curRevenue/curDelivered:0)} <small class="text-sm font-medium text-gray-400">ج.م</small>`;
+
+  const cmp=pct(curRevenue,prevRevenue);
+  const cmpEl=document.getElementById('kpi-compare');
+  const up=cmp>=0;
+  cmpEl.className=`text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-0.5 ${up?'bg-emerald-50 text-emerald-600':'bg-red-50 text-red-500'}`;
+  cmpEl.innerHTML=`<span class="material-symbols-outlined text-[12px]">${up?'trending_up':'trending_down'}</span>${up?'+':''}${cmp}%`;
+
+  // أفضل منتج
+  const sorted=Object.entries(productAgg).sort((a,b)=>b[1].qty-a[1].qty);
+  if(sorted.length>0){
+    document.getElementById('kpi-top-product').textContent=sorted[0][0];
+    document.getElementById('kpi-top-product-qty').textContent=`${sorted[0][1].qty} قطعة مبيعة`;
+  }else{
+    document.getElementById('kpi-top-product').textContent='لا توجد بيانات';
+    document.getElementById('kpi-top-product-qty').textContent='';
+  }
+
+  // ===== الرسم الرئيسي =====
+  let labels=[], values=[];
+  if(isHour){
+    const hr=def.now.getHours();
+    for(let h=0;h<=hr;h++){labels.push(String(h).padStart(2,'0')+':00');values.push(buckets[h]||0);}
+  }else{
+    for(let i=0;i<def.days;i++){
+      const d=new Date(def.currentStart.getTime()+i*86400000);
+      if(d.getTime()>def.now.getTime())break;
+      labels.push(d.toLocaleDateString('ar-EG',{day:'numeric',month:'numeric'}));
+      values.push(buckets[new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()]||0);
+    }
+  }
+
+  if(mainChart) mainChart.destroy();
+  const ctx=bars.getContext('2d');
+  const grad=ctx.createLinearGradient(0,0,0,300);
+  grad.addColorStop(0,'rgba(236,19,91,.25)');
+  grad.addColorStop(1,'rgba(236,19,91,0)');
+  mainChart=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{
+      label:'المبيعات (ج.م)',
+      data:values,
+      borderColor:PRIMARY,
+      backgroundColor:grad,
+      fill:true,
+      tension:.35,
+      pointRadius:3,
+      pointBackgroundColor:'#fff',
+      pointBorderColor:PRIMARY,
+      pointBorderWidth:2,
+      borderWidth:2.5
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true,ticks:{callback:v=>fmt(v)} ,grid:{color:'#f1f5f9'}},
+        x:{grid:{display:false},ticks:{maxTicksLimit:isHour?12:10}}
+      }
+    }
+  });
+
+  // ===== المنتجات الأكثر مبيعاً =====
+  const top=sorted.slice(0,7).reverse();
+  if(productsChart) productsChart.destroy();
+  const pctx=document.getElementById('products-chart').getContext('2d');
+  if(top.length===0){
+    document.getElementById('top-products-wrap').innerHTML='<p class="text-center text-gray-300 text-sm py-16">لا توجد مبيعات مكتملة في هذه الفترة.</p>';
+    return;
+  }
+  document.getElementById('top-products-wrap').innerHTML='<canvas id="products-chart"></canvas>';
+  const colors=['#ec135b','#f43f5e','#fb7185','#fda4af','#fecdd3','#38bdf8','#a5b4fc'];
+  productsChart=new Chart(document.getElementById('products-chart'),{
+    type:'bar',
+    data:{labels:top.map(x=>x[0]),datasets:[{label:'الكمية المبيعة',data:top.map(x=>x[1].qty),backgroundColor:colors.slice(0,top.length),borderRadius:8,barThickness:24}]},
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{beginAtZero:true,ticks:{stepSize:1,precision:0},grid:{color:'#f1f5f9'}},
+        y:{grid:{display:false},ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+window.onload=async function(){
+  renderSidebar('sales-report.html');
+  const ok=await requireAdmin();
+  if(ok){setPeriod('week');}
+};
+</script>
+</body>
+</html>

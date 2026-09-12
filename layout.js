@@ -56,6 +56,7 @@ function renderSidebar(activePage) {
     { href: 'orders.html',      icon: 'shopping_bag', label: 'الطلبات' },
     { href: 'inventory.html',   icon: 'inventory_2',  label: 'المخزون' },
     { href: 'customers.html',   icon: 'group',        label: 'العملاء' },
+    { href: 'coupons.html',     icon: 'confirmation_number', label: 'الكوبونات والعروض' },
     { href: 'sales-report.html', icon: 'monitoring',   label: 'تقرير المبيعات' },
     { href: 'messages.html',    icon: 'chat',         label: 'رسائل العملاء' },
     { href: 'settings.html',    icon: 'settings',     label: 'إعدادات المتجر' },
@@ -84,7 +85,7 @@ function renderSidebar(activePage) {
   const sidebarHTML = `
     <aside id="app-sidebar" class="w-64 h-screen fixed right-0 top-0 bg-white border-l border-gray-100/80 flex flex-col z-40" style="box-shadow:2px 0 24px rgba(0,0,0,.04)">
       <div class="p-5 flex items-center gap-3 border-b border-gray-50">
-        <div class="w-10 h-10 bg-gradient-to-br from-primary to-rose-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
+        <div class="w-10 h-10 bg-gradient-to-br from-[#4d3ceb] to-[#8536ff] rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
           <span class="material-symbols-outlined text-[18px]" aria-hidden="true">clinical_notes</span>
         </div>
         <div class="flex-1 min-w-0">
@@ -151,7 +152,7 @@ function confirmDialog(title, text, confirmText = 'نعم، احذف') {
     title, text,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#ec135b',
+    confirmButtonColor: '#4d3ceb',
     cancelButtonColor: '#6b7280',
     confirmButtonText: confirmText,
     cancelButtonText: 'إلغاء',

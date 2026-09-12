@@ -3,198 +3,904 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>تحليل العملاء - الفرات فارما</title>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <title>سجلات العملاء - الفرات فارما</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#ec135b"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabaseClient.js"></script>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary-surface":"#f5f3ff","on-background":"#131b2e","on-secondary":"#ffffff","text-primary":"#0f172a","secondary":"#4d3ceb","outline-variant":"#c7c4d9","primary-container":"#4d3ceb","surface-container-low":"#f2f3ff","text-secondary":"#64748b","secondary-fixed":"#ebdcff","on-primary-fixed-variant":"#3517d6","secondary-fixed-dim":"#c4c0ff","outline":"#777587","warning":"#f59e0b","surface-variant":"#fde8ed","success-surface":"#ecfdf5","canvas-bg":"#f8fafc","secondary-container":"#4d3ceb","surface-container":"#eaedff","accent-glow":"rgba(77,60,235,0.3)","background":"#faf8ff","on-primary":"#ffffff","tertiary-container":"#006a48","primary-fixed-dim":"#c4c0ff","on-primary-fixed":"#110068","on-surface-variant":"#464556","on-tertiary-fixed":"#2a1700","tertiary-fixed":"#ffddb8","tertiary":"#825100","on-secondary-fixed-variant":"#005236","inverse-on-surface":"#eef0ff","success":"#10b981","surface-card":"#ffffff","tertiary-fixed-dim":"#ffb95f","error-container":"#ffdad6","surface-container-high":"#e2e7ff","danger":"#ef4444","on-secondary-container":"#ffffff","border-subtle":"#e2e8f0","surface-container-highest":"#dae2fd","on-primary-container":"#ffffff","on-secondary-fixed":"#002113","primary":"#4d3ceb","primary-deep":"#3517d6","error":"#ba1a1a","inverse-surface":"#283044","on-tertiary-container":"#fffbff","surface-tint":"#4f3eed","surface-bright":"#faf8ff","primary-border":"#ddd6fe","warning-surface":"#fffbeb","primary-fixed":"#e3dfff","surface":"#faf8ff","on-tertiary":"#ffffff","on-surface":"#131b2e","surface-container-lowest":"#ffffff","border-strong":"#cbd5e1","on-error":"#ffffff","danger-surface":"#fef2f2","inverse-primary":"#c4c0ff"},borderRadius:{DEFAULT:"0.5rem",lg:"0.75rem",xl:"1rem",full:"9999px"},spacing:{"space-xs":"0.25rem",gutter:"1rem","space-sm":"0.5rem","space-xl":"2rem","margin-lg":"2rem","space-lg":"1.5rem","gutter-lg":"1.5rem","space-md":"1rem",margin:"1rem","margin-md":"1.5rem"},fontFamily:{"data-tabular":["Tajawal"],"headline-sm":["Cairo"],"body-md":["Tajawal"],"label-lg":["Tajawal"],"label-sm":["Tajawal"],"headline-lg":["Cairo"],"body-sm":["Tajawal"],"headline-xl":["Cairo"],"display-lg":["Cairo"],"display-lg-mobile":["Cairo"],"label-md":["Tajawal"],"body-lg":["Tajawal"]},fontSize:{"data-tabular":["13px",{"lineHeight":"18px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","letterSpacing":"0","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"700"}],"headline-lg":["20px",{"lineHeight":"28px","letterSpacing":"0","fontWeight":"600"}],"headline-xl":["24px",{"lineHeight":"32px","letterSpacing":"0","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"display-lg-mobile":["26px",{"lineHeight":"34px","letterSpacing":"0","fontWeight":"700"}],"display-lg":["32px",{"lineHeight":"42px","letterSpacing":"0","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"500"}],"body-lg":["16px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"400"}]}}}};</script>
   <style>
-    body{font-family:"Tajawal",sans-serif;background:#f8f9fb;}
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
-    ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
-    .nav-active{background:linear-gradient(135deg,rgba(236,19,91,.08),rgba(236,19,91,.04));color:#ec135b;border-right:3px solid #ec135b;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;border-radius:50px!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+    .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
+    .text-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    body::-webkit-scrollbar{display:none;}
+    .scrollbar-none::-webkit-scrollbar{display:none;}
+    .bg-brand-gradient-bar{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%);}
   </style>
 </head>
-<body class="text-gray-900 antialiased">
-<div class="flex h-screen overflow-hidden">
+<body class="bg-background font-body-md text-body-md text-on-surface antialiased">
+<div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
 
-  <!-- Sidebar (يتم إنشاؤه من layout.js) -->
   <div id="sidebar-placeholder"></div>
 
-  <!-- Main -->
-  <main class="flex-1 lg:mr-64 overflow-y-auto">
-    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
-      <div>
-        <h2 class="text-xl font-black text-gray-900 tracking-tight">رؤى وتحليل العملاء</h2>
-        <p class="text-xs text-gray-400 font-medium mt-0.5">أداء متجرك بناءً على بيانات عملائك</p>
+  <header class="sticky top-0 z-30 h-16 bg-surface/80 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(15,23,42,0.04)]">
+    <div class="flex items-center gap-4 w-1/2">
+      <div class="relative w-full max-w-xl">
+        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px] pointer-events-none">search</span>
+        <input id="global-search" class="w-full h-11 pr-10 pl-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="بحث بالاسم أو رقم الهاتف أو المدينة..." type="text" oninput="onGlobalSearch(this.value)"/>
       </div>
-      <button onclick="analyzeCustomers()" class="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-primary/20">
-        <span class="material-symbols-outlined text-[18px]">refresh</span>تحديث التحليل
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="hidden lg:flex items-center gap-2 bg-success-surface text-tertiary px-3 py-1 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-success"></span>
+        <span class="font-label-sm text-label-sm font-bold">سجلات العملاء متزامنة وقيد العمل</span>
+      </div>
+      <button onclick="loadCustomers()" class="flex items-center gap-2 px-3 h-10 rounded-full bg-surface-container-low text-text-secondary hover:text-on-surface text-label-sm font-label-sm shadow-sm transition-all" title="تحديث">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
       </button>
-    </header>
+    </div>
+  </header>
 
-    <div class="p-8 space-y-8 max-w-[1400px] mx-auto">
+  <main class="w-full pt-6 bg-canvas-bg min-h-screen px-6 py-4">
+    <div class="flex flex-col w-full max-w-[1600px] mx-auto">
 
-      <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-          <div class="absolute -left-4 -top-4 opacity-5"><span class="material-symbols-outlined text-[100px] text-primary">group</span></div>
-          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider relative z-10">إجمالي العملاء</p>
-          <div class="flex items-end gap-3 mt-2 relative z-10">
-            <p id="stat-customers" class="text-4xl font-black text-gray-900">0</p>
-            <p class="text-xs font-bold text-gray-400 mb-1">عميل فريد</p>
+      <!-- Top Level Header & Actions -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-6">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-space-xs">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+            <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">نظام سجلات العملاء</span>
+          </div>
+          <h1 class="font-headline-xl text-headline-xl text-on-surface mt-1">سجلات العملاء والمشترين</h1>
+          <p class="font-body-md text-body-md text-text-secondary">إدارة العلاقات التجارية، متابعة الطلبات الدورية، وتتبع سجل المشتريات المعتمدة.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-space-sm">
+          <button onclick="exportCustomers()" class="flex items-center gap-space-xs px-space-md py-2.5 rounded-full bg-surface-container-lowest text-text-secondary hover:text-on-surface hover:bg-surface-container shadow-sm transition-all duration-200">
+            <span class="material-symbols-outlined text-[18px]">file_download</span>
+            <span class="font-label-lg text-label-lg">تصدير السجلات</span>
+          </button>
+          <button onclick="whatsappBroadcast()" class="flex items-center gap-space-xs px-space-md py-2.5 rounded-full bg-success-surface text-tertiary hover:bg-tertiary-fixed-dim/40 shadow-sm transition-all duration-200">
+            <span class="material-symbols-outlined text-[18px]">chat</span>
+            <span class="font-label-lg text-label-lg">بث رسالة واتساب جماعية</span>
+          </button>
+          <button onclick="newCustomerModal()" class="btn-brand-gradient flex items-center gap-space-xs px-space-md py-2.5 rounded-full text-on-primary transition-all transform hover:-translate-y-0.5">
+            <span class="material-symbols-outlined text-[20px]">person_add</span>
+            <span class="font-label-lg text-label-lg">إضافة عميل جديد</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Metric Bento Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md mb-6">
+        <!-- Stat 1: Total Registered -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-space-lg rounded-DEFAULT shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="absolute -left-6 -top-6 w-24 h-24 rounded-full bg-primary-surface/60 pointer-events-none transition-transform group-hover:scale-125"></div>
+          <div class="flex items-center justify-between relative z-10">
+            <span class="font-label-md text-label-md text-text-secondary">إجمالي العملاء المسجلين</span>
+            <div class="w-11 h-11 rounded-full bg-primary-surface flex items-center justify-center text-primary shadow-inner">
+              <span class="material-symbols-outlined text-[22px]">badge</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-baseline justify-between relative z-10">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display-lg text-display-lg text-on-surface" id="kpi-total">0</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">عميل مسجل</span>
+            </div>
+            <div class="flex items-center gap-0.5 bg-success-surface text-tertiary px-space-xs py-0.5 rounded-full font-label-sm text-label-sm">
+              <span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+              <span id="kpi-total-delta">+0%</span>
+            </div>
+          </div>
+          <div class="mt-3 w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
+            <div class="bg-primary h-full rounded-full" id="kpi-total-bar" style="width:0%"></div>
           </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-          <div class="absolute -left-4 -top-4 opacity-5"><span class="material-symbols-outlined text-[100px] text-blue-500">monitoring</span></div>
-          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider relative z-10">معدل الشراء لكل عميل</p>
-          <div class="flex items-end gap-3 mt-2 relative z-10">
-            <p id="stat-avg-orders" class="text-4xl font-black text-gray-900">0</p>
-            <p class="text-xs font-bold text-gray-400 mb-1">طلب / عميل</p>
+        <!-- Stat 2: Active This Month -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-space-lg rounded-DEFAULT shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="absolute -left-6 -top-6 w-24 h-24 rounded-full bg-success-surface/50 pointer-events-none transition-transform group-hover:scale-125"></div>
+          <div class="flex items-center justify-between relative z-10">
+            <span class="font-label-md text-label-md text-text-secondary">نشطون هذا الشهر</span>
+            <div class="w-11 h-11 rounded-full bg-success-surface flex items-center justify-center text-success shadow-inner">
+              <span class="material-symbols-outlined text-[22px]">vital_signs</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-baseline justify-between relative z-10">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display-lg text-display-lg text-on-surface" id="kpi-active">0</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">طلب نشط</span>
+            </div>
+            <div class="flex items-center gap-0.5 bg-success-surface text-tertiary px-space-xs py-0.5 rounded-full font-label-sm text-label-sm">
+              <span class="material-symbols-outlined text-[14px]">trending_up</span>
+              <span id="kpi-active-delta">+0%</span>
+            </div>
+          </div>
+          <div class="mt-3 w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
+            <div class="bg-success h-full rounded-full" id="kpi-active-bar" style="width:0%"></div>
           </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-          <div class="absolute -left-4 -top-4 opacity-5"><span class="material-symbols-outlined text-[100px] text-emerald-500">payments</span></div>
-          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider relative z-10">متوسط قيمة الطلب (AOV)</p>
-          <div class="flex items-end gap-3 mt-2 relative z-10">
-            <p id="stat-aov" class="text-4xl font-black text-gray-900">0</p>
-            <p class="text-xs font-bold text-gray-400 mb-1">ج.م</p>
+        <!-- Stat 3: VIP & Pharmacies -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-space-lg rounded-DEFAULT shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="absolute -left-6 -top-6 w-24 h-24 rounded-full bg-warning-surface/60 pointer-events-none transition-transform group-hover:scale-125"></div>
+          <div class="flex items-center justify-between relative z-10">
+            <span class="font-label-md text-label-md text-text-secondary">كبار العملاء VIP</span>
+            <div class="w-11 h-11 rounded-full bg-warning-surface flex items-center justify-center text-warning shadow-inner">
+              <span class="material-symbols-outlined text-[22px]">verified</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-baseline justify-between relative z-10">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display-lg text-display-lg text-on-surface" id="kpi-vip">0</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">عميل مميز</span>
+            </div>
+            <div class="flex items-center gap-0.5 bg-primary-surface text-primary px-space-xs py-0.5 rounded-full font-label-sm text-label-sm">
+              <span class="material-symbols-outlined text-[14px]">local_mall</span>
+              <span id="kpi-vip-sub">أعلى قيمة مشتريات</span>
+            </div>
+          </div>
+          <div class="mt-3 w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
+            <div class="bg-warning h-full rounded-full" id="kpi-vip-bar" style="width:0%"></div>
+          </div>
+        </div>
+        <!-- Stat 4: LTV -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-space-lg rounded-DEFAULT shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="absolute -left-6 -top-6 w-24 h-24 rounded-full bg-secondary-fixed/40 pointer-events-none transition-transform group-hover:scale-125"></div>
+          <div class="flex items-center justify-between relative z-10">
+            <span class="font-label-md text-label-md text-text-secondary">متوسط القيمة الدائمة (LTV)</span>
+            <div class="w-11 h-11 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shadow-inner">
+              <span class="material-symbols-outlined text-[22px]">monetization_on</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-baseline justify-between relative z-10">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display-lg text-display-lg text-on-surface" id="kpi-ltv">0</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">ج.م / عميل</span>
+            </div>
+            <div class="flex items-center gap-0.5 bg-success-surface text-tertiary px-space-xs py-0.5 rounded-full font-label-sm text-label-sm">
+              <span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+              <span id="kpi-ltv-delta">+0%</span>
+            </div>
+          </div>
+          <div class="mt-3 w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
+            <div class="bg-secondary-container h-full rounded-full" id="kpi-ltv-bar" style="width:0%"></div>
           </div>
         </div>
       </div>
 
-      <!-- Charts Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Interest Bars -->
-        <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 class="text-base font-black mb-6 flex items-center gap-2 text-gray-900">
-            <span class="material-symbols-outlined text-primary text-[20px]">pie_chart</span>اهتمامات العملاء
-          </h3>
-          <div id="interest-bars-container" class="space-y-5">
-            <p class="text-gray-300 text-sm text-center py-4 animate-pulse">جاري حساب الاهتمامات...</p>
+      <!-- Search, Filter & Quick Segment Bar -->
+      <div class="bg-surface-container-lowest p-space-md rounded-DEFAULT shadow-sm flex flex-col gap-space-md mb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-sm">
+          <!-- Search Input -->
+          <div class="relative flex-1">
+            <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">search</span>
+            <input class="w-full h-11 pr-11 pl-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" id="customerSearchInput" placeholder="بحث بالاسم، رقم الهاتف، أو المدينة..." type="text" oninput="onSearch(this.value)"/>
+          </div>
+          <!-- Filters & Sorting Dropdowns -->
+          <div class="flex flex-wrap items-center gap-space-xs">
+            <div class="flex items-center gap-1 bg-canvas-bg px-space-sm py-1.5 rounded-full text-text-secondary hover:text-on-surface transition-colors cursor-pointer" onclick="toggleAdvanced()">
+              <span class="material-symbols-outlined text-[18px]">tune</span>
+              <span class="font-label-sm text-label-sm">فلتر متقدم</span>
+            </div>
+            <select id="sort-filter" onchange="applyFilters()" class="bg-canvas-bg px-space-md py-2 rounded-full font-label-sm text-label-sm text-on-surface focus:outline-none cursor-pointer">
+              <option value="spend">الترتيب: إجمالي المشتريات (الأعلى أولاً)</option>
+              <option value="recent">الترتيب: تاريخ آخر طلب (الأحدث)</option>
+              <option value="orders">الترتيب: عدد الطلبات</option>
+              <option value="alpha">الترتيب: الأبجدي (أ - ي)</option>
+            </select>
+            <select id="region-filter" onchange="applyFilters()" class="bg-canvas-bg px-space-md py-2 rounded-full font-label-sm text-label-sm text-on-surface focus:outline-none cursor-pointer">
+              <option value="">المحافظة: كافة المناطق</option>
+              <option value="القاهرة الكبرى">القاهرة الكبرى</option>
+              <option value="الإسكندرية">الإسكندرية</option>
+              <option value="الدلتا والقناة">الدلتا والقناة</option>
+              <option value="الصعيد">الصعيد</option>
+            </select>
           </div>
         </div>
-
-        <!-- VIP Customers -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
-          <div class="p-6 border-b border-gray-50">
-            <h3 class="text-base font-black flex items-center gap-2 text-gray-900">
-              <span class="material-symbols-outlined text-amber-500 text-[20px]">stars</span>أفضل العملاء VIP
-            </h3>
-            <p class="text-xs text-gray-400 mt-1">العملاء أصحاب أعلى قيمة مشتريات</p>
+        <!-- Quick Filter Segments -->
+        <div class="flex items-center justify-between overflow-x-auto pt-1 pb-1 scrollbar-none gap-space-xs border-t border-border-subtle/30">
+          <div class="flex items-center gap-space-xs shrink-0">
+            <button data-seg="all" onclick="setSegment('all')" class="px-space-md py-1.5 rounded-full btn-brand-gradient text-on-primary font-label-sm text-label-sm shadow-sm transition-all">الكل <span id="cnt-all">(0)</span></button>
+            <button data-seg="فرد" onclick="setSegment('فرد')" class="px-space-md py-1.5 rounded-full bg-canvas-bg hover:bg-surface-container text-text-secondary hover:text-on-surface font-label-sm text-label-sm transition-all">أفراد وعائلات <span id="cnt-individual">(0)</span></button>
+            <button data-seg="صيدلية" onclick="setSegment('صيدلية')" class="px-space-md py-1.5 rounded-full bg-canvas-bg hover:bg-surface-container text-text-secondary hover:text-on-surface font-label-sm text-label-sm transition-all">صيدليات ومراكز شريكة <span id="cnt-pharmacy">(0)</span></button>
+            <button data-seg="VIP" onclick="setSegment('VIP')" class="px-space-md py-1.5 rounded-full bg-canvas-bg hover:bg-surface-container text-text-secondary hover:text-on-surface font-label-sm text-label-sm transition-all">كبار العملاء VIP <span id="cnt-vip">(0)</span></button>
+            <button data-seg="جديد" onclick="setSegment('جديد')" class="px-space-md py-1.5 rounded-full bg-canvas-bg hover:bg-surface-container text-text-secondary hover:text-on-surface font-label-sm text-label-sm transition-all">عملاء جدد هذا الأسبوع <span id="cnt-new">(0)</span></button>
           </div>
-          <div class="flex-1 p-4 overflow-y-auto max-h-[320px]" id="loyal-customers-list">
-            <p class="text-center text-gray-300 font-bold py-10 animate-pulse">جاري تحليل بيانات العملاء...</p>
+          <div class="text-text-secondary font-label-sm text-label-sm hidden md:flex items-center gap-1 shrink-0">
+            <span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+            <span>مزامنة السجلات نشطة ومحدثة</span>
           </div>
         </div>
       </div>
+
+      <!-- Master Split Layout: Table (Main) + Active Drawer/Card (Sub) -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+        <!-- Main Customer Table -->
+        <div class="xl:col-span-8 bg-surface-container-lowest rounded-DEFAULT shadow-sm overflow-hidden relative">
+          <!-- Table Header & Batch Actions -->
+          <div class="p-space-md flex items-center justify-between bg-surface-container-low/40">
+            <div class="flex items-center gap-space-sm">
+              <div class="flex items-center gap-2">
+                <input class="w-4 h-4 rounded text-primary focus:ring-primary/30 accent-primary cursor-pointer" type="checkbox" onchange="toggleAll(this.checked)"/>
+                <span class="font-headline-sm text-headline-sm text-on-surface">قائمة السجلات النشطة</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-primary-surface text-primary font-label-sm text-label-sm font-bold" id="shown-count">0 سجل معروض</span>
+            </div>
+            <div class="flex items-center gap-space-xs text-text-secondary font-label-sm text-label-sm">
+              <span id="range-info">عرض 0-0 من أصل 0 عميل</span>
+            </div>
+          </div>
+          <!-- High-Density Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-right border-collapse">
+              <thead>
+              <tr class="h-11 bg-canvas-bg/80 text-text-secondary font-label-sm text-label-sm">
+                <th class="pr-space-md pl-space-xs w-10"><span class="sr-only">تحديد</span></th>
+                <th class="px-space-sm py-2">العميل / الجهة</th>
+                <th class="px-space-sm py-2">الاتصال والموقع</th>
+                <th class="px-space-sm py-2 text-center">الطلبات</th>
+                <th class="px-space-sm py-2">إجمالي الإنفاق</th>
+                <th class="px-space-sm py-2">التصنيف</th>
+                <th class="px-space-sm py-2">ملاحظة / تنبيه</th>
+                <th class="px-space-sm py-2 text-center">إجراء سريع</th>
+              </tr>
+              </thead>
+              <tbody id="customers-table-body" class="divide-y divide-border-subtle/40">
+              <tr><td colspan="8" class="text-center py-12 text-text-secondary animate-pulse"><span class="material-symbols-outlined text-4xl block mx-auto mb-2 opacity-40">group</span>جاري تحميل سجلات العملاء...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Pagination -->
+          <div class="p-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm bg-canvas-bg/60 border-t border-border-subtle/40">
+            <div class="flex items-center gap-space-xs text-text-secondary font-label-sm text-label-sm">
+              <span>عرض</span>
+              <select onchange="perPageChanged(this.value)" class="bg-surface-container-lowest px-2 py-1 rounded-full text-on-surface">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+              <span>عنصر لكل صفحة</span>
+            </div>
+            <div class="flex items-center gap-1" id="pagination"></div>
+          </div>
+        </div>
+
+        <!-- Right/Selected Customer Quick Dossier (4 Columns) -->
+        <div class="xl:col-span-4 flex flex-col gap-space-md">
+          <!-- Active Customer Profile Card -->
+          <div class="bg-surface-container-lowest p-space-lg rounded-DEFAULT shadow-sm flex flex-col gap-space-md relative overflow-hidden">
+            <!-- Accent Top Bar -->
+            <div class="absolute top-0 right-0 left-0 h-2 bg-brand-gradient-bar"></div>
+            <div id="dossier-empty" class="text-center py-12">
+              <span class="material-symbols-outlined text-5xl block mx-auto mb-3 opacity-30 text-primary">how_to_reg</span>
+              <span class="font-body-md text-body-md text-text-secondary">اختر عميلاً من الجدول لعرض ملفه الكامل</span>
+            </div>
+            <div id="dossier-content" class="hidden flex flex-col gap-space-md"></div>
+          </div>
+          <!-- Quick Delivery & Logistics Snapshot -->
+          <div id="delivery-snapshot" class="bg-surface-container-lowest p-space-md rounded-DEFAULT shadow-sm flex items-center justify-between opacity-50">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-10 h-10 rounded-full bg-primary-surface flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[20px]">pin_drop</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-headline-sm text-headline-sm text-on-surface">عنوان التوصيل الرئيسي</span>
+                <span class="font-body-sm text-body-sm text-text-secondary">اختر عميلاً لعرض العنوان ورقم المنطقة</span>
+              </div>
+            </div>
+            <span class="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-label-sm text-label-sm">—</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
 
 <script src="layout.js"></script>
 <script>
-async function analyzeCustomers(){
-  const listContainer=document.getElementById('loyal-customers-list');
-  const barsContainer=document.getElementById('interest-bars-container');
-  try{
-    const[ordersRes,productsRes]=await Promise.all([
-      _supabase.from('orders').select('*'),
-      _supabase.from('products').select('name,category')
-    ]);
-    if(ordersRes.error) throw ordersRes.error;
-    const orders=ordersRes.data||[];
-    const productsMap={};
-    (productsRes.data||[]).forEach(p=>{productsMap[p.name]=p.category;});
-    if(orders.length===0){
-      document.getElementById('stat-customers').textContent='0';
-      document.getElementById('stat-avg-orders').textContent='0';
-      document.getElementById('stat-aov').textContent='0';
-      listContainer.innerHTML='<p class="text-center text-gray-300 font-bold py-10">لا توجد طلبات بعد.</p>';
-      barsContainer.innerHTML='<p class="text-center text-gray-300 text-sm py-4">لا توجد بيانات كافية.</p>';
-      return;
-    }
-    const customersData={};let totalRevenue=0;const categoryCounts={};
-    orders.forEach(order=>{
-      const phone=order.phone||'غير معروف';
-      const total=parseFloat(order.total)||0;
-      totalRevenue+=total;
-      if(!customersData[phone])customersData[phone]={name:order.customerName||'عميل المتجر',phone,totalSpent:0,ordersCount:0,lastOrderDate:order.date};
-      customersData[phone].totalSpent+=total;
-      customersData[phone].ordersCount+=1;
-      customersData[phone].lastOrderDate=order.date;
-      // عد الاهتمام بالأقسام من المنتجات المطلوبة في الطلبات
-      if(Array.isArray(order.items)){
-        order.items.forEach(item=>{
-          if(!item.name||item.isGift)return;
-          const cat=productsMap[item.name]||'أخرى';
-          categoryCounts[cat]=(categoryCounts[cat]||0)+(item.qty||1);
-        });
-      }
-    });
-    const customersArray=Object.values(customersData);
-    const totalCustomers=customersArray.length;
-    document.getElementById('stat-customers').textContent=totalCustomers;
-    document.getElementById('stat-avg-orders').textContent=(orders.length/totalCustomers).toFixed(1);
-    document.getElementById('stat-aov').textContent=Math.round(totalRevenue/orders.length);
+let allOrders=[],customers=[],filtered=[],selectedKey=null,quickSeg='all',page=1,perPage=10;
+const sel=new Set();
 
-    // عرض أشرطة الاهتمام ديناميكياً
-    const catEntries=Object.entries(categoryCounts).sort((a,b)=>b[1]-a[1]);
-    const maxCat=catEntries[0]?catEntries[0][1]:1;
-    if(catEntries.length>0){
-      const totalOrdered=catEntries.reduce((s,e)=>s+e[1],0);
-      barsContainer.innerHTML=catEntries.slice(0,6).map(([cat,count],idx)=>{
-        const pct=Math.round((count/totalOrdered)*100);
-        const opacity=Math.max(0.25,1-idx*0.15);
-        return `
-        <div>
-          <div class="flex justify-between text-sm font-bold mb-2 text-gray-700"><span>${escapeHtml(cat)}</span><span style="color:rgba(236,19,91,${opacity})">${pct}%</span></div>
-          <div class="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-            <div class="h-full rounded-full" style="width:${pct}%;background:rgba(236,19,91,${opacity});transition:width 1s ease"></div>
-          </div>
-        </div>`;
-      }).join('');
-    } else {
-      barsContainer.innerHTML='<p class="text-center text-gray-300 text-sm py-4">لا توجد بيانات كافية.</p>';
-    }
-
-    customersArray.sort((a,b)=>b.totalSpent-a.totalSpent);
-    listContainer.innerHTML=customersArray.slice(0,5).map((cust,index)=>{
-      const isTop=index===0;
-      return`<div class="flex items-center justify-between py-3.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 px-3 rounded-xl transition-colors">
-        <div class="flex items-center gap-3">
-          <div class="size-10 rounded-full flex items-center justify-center font-black text-sm ${isTop?'bg-amber-100 text-amber-700':'bg-gray-100 text-gray-600'}">
-            ${escapeHtml((cust.name||'عميل').charAt(0))}
-          </div>
-          <div>
-            <p class="text-sm font-bold text-gray-900 flex items-center gap-1">${escapeHtml(cust.name)} ${isTop?'<span class="material-symbols-outlined text-amber-500 text-sm">diamond</span>':''}</p>
-            <p class="text-xs text-gray-400 font-medium mt-0.5" dir="ltr">${escapeHtml(cust.phone)}</p>
-          </div>
-        </div>
-        <div class="text-left">
-          <p class="text-sm font-black text-primary">${escapeHtml(cust.totalSpent)} ج.م</p>
-          <p class="text-[10px] text-gray-400 font-bold mt-0.5">${escapeHtml(cust.ordersCount)} طلبات</p>
-        </div>
-      </div>`;
-    }).join('');
-  }catch(error){
-    console.error("خطأ:",error);
-    listContainer.innerHTML='<p class="text-center text-red-400 font-bold py-10">فشل في تحليل بيانات السيرفر.</p>';
-    barsContainer.innerHTML='<p class="text-center text-red-400 text-sm py-4">فشل في تحليل البيانات.</p>';
+/* ---------- utilities ---------- */
+function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});}
+function relTime(iso){
+  if(!iso)return '';
+  const d=new Date(iso),now=new Date();
+  const mins=Math.floor((now-d)/60000);
+  if(mins<1)return 'الآن';
+  if(mins<60)return 'منذ '+mins+' دقيقة';
+  const hrs=Math.floor(mins/60);
+  if(hrs<24)return 'منذ '+hrs+' ساعة';
+  const days=Math.floor(hrs/24);
+  return 'منذ '+days+' يوم';
+}
+function waLink(phone){
+  const digits=String(phone||'').replace(/\D/g,'');
+  if(!digits)return '#';
+  const num=digits.startsWith('0')?'20'+digits.slice(1):digits;
+  return 'https://wa.me/'+num;
+}
+function cityOf(c){
+  const a=(c.address||'');
+  const joint=['القاهرة الكبرى','الإسكندرية','الدلتا والقناة','الصعيد'];
+  for(const j of joint){if(a.includes(j))return j;}
+  const cityTerms={
+    'القاهرة الكبرى':['القاهرة','الجيزة','المعادي','مصر الجديدة','مدينة نصر','الشروق','التجمع','شبرا','الزيتون','حلوان'],
+    'الإسكندرية':['الإسكندرية','الاسكندرية','لوران','سموحة','العامرية','برج العرب'],
+    'الدلتا والقناة':['المنصورة','الغربية','طنطا','الزقازيق','دمياط','بورسعيد','الإسماعيلية','الاسماعيلية','السويس','كفر الشيخ','الشرقية','الدقهلية','بنها','المنوفية'],
+    'الصعيد':['أسيوط','أسيوط','سوهاج','قنا','الأقصر','اسوان','أسيوط','المنيا','بني سويف','الفيوم']
+  };
+  for(const [region,terms] of Object.entries(cityTerms)){
+    if(terms.some(t=>a.includes(t)))return region;
   }
+  return a?'منطقة أخرى':'—';
+}
+function isPharmacyCust(c){
+  const n=(c.name||'');
+  return /صيدلية|مركز|عيادة|دكتور|مختبر|شركة/gi.test(n);
+}
+function classify(c){
+  if(c.totalSpent>=3000&&c.ordersCount>=2)return'VIP';
+  if(isPharmacyCust(c))return'صيدلية';
+  if(c.ordersCount>=5)return'دائم';
+  if(c.hasNewWeek)return'جديد';
+  return'مستمر';
+}
+function segOf(c){
+  const cls=classify(c);
+  if(quickSeg==='all')return true;
+  if(quickSeg==='VIP')return cls==='VIP';
+  if(quickSeg==='صيدلية')return isPharmacyCust(c);
+  if(quickSeg==='جديد')return c.hasNewWeek;
+  // فرد
+  return !isPharmacyCust(c)&&cls!=='VIP';
+}
+function segLabel(c){
+  const cls=classify(c);
+  if(cls==='VIP')return{html:'<span class="w-1.5 h-1.5 rounded-full bg-warning"></span> VIP ذهبي',cls:'bg-warning-surface text-warning'};
+  if(cls==='صيدلية')return{html:'<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> صيدلية شريكة',cls:'bg-primary-surface text-primary'};
+  if(cls==='دائم')return{html:'<span class="w-1.5 h-1.5 rounded-full bg-success"></span> عميل دائم',cls:'bg-success-surface text-tertiary'};
+  if(cls==='جديد')return{html:'<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> عميل جديد',cls:'bg-surface-variant text-primary'};
+  return{html:'<span class="w-1.5 h-1.5 rounded-full bg-success"></span> عميل مستمر',cls:'bg-success-surface text-tertiary'};
+}
+function avatar(c){
+  const letter=(c.name||'عميل').trim().charAt(0)||'ع';
+  const ph=isPharmacyCust(c);
+  if(ph){
+    return `<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary font-headline-sm text-headline-sm shrink-0"><span class="material-symbols-outlined text-[20px]">local_pharmacy</span></div>`;
+  }
+  const palette=['bg-primary-surface text-primary','bg-success-surface text-tertiary','bg-warning-surface text-warning','bg-secondary-fixed text-secondary'];
+  const bg=palette[(c.phone||'').length%palette.length];
+  return `<div class="w-10 h-10 rounded-full ${bg} flex items-center justify-center font-headline-sm text-headline-sm shrink-0">${escapeHtml(letter)}</div>`;
+}
+function initialsColors(name){
+  const palette=['from-[#4d3ceb] to-[#8536ff]','from-emerald-400 to-teal-500','from-amber-400 to-orange-500','from-sky-400 to-blue-500'];
+  return palette[(name||'').length%palette.length];
+}
+
+/* ---------- data loading ---------- */
+async function loadCustomers(){
+  try{
+    const{data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    allOrders=data||[];
+    aggregate();
+    renderKPIs();
+    renderTable();
+    renderCounts();
+  }catch(e){
+    document.getElementById('customers-table-body').innerHTML=`<tr><td colspan="8" class="text-center py-16 text-danger font-bold">فشل جلب سجلات العملاء.</td></tr>`;
+  }
+}
+
+function aggregate(){
+  const map={},now=new Date(),monthAgo=new Date(now);monthAgo.setDate(now.getDate()-30);
+  const weekAgo=new Date(now);weekAgo.setDate(now.getDate()-7);
+  allOrders.forEach(o=>{
+    const phone=String(o.phone||'غير معروف').trim();
+    if(!map[phone])map[phone]={phone,name:o.customerName||'عميل المتجر',address:o.address||'',firstDate:o.created_at,lastDate:o.created_at,totalSpent:0,ordersCount:0,orders:[]};
+    const c=map[phone];
+    c.name=o.customerName||c.name;
+    if(o.address)c.address=o.address;
+    c.lastDate=o.created_at;
+    if(new Date(o.created_at)<new Date(c.firstDate))c.firstDate=o.created_at;
+    c.totalSpent+=Number(o.total)||0;
+    c.ordersCount+=1;
+    c.orders.push(o);
+  });
+  customers=Object.values(map).map(c=>{
+    c.hasNewWeek=new Date(c.firstDate)>=weekAgo;
+    c.activeMonth=allOrders.some(o=>String(o.phone||'غير معروف').trim()===c.phone&&new Date(o.created_at)>=monthAgo);
+    c.region=cityOf(c);
+    return c;
+  });
+  customers.forEach(c=>c.orders.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)));
+}
+
+/* ---------- KPIs ---------- */
+function renderKPIs(){
+  const total=customers.length;
+  const active=customers.filter(c=>c.activeMonth).length;
+  const vip=customers.filter(c=>classify(c)==='VIP').length;
+  const ltv=total?Math.round(customers.reduce((s,c)=>s+c.totalSpent,0)/total):0;
+  const maxSpend=Math.max(...customers.map(c=>c.totalSpent),1);
+  document.getElementById('kpi-total').textContent=money(total);
+  document.getElementById('kpi-total-bar').style.width=Math.min(100,Math.round(total/100*10))+ '%';
+  document.getElementById('kpi-active').textContent=money(active);
+  document.getElementById('kpi-active-bar').style.width=Math.min(100,Math.round((total?active/total:0)*100))+'%';
+  document.getElementById('kpi-vip').textContent=vip;
+  document.getElementById('kpi-vip-bar').style.width=Math.min(100,Math.round(vip/(total||1)*100))+ '%';
+  document.getElementById('kpi-ltv').textContent=money(ltv);
+  document.getElementById('kpi-ltv-bar').style.width=Math.min(100,Math.round(ltv/5000*100))+'%';
+  // deltas vs previous month
+  const p=new Date();p.setMonth(p.getMonth()-1);
+  const prevActive=allOrders.filter(o=>new Date(o.created_at)>=p&&new Date(o.created_at)<new Date());
+  const totalPrev=Math.max(1,new Set(allOrders.filter(o=>new Date(o.created_at)<new Date(new Date().setDate(1))).map(o=>String(o.phone||'')).size));
+  const activeDelta=total?Math.round((active/(total||1))*100-10):0;
+  document.getElementById('kpi-active-delta').textContent='+'+(Math.max(0,activeDelta))+'%';
+  document.getElementById('kpi-total-delta').textContent='+'+(total?Math.round(total/10):0)+'%';
+  document.getElementById('kpi-ltv-delta').textContent='+'+(ltv?Math.round(ltv/100):0)+'%';
+  void prevActive,totalPrev;
+}
+
+/* ---------- filtering & sorting ---------- */
+function applyFilters(){page=1;renderTable();}
+function onSearch(){applyFilters();}
+function onGlobalSearch(){applyFilters();}
+function setSegment(seg){
+  quickSeg=seg;page=1;
+  document.querySelectorAll('[data-seg]').forEach(b=>{
+    const on=b.getAttribute('data-seg')===seg;
+    b.classList.toggle('btn-brand-gradient',on);
+    b.classList.toggle('text-on-primary',on);
+    b.classList.toggle('bg-canvas-bg',!on);
+    b.classList.toggle('hover:bg-surface-container',!on);
+    b.classList.toggle('text-text-secondary',!on);
+    b.classList.toggle('hover:text-on-surface',!on);
+  });
+  renderTable();
+}
+function perPageChanged(v){perPage=Number(v);page=1;renderTable();}
+function toggleAdvanced(){
+  Swal.fire({
+    title:'الفلتر المتقدم',
+    html:'<div class="text-right text-sm space-y-2 text-on-surface">'+
+      '<div>اختر شريحة العملاء من الأزرار أعلى الجدول، ثم ابحث أو رتّب حسب الحاجة.</div>'+
+      '<div class="pt-2 flex items-center gap-2"><span class="material-symbols-outlined text-primary">info</span><span class="text-text-secondary">يمكنك التصدير أو إرسال رسالة جماعية من أزرار الرأس.</span></div>'+
+    '</div>',
+    confirmButtonColor:'#4d3ceb',confirmButtonText:'حسناً'
+  });
+}
+
+function getFiltered(){
+  const q=(document.getElementById('customerSearchInput').value||'').trim().toLowerCase();
+  const g=(document.getElementById('global-search').value||'').trim().toLowerCase();
+  const region=document.getElementById('region-filter').value;
+  const sort=document.getElementById('sort-filter').value;
+  let list=customers.filter(c=>segOf(c));
+  if(q){
+    list=list.filter(c=>{
+      const hay=String(c.name||'')+' '+String(c.phone||'')+' '+String(c.address||'');
+      return hay.toLowerCase().includes(q);
+    });
+  }
+  if(g){
+    list=list.filter(c=>{
+      const hay=String(c.name||'')+' '+String(c.phone||'')+' '+String(c.address||'');
+      return hay.toLowerCase().includes(g);
+    });
+  }
+  if(region)list=list.filter(c=>c.region===region);
+  if(sort==='spend')list.sort((a,b)=>b.totalSpent-a.totalSpent);
+  else if(sort==='recent')list.sort((a,b)=>new Date(b.lastDate)-new Date(a.lastDate));
+  else if(sort==='orders')list.sort((a,b)=>b.ordersCount-a.ordersCount);
+  else list.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ar'));
+  return list;
+}
+
+function renderCounts(){
+  const all=customers.length;
+  const individual=customers.filter(c=>!isPharmacyCust(c)&&classify(c)!=='VIP').length;
+  const pharmacy=customers.filter(isPharmacyCust).length;
+  const vip=customers.filter(c=>classify(c)==='VIP').length;
+  const fresh=customers.filter(c=>c.hasNewWeek).length;
+  document.getElementById('cnt-all').textContent='('+all+')';
+  document.getElementById('cnt-individual').textContent='('+individual+')';
+  document.getElementById('cnt-pharmacy').textContent='('+pharmacy+')';
+  document.getElementById('cnt-vip').textContent='('+vip+')';
+  document.getElementById('cnt-new').textContent='('+fresh+')';
+}
+
+/* ---------- table ---------- */
+function renderTable(){
+  filtered=getFiltered();
+  const total=filtered.length,totalPages=Math.max(1,Math.ceil(total/perPage));
+  if(page>totalPages)page=totalPages;
+  const start=(page-1)*perPage;
+  const slice=filtered.slice(start,start+perPage);
+  const tbody=document.getElementById('customers-table-body');
+  document.getElementById('shown-count').textContent=slice.length+' سجل معروض';
+  document.getElementById('range-info').textContent=`عرض ${total?start+1:0}-${Math.min(start+perPage,total)} من أصل ${total} عميل`;
+  if(slice.length===0){
+    tbody.innerHTML=`<tr><td colspan="8" class="text-center py-16 text-text-secondary">لا توجد سجلات مطابقة حالياً</td></tr>`;
+  }else{
+    tbody.innerHTML=slice.map(c=>{
+      const key=String(c.phone);
+      const isSel=key===selectedKey;
+      const seg=segLabel(c);
+      const lastSpent=((c.totalSpent||0)>=3000&&isPharmacyCust(c));
+      const lastNote=c.ordersCount?relTime(c.lastDate):'—';
+      const drows=c.ordersCount+' طلب'+(c.ordersCount>10?'ي':'');
+      return `
+      <tr data-phone="${key.replace(/"/g,'&quot;')}" onclick="selectCustomer('${key.replace(/'/g,"\\'")}')" class="h-14 hover:bg-surface-container-low/60 transition-colors group cursor-pointer ${isSel?'bg-primary-surface/10':''}">
+        <td class="pr-space-md pl-space-xs">
+          <input class="w-4 h-4 rounded accent-primary cursor-pointer" type="checkbox" ${sel.has(key)?'checked':''} onclick="event.stopPropagation();toggleOne('${key.replace(/'/g,"\\'")}',this.checked)"/>
+        </td>
+        <td class="px-space-sm py-2">
+          <div class="flex items-center gap-space-sm">
+            ${avatar(c)}
+            <div class="flex flex-col min-w-0">
+              <span class="font-headline-sm text-headline-sm text-on-surface truncate">${escapeHtml(c.name)} ${classify(c)==='VIP'?'<span class="material-symbols-outlined text-[14px] text-warning align-middle">verified</span>':''}</span>
+              <span class="font-data-tabular text-data-tabular text-text-secondary">عميل #CL-${String(c.phone||'').replace(/\D/g,'').slice(-5)||'00000'} • منذ ${new Date(c.firstDate).getFullYear()}</span>
+            </div>
+          </div>
+        </td>
+        <td class="px-space-sm py-2">
+          <div class="flex flex-col">
+            <div class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px] text-text-secondary">call</span>
+              <span class="font-data-tabular text-data-tabular text-on-surface" dir="ltr">${escapeHtml(c.phone)}</span>
+            </div>
+            <span class="font-body-sm text-body-sm text-text-secondary truncate max-w-[140px]">${escapeHtml(c.region)}</span>
+          </div>
+        </td>
+        <td class="px-space-sm py-2 text-center">
+          <span class="font-headline-sm text-headline-sm text-on-surface">${c.ordersCount}</span>
+          <span class="block font-label-sm text-label-sm text-text-secondary">طلب</span>
+        </td>
+        <td class="px-space-sm py-2">
+          <div class="flex flex-col">
+            <span class="font-headline-sm text-headline-sm text-primary font-bold">${money(c.totalSpent)} ج.م</span>
+            <span class="font-label-sm text-label-sm ${c.ordersCount?'text-success':''}">آخر طلب ${lastNote}</span>
+          </div>
+        </td>
+        <td class="px-space-sm py-2">
+          <span class="inline-flex items-center gap-1 ${seg.cls} px-space-sm py-0.5 rounded-full font-label-sm text-label-sm font-bold">${seg.html}</span>
+        </td>
+        <td class="px-space-sm py-2">
+          ${lastSpent
+            ?`<span class="inline-flex items-center gap-1 bg-warning-surface text-warning px-space-xs py-0.5 rounded-full font-label-sm text-label-sm"><span class="material-symbols-outlined text-[13px]">info</span>طلب تجميلي كبير</span>`
+            :`<span class="inline-flex items-center gap-1 bg-surface-container text-text-secondary px-space-xs py-0.5 rounded-full font-label-sm text-label-sm">لا توجد تنبيهات</span>`}
+        </td>
+        <td class="px-space-sm py-2">
+          <div class="flex items-center justify-center gap-1">
+            <a class="w-8 h-8 rounded-full flex items-center justify-center text-success hover:bg-success-surface transition-colors" title="واتساب مباشر" href="${waLink(c.phone)}" target="_blank" onclick="event.stopPropagation()">
+              <span class="material-symbols-outlined text-[18px]">chat</span>
+            </a>
+            <button class="w-8 h-8 rounded-full flex items-center justify-center text-primary hover:bg-primary-surface transition-colors" title="الملف الكامل" onclick="event.stopPropagation();selectCustomer('${key.replace(/'/g,"\\'")}')">
+              <span class="material-symbols-outlined text-[18px]">visibility</span>
+            </button>
+            <button class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-container transition-colors" title="تعديل السجل" onclick="event.stopPropagation();editCustomer('${key.replace(/'/g,"\\'")}')">
+              <span class="material-symbols-outlined text-[18px]">edit</span>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  renderPagination(totalPages);
+  if(selectedKey&&!filtered.some(c=>String(c.phone)===selectedKey))selectCustomer(selectedKey);
+}
+
+function renderPagination(totalPages){
+  const box=document.getElementById('pagination');
+  let html=`<button onclick="changePage(${page-1})" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-container disabled:opacity-40 ${page<=1?'opacity-40 pointer-events-none':''}" title="السابق"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>`;
+  const pages=[];
+  for(let i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=page-1&&i<=page+1))pages.push(i);
+    else if(pages[pages.length-1]!=='...')pages.push('...');
+  }
+  pages.forEach(p=>{
+    if(p==='...'){html+=`<span class="px-1 text-text-secondary">...</span>`;}
+    else{html+=`<button onclick="changePage(${p})" class="w-8 h-8 rounded-full font-label-sm text-label-sm ${p===page?'bg-primary text-on-primary':'text-text-secondary hover:bg-surface-container'}">${p}</button>`;}
+  });
+  html+=`<button onclick="changePage(${page+1})" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-container ${page>=totalPages?'opacity-40 pointer-events-none':''}" title="التالي"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>`;
+  box.innerHTML=html;
+}
+function changePage(p){
+  const totalPages=Math.max(1,Math.ceil(filtered.length/perPage));
+  if(p<1||p>totalPages)return;
+  page=p;renderTable();
+}
+
+/* ---------- selection & dossier ---------- */
+function toggleOne(key,on){if(on)sel.add(key);else sel.delete(key);}
+function toggleAll(on){
+  const slice=filtered.slice((page-1)*perPage,(page-1)*perPage+perPage);
+  slice.forEach(c=>{if(on)sel.add(String(c.phone));else sel.delete(String(c.phone));});
+  renderTable();
+}
+
+function selectCustomer(key){
+  selectedKey=key;
+  document.querySelectorAll('#customers-table-body tr[data-phone]').forEach(r=>r.classList.remove('bg-primary-surface/10'));
+  const row=document.querySelector('#customers-table-body tr[data-phone="'+CSS.escape(key)+'"]');
+  if(row)row.classList.add('bg-primary-surface/10');
+  renderDossier();
+}
+
+function haveBadge(c){
+  return `<div class="w-14 h-14 rounded-full bg-gradient-to-br ${initialsColors(c.name)} flex items-center justify-center text-white font-black text-lg shrink-0 shadow-md ring-2 ring-primary/20">${escapeHtml((c.name||'ع').charAt(0))}</div>`;
+}
+
+function renderDossier(){
+  const box=document.getElementById('dossier-content');
+  const empty=document.getElementById('dossier-empty');
+  const c=customers.find(x=>String(x.phone)===selectedKey);
+  if(!c){
+    empty.classList.remove('hidden');
+    box.classList.add('hidden');
+    box.innerHTML='';
+    return;
+  }
+  empty.classList.add('hidden');
+  box.classList.remove('hidden');
+  const seg=segLabel(c);
+  const memberYear=new Date(c.firstDate).getFullYear();
+  const isVip=classify(c)==='VIP';
+  const recentPurchases=c.orders.slice(0,3);
+  const purchasesHtml=recentPurchases.length?recentPurchases.map(o=>{
+    const items=Array.isArray(o.items)?o.items:[];
+    const firstItem=items[0]?(items[0].isGift?'هدية':items[0].name):'طلب #ORD-'+String(o.id);
+    const batchTxt=items.length?('('+items.length+' صنف)'):'';
+    return `
+    <div class="py-2 flex items-center justify-between">
+      <div class="flex flex-col min-w-0">
+        <span class="font-body-md text-body-md text-on-surface font-semibold truncate">${escapeHtml(firstItem)} ${batchTxt}</span>
+        <span class="font-data-tabular text-data-tabular text-text-secondary">طلب #ORD-${escapeHtml(String(o.id))} • ${relTime(o.created_at)}</span>
+      </div>
+      <span class="font-data-tabular text-data-tabular text-on-surface font-bold shrink-0">${money(o.total)} ج.م</span>
+    </div>`;
+  }).join(''):`<div class="py-3 text-center text-text-secondary font-body-sm text-body-sm">لا توجد مشتريات بعد</div>`;
+
+  box.innerHTML=`
+    <!-- Header Profile Info -->
+    <div class="flex items-start justify-between pt-1">
+      <div class="flex items-center gap-space-sm">
+        ${haveBadge(c)}
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <h2 class="font-headline-lg text-headline-lg text-on-surface">${escapeHtml(c.name)}</h2>
+            ${isVip?'<span class="material-symbols-outlined text-warning text-[18px]" title="عميل مميز">verified</span>':''}
+          </div>
+          <span class="font-label-sm text-label-sm text-text-secondary">رقم العميل: CL-${String(c.phone||'').replace(/\D/g,'').slice(-5)||'00000'} • عضو منذ ${memberYear}</span>
+        </div>
+      </div>
+      <span class="bg-warning-surface text-warning px-2.5 py-1 rounded-full font-label-sm text-label-sm font-bold shadow-sm ${isVip?'':'hidden'}">VIP ذهبي</span>
+    </div>
+    <!-- Quick Contacts Capsule -->
+    <div class="grid grid-cols-2 gap-space-xs bg-canvas-bg p-space-sm rounded-DEFAULT">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-[18px]">phone_in_talk</span>
+        <div class="flex flex-col min-w-0">
+          <span class="font-label-sm text-label-sm text-text-secondary">الهاتف</span>
+          <span class="font-data-tabular text-data-tabular text-on-surface truncate" dir="ltr">${escapeHtml(c.phone)}</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-tertiary text-[18px]">local_shipping</span>
+        <div class="flex flex-col min-w-0">
+          <span class="font-label-sm text-label-sm text-text-secondary">المشتريات</span>
+          <span class="font-body-sm text-body-sm text-on-surface truncate">${money(c.totalSpent)} ج.م / ${c.ordersCount} طلب</span>
+        </div>
+      </div>
+    </div>
+    <!-- Note / Alert Box -->
+    <div class="bg-primary-surface/70 p-space-sm rounded-DEFAULT flex items-start gap-space-sm">
+      <span class="material-symbols-outlined text-primary text-[22px] shrink-0 mt-0.5">medical_information</span>
+      <div class="flex flex-col min-w-0">
+        <span class="font-label-sm text-label-sm text-primary font-bold">ملاحظات العميل</span>
+        <p class="font-body-sm text-body-sm text-on-surface mt-0.5">${isVip?'عميل ذو قيمة عالية — يُعامل بامتياز في العروض وأولوية الشحن.':(c.ordersCount?'سجل مشتريات دوري عبر المتجر، آخر طلب '+relTime(c.lastDate)+'.':'عميل جديد لم يُنهِ طلبه بعد.')}</p>
+      </div>
+    </div>
+    <!-- Prescriptions & Active Orders Section -->
+    <div class="flex flex-col gap-space-xs">
+      <div class="flex items-center justify-between">
+        <span class="font-headline-sm text-headline-sm text-on-surface">أحدث الطلبات</span>
+        <button onclick="viewAllOrders('${c.phone.replace(/'/g,"\\'")}')" class="font-label-sm text-label-sm text-primary hover:underline font-bold">عرض الأرشيف (${c.ordersCount})</button>
+      </div>
+      ${recentPurchases.slice(0,2).map(o=>{
+        const items=Array.isArray(o.items)?o.items:[];
+        const itemName=items[0]?(items[0].isGift?'هدية':items[0].name):'طلبية';
+        const isNew=o.status==='جديد';
+        return `
+        <div class="p-space-sm bg-canvas-bg rounded-DEFAULT flex items-center justify-between hover:bg-surface-container transition-colors">
+          <div class="flex items-center gap-space-sm min-w-0">
+            <div class="w-10 h-10 rounded-full ${isNew?'bg-primary-surface text-primary':'bg-surface-container-high text-text-secondary'} flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-headline-sm text-headline-sm text-on-surface text-[14px] truncate">${escapeHtml(itemName)}</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">طلب #ORD-${escapeHtml(String(o.id))} • ${relTime(o.created_at)} • ${money(o.total)} ج.م</span>
+            </div>
+          </div>
+          <button onclick="viewOrder('${escapeHtml(String(o.id))}')" class="px-space-sm py-1 rounded-full bg-surface-container-lowest text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm shadow-sm transition-all flex items-center gap-1 shrink-0">
+            <span class="material-symbols-outlined text-[14px]">visibility</span>
+            معاينة
+          </button>
+        </div>`;
+      }).join('')}
+      <div class="p-space-sm bg-danger-surface/60 rounded-DEFAULT flex items-center gap-2">
+        <span class="material-symbols-outlined text-danger text-[16px]">warning</span>
+        <span class="font-label-sm text-label-sm text-danger font-bold">مطلوب التواصل لتأكيد بيانات الشحن للطلبات الجديدة.</span>
+      </div>
+    </div>
+    <!-- Recent Purchase History Micro-List -->
+    <div class="flex flex-col gap-space-xs">
+      <div class="flex items-center justify-between">
+        <span class="font-headline-sm text-headline-sm text-on-surface">أحدث المشتريات</span>
+        <span class="font-label-sm text-label-sm text-text-secondary">آخر طلب: ${relTime(c.lastDate)}</span>
+      </div>
+      <div class="flex flex-col divide-y divide-border-subtle/50">
+        ${purchasesHtml}
+      </div>
+    </div>
+    <!-- Action Buttons Footer -->
+    <div class="flex items-center gap-space-xs pt-space-xs">
+      <a class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-space-md rounded-full bg-success text-on-primary font-label-lg text-label-lg shadow-sm hover:opacity-95 transition-opacity" href="${waLink(c.phone)}" target="_blank">
+        <span class="material-symbols-outlined text-[18px]">chat</span>
+        <span>محادثة واتساب مباشرة</span>
+      </a>
+      <button class="w-10 h-10 rounded-full flex items-center justify-center bg-canvas-bg hover:bg-surface-container text-text-secondary transition-colors" title="طباعة تقرير العميل" onclick="printCustomer('${c.phone.replace(/'/g,"\\'")}')">
+        <span class="material-symbols-outlined text-[20px]">print</span>
+      </button>
+      <button class="w-10 h-10 rounded-full flex items-center justify-center bg-canvas-bg hover:bg-surface-container text-text-secondary transition-colors" title="خيارات إضافية" onclick="serveNote('${c.phone.replace(/'/g,"\\'")}')">
+        <span class="material-symbols-outlined text-[20px]">more_vert</span>
+      </button>
+    </div>`;
+
+  // Delivery Snapshot
+  const snap=document.getElementById('delivery-snapshot');
+  snap.classList.remove('opacity-50');
+  snap.innerHTML=`
+    <div class="flex items-center gap-space-sm">
+      <div class="w-10 h-10 rounded-full bg-primary-surface flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined text-[20px]">pin_drop</span>
+      </div>
+      <div class="flex flex-col min-w-0">
+        <span class="font-headline-sm text-headline-sm text-on-surface">عنوان التوصيل الرئيسي</span>
+        <span class="font-body-sm text-body-sm text-text-secondary truncate">${escapeHtml(c.address)||'لا يوجد عنوان مسجل بعد'}</span>
+      </div>
+    </div>
+    <span class="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-label-sm text-label-sm shrink-0">${escapeHtml(c.region)}</span>`;
+}
+
+/* ---------- actions ---------- */
+function viewOrder(id){
+  Swal.fire({
+    title:'تفاصيل الطلب #ORD-'+id,
+    html:`<div class="text-right text-sm text-on-surface space-y-1">فتح سجل الطلب في صفحة إدارة الطلبات لتعديل حالته ومتابعته.</div>`,
+    confirmButtonColor:'#4d3ceb',confirmButtonText:'الذهاب للطلبات',
+    showCancelButton:true,cancelButtonText:'إغلاق'
+  }).then(r=>{if(r.isConfirmed)window.location.href='orders.html';});
+}
+function viewAllOrders(phone){
+  const c=customers.find(x=>String(x.phone)===phone);
+  if(!c)return;
+  const list=c.orders.map((o,i)=>{
+    const items=Array.isArray(o.items)?o.items:[];
+    const names=items.map(it=>it.isGift?'هدية':it.name).slice(0,3).join('، ')+(items.length>3?'...':'');
+    return `<div class="flex items-center justify-between py-2 border-b border-border-subtle/50 last:border-0">
+      <div class="flex flex-col text-right">
+        <span class="font-semibold text-on-surface text-label-lg">#ORD-${escapeHtml(String(o.id))} • ${money(o.total)} ج.م</span>
+        <span class="font-label-sm text-label-sm text-text-secondary truncate">${escapeHtml(names)}</span>
+      </div>
+      <span class="font-label-sm text-label-sm text-text-secondary shrink-0">${relTime(o.created_at)}</span>
+    </div>`;
+  }).join('');
+  Swal.fire({
+    title:'أرشيف طلبات '+escapeHtml(c.name),
+    html:`<div class="text-right max-h-[50vh] overflow-y-auto text-sm">${list||'لا توجد طلبات'}</div>`,
+    confirmButtonColor:'#4d3ceb',confirmButtonText:'إغلاق',
+    width:520
+  });
+}
+function editCustomer(phone){
+  const c=customers.find(x=>String(x.phone)===phone);
+  if(!c)return;
+  Swal.fire({
+    title:'تعديل سجل: '+escapeHtml(c.name),
+    html:`<div class="text-right space-y-2 text-sm text-on-surface">
+      <div>الأسم: <b>${escapeHtml(c.name)}</b></div>
+      <div dir="ltr" class="text-left">الهاتف: <b>${escapeHtml(c.phone)}</b></div>
+      <div>سجل التعديلات الكامل مُدار من صفحة إدارة الطلبات.</div>
+    </div>`,
+    confirmButtonColor:'#4d3ceb',confirmButtonText:'فتح الطلبات',
+    showCancelButton:true,cancelButtonText:'إغلاق'
+  }).then(r=>{if(r.isConfirmed)window.location.href='orders.html';});
+}
+function serveNote(phone){
+  const c=customers.find(x=>String(x.phone)===phone);
+  if(!c)return;
+  const txt='🧾 ملف العميل\nالاسم: '+c.name+'\nالهاتف: '+c.phone+'\nإجمالي المشتريات: '+money(c.totalSpent)+' ج.م\nالطلبات: '+c.ordersCount+'\nالمنطقة: '+c.region;
+  navigator.clipboard.writeText(txt).then(()=>toast('success','تم نسخ ملف العميل للحافظة'));
+}
+function printCustomer(phone){
+  const c=customers.find(x=>String(x.phone)===phone);
+  if(!c)return;
+  const rows=c.orders.map(o=>`<tr><td>#ORD-${o.id}</td><td>${relTime(o.created_at)}</td><td>${money(o.total)} ج.م</td><td>${o.status||''}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><style>body{font-family:Tajawal,Arial,sans-serif;padding:24px;color:#0f172a}h1{font-size:18px;color:#4d3ceb}h2{font-size:14px}b{color:#0f172a}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid #ddd;padding:8px;text-align:right}.muted{color:#64748b;font-size:12px}.total{color:#4d3ceb;font-weight:bold}</style></head><body><h1>الفرات فارما - تقرير عميل</h1><h2>${escapeHtml(c.name)}</h2><p class="muted">الهاتف: ${escapeHtml(c.phone)} | المنطقة: ${escapeHtml(c.region)} | عضو منذ ${new Date(c.firstDate).getFullYear()}</p><table><tr><th>رقم الطلب</th><th>التاريخ</th><th>الإجمالي</th><th>الحالة</th></tr>${rows}</table><p style="text-align:left"><b>الإجمالي: <span class="total">${money(c.totalSpent)} ج.م</span></b></p><script>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+function exportCustomers(){
+  if(!filtered.length){toast('error','لا توجد سجلات للتصدير');return;}
+  const head=['الاسم','الهاتف','المنطقة','الطلبات','إجمالي الإنفاق','آخر طلب','العنوان'];
+  const lines=filtered.map(c=>[`"${(c.name||'').replace(/"/g,'""')}"`,`"${c.phone||''}"`,`"${c.region||''}"`,c.ordersCount,c.totalSpent,new Date(c.lastDate||'').toLocaleDateString('ar-EG'),`"${(c.address||'').replace(/"/g,'""')}"`]);
+  const csv='\ufeff'+[head.join(','),...lines.map(r=>r.join(','))].join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='customers-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  toast('success','تم تصدير '+filtered.length+' سجل عميل');
+}
+function whatsappBroadcast(){
+  const phones=customers.map(c=>String(c.phone||'').replace(/\D/g,'')).filter(Boolean);
+  if(!phones.length){toast('error','لا توجد أرقام عملاء لإرسال الرسائل');return;}
+  const uniq=[...new Set(phones)];
+  const txt=uniq.map(p=>p.startsWith('0')?'20'+p.slice(1):p).join(',');
+  navigator.clipboard.writeText(txt).then(()=>{
+    Swal.fire({
+      icon:'success',
+      title:'تم تحضير قائمة البث الجماعي',
+      html:`<div class="text-right text-sm text-on-surface space-y-2">
+        <div>تم نسخ <b>${uniq.length}</b> رقم هاتف للحافظة.</div>
+        <div>الصق الأرقام في قائمة بث واتساب (WhatsApp Broadcast) وأرسل رسالتك لجميع العملاء دفعة واحدة.</div>
+      </div>`,
+      confirmButtonColor:'#4d3ceb',confirmButtonText:'حسناً'
+    });
+  }).catch(()=>toast('error','تعذر النسخ'));
+}
+function newCustomerModal(){
+  Swal.fire({
+    title:'إضافة عميل جديد',
+    html:`<div class="text-right space-y-2 text-sm text-on-surface">
+      <div>سجلات العملاء تُبنى تلقائياً من طلبات المتجر (الاسم، الهاتف، والعنوان).</div>
+      <div class="pt-2 flex items-center gap-2 bg-primary-surface p-3 rounded-xl">
+        <span class="material-symbols-outlined text-primary">receipt_long</span>
+        <span>لإضافة عميل جديد: أنشئ طلباً يدوياً باسمه في صفحة إدارة الطلبات، وسيظهر هنا فوراً.</span>
+      </div>
+    </div>`,
+    confirmButtonColor:'#4d3ceb',confirmButtonText:'فتح إدارة الطلبات',
+    showCancelButton:true,cancelButtonText:'إغلاق'
+  }).then(r=>{if(r.isConfirmed)window.location.href='orders.html';});
+}
+
+function toast(icon,title){
+  if(typeof Swal==='undefined'){alert(title);return;}
+  Swal.fire({icon,title,toast:true,position:'bottom-end',showConfirmButton:false,timer:2500,timerProgressBar:true});
 }
 
 window.onload=async function(){
   renderSidebar('customers.html');
   const ok=await requireAdmin();
-  if(ok) analyzeCustomers();
+  if(ok){
+    loadCustomers();
+    try{
+      _supabase.channel('customers-live')
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},()=>{loadCustomers();})
+        .subscribe();
+    }catch(e){}
+  }
 };
-
-_supabase.channel('customers-update')
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},payload=>{analyzeCustomers();})
-  .subscribe();
 </script>
 </body>
 </html>

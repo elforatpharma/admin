@@ -9,14 +9,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#ec135b"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#4d3ceb"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabaseClient.js"></script>
   <style>
     body{font-family:'Tajawal',sans-serif;background:#f8f9fb;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
     ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
-    .nav-active{background:linear-gradient(135deg,rgba(236,19,91,.08),rgba(236,19,91,.04));color:#ec135b;border-right:3px solid #ec135b;}
+    .nav-active{background:linear-gradient(135deg,rgba(77,60,235,.08),rgba(77,60,235,.04));color:#4d3ceb;border-right:3px solid #4d3ceb;}
     .kpi-card{transition:transform .2s ease,box-shadow .2s ease;} .kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.06);}
   </style>
 </head>
@@ -53,7 +53,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <div class="kpi-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <div class="flex justify-between items-start mb-4">
-            <div class="p-2.5 rounded-xl" style="background:rgba(236,19,91,.08)"><span class="material-symbols-outlined text-primary text-[22px]">payments</span></div>
+            <div class="p-2.5 rounded-xl" style="background:rgba(77,60,235,.08)"><span class="material-symbols-outlined text-primary text-[22px]">payments</span></div>
             <span id="kpi-compare" class="text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-0.5"></span>
           </div>
           <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider">المبيعات المكتملة</p>
@@ -106,7 +106,7 @@
 
 <script src="layout.js"></script>
 <script>
-const PRIMARY='#ec135b';
+const PRIMARY='#4d3ceb';
 let currentPeriod='week';
 let mainChart=null, productsChart=null;
 
@@ -241,8 +241,8 @@ async function loadReport(p){
   if(mainChart) mainChart.destroy();
   const ctx=bars.getContext('2d');
   const grad=ctx.createLinearGradient(0,0,0,300);
-  grad.addColorStop(0,'rgba(236,19,91,.25)');
-  grad.addColorStop(1,'rgba(236,19,91,0)');
+  grad.addColorStop(0,'rgba(77,60,235,.25)');
+  grad.addColorStop(1,'rgba(77,60,235,0)');
   mainChart=new Chart(ctx,{
     type:'line',
     data:{labels,datasets:[{
@@ -277,7 +277,7 @@ async function loadReport(p){
     return;
   }
   document.getElementById('top-products-wrap').innerHTML='<canvas id="products-chart"></canvas>';
-  const colors=['#ec135b','#f43f5e','#fb7185','#fda4af','#fecdd3','#38bdf8','#a5b4fc'];
+  const colors=['#4d3ceb','#6d49f5','#8f7bff','#b8a8ff','#ddd6ff','#38bdf8','#a5b4fc'];
   productsChart=new Chart(document.getElementById('products-chart'),{
     type:'bar',
     data:{labels:top.map(x=>x[0]),datasets:[{label:'الكمية المبيعة',data:top.map(x=>x[1].qty),backgroundColor:colors.slice(0,top.length),borderRadius:8,barThickness:24}]},

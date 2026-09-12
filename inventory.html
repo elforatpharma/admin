@@ -2,238 +2,798 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>المخزون - الفرات فارما</title>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>إدارة المخزون - الفرات فارما</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#ec135b"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabaseClient.js"></script>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-variant":"#dae2fd","surface-container-highest":"#dae2fd","secondary":"#6a00e1","outline":"#777587","warning-surface":"#fffbeb","secondary-fixed":"#ebdcff","outline-variant":"#c7c4d9","text-secondary":"#64748b","on-secondary":"#ffffff","brand-gradient-hover":"linear-gradient(90deg, #3f2fd4 0%, #7624f2 100%)","background":"#faf8ff","tertiary-fixed":"#6ffbbe","error-container":"#ffdad6","surface-container-lowest":"#ffffff","on-surface":"#131b2e","inverse-primary":"#c4c0ff","on-secondary-fixed":"#260059","surface-container":"#eaedff","on-surface-variant":"#464556","primary-border":"#ddd6fe","danger":"#ef4444","surface-container-high":"#e2e7ff","on-primary":"#ffffff","tertiary":"#004f35","accent-glow":"rgba(77, 60, 235, 0.3)","secondary-fixed-dim":"#d3bbff","on-error-container":"#93000a","warning":"#f59e0b","on-tertiary-container":"#60eeb1","inverse-surface":"#283044","surface-container-low":"#f2f3ff","tertiary-container":"#006a48","surface-tint":"#4f3eed","secondary-container":"#8434fe","primary":"#3312d5","border-strong":"#cbd5e1","success-surface":"#ecfdf5","surface":"#faf8ff","inverse-on-surface":"#eef0ff","on-tertiary-fixed-variant":"#005236","on-primary-fixed":"#110068","canvas-bg":"#f8fafc","brand-gradient":"linear-gradient(90deg, #4d3ceb 0%, #8536ff 100%)","text-primary":"#0f172a","tertiary-fixed-dim":"#4edea3","surface-bright":"#faf8ff","error":"#ba1a1a","on-secondary-container":"#f3e8ff","on-tertiary":"#ffffff","danger-surface":"#fef2f2","on-primary-fixed-variant":"#3517d6","on-background":"#131b2e","success":"#10b981","surface-card":"#ffffff","on-primary-container":"#d5d1ff","border-subtle":"#e2e8f0","primary-fixed":"#e3dfff","on-secondary-fixed-variant":"#5c00c4","surface-dim":"#d2d9f4","primary-container":"#4d3ceb","on-tertiary-fixed":"#002113","primary-surface":"#f5f3ff","primary-fixed-dim":"#c4c0ff","on-error":"#ffffff"},borderRadius:{DEFAULT:"0.75rem",lg:"1rem",xl:"1.5rem",full:"9999px"},spacing:{gutter:"1rem","gutter-lg":"1.5rem","space-lg":"1.5rem","space-sm":"0.5rem","space-md":"1rem","space-xs":"0.25rem","margin-lg":"2rem","space-xl":"2rem",margin:"1rem","margin-md":"1.5rem"},fontFamily:{"body-lg":["Tajawal"],"label-lg":["Tajawal"],"headline-xl":["Cairo"],"data-tabular":["Tajawal"],"headline-sm":["Cairo"],"label-sm":["Tajawal"],"label-md":["Tajawal"],"headline-lg":["Cairo"],"body-md":["Tajawal"],"display-lg-mobile":["Cairo"],"body-sm":["Tajawal"],"display-lg":["Cairo"]},fontSize:{"body-lg":["16px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"600"}],"headline-xl":["24px",{"lineHeight":"32px","letterSpacing":"0","fontWeight":"700"}],"data-tabular":["13px",{"lineHeight":"18px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"500"}],"headline-lg":["20px",{"lineHeight":"28px","letterSpacing":"0","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","letterSpacing":"0","fontWeight":"400"}],"display-lg-mobile":["26px",{"lineHeight":"34px","letterSpacing":"0","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"display-lg":["32px",{"lineHeight":"42px","letterSpacing":"0","fontWeight":"700"}]}}}};</script>
   <style>
-    body{font-family:'Tajawal',sans-serif;background:#f8f9fb;}
+    body{font-family:'Tajawal',sans-serif;background:#f8fafc;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
-    ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
-    .nav-active{background:linear-gradient(135deg,rgba(236,19,91,.08),rgba(236,19,91,.04));color:#ec135b;border-right:3px solid #ec135b;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;border-radius:9999px!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+    .btn-brand-gradient:hover{background:linear-gradient(90deg,#3f2fd4 0%,#7624f2 100%)!important;box-shadow:0 12px 24px rgba(77,60,235,0.4)!important;}
+    body::-webkit-scrollbar{display:none;}
+    .scrollbar-none::-webkit-scrollbar{display:none;}
   </style>
 </head>
-<body class="text-gray-900 antialiased min-h-screen">
-<div class="flex h-screen overflow-hidden">
+<body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
+<div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
 
-  <!-- Sidebar (يتم إنشاؤه من layout.js) -->
   <div id="sidebar-placeholder"></div>
 
-  <!-- Main -->
-  <main class="flex-1 lg:mr-64 overflow-y-auto">
-    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
-      <div>
-        <h2 class="text-xl font-black text-gray-900 tracking-tight">إدارة المنتجات</h2>
-        <p class="text-xs text-gray-400 font-medium mt-0.5">التحكم في مخزون وأسعار المنتجات</p>
+  <header class="sticky top-0 z-30 h-16 bg-surface/80 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(15,23,42,0.04)]">
+    <div class="flex items-center gap-4 w-1/2">
+      <div class="relative w-full max-w-xl">
+        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px] pointer-events-none">search</span>
+        <input id="global-search" class="w-full h-11 pr-10 pl-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="بحث شامل عن الأصناف أو الباركود..." type="text" oninput="onSearch(this.value)"/>
       </div>
-      <a href="admin.html" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
-        <span class="material-symbols-outlined text-[18px]">add</span>إضافة منتج
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="hidden lg:flex items-center gap-2 bg-success-surface text-tertiary px-3 py-1 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-success"></span>
+        <span class="font-label-sm text-label-sm font-bold">المتجر متصل وقيد العمل</span>
+      </div>
+      <a class="relative p-2 rounded-full hover:bg-surface-container-high transition-colors text-text-secondary hover:text-on-surface" href="#" title="الإشعارات">
+        <span class="material-symbols-outlined text-[22px]">notifications</span>
+        <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-danger rounded-full ring-2 ring-surface-container-lowest"></span>
       </a>
-    </header>
+      <button onclick="supplyRequest()" class="flex items-center gap-2 btn-brand-gradient text-on-primary px-4 py-2.5 rounded-full transition-all transform hover:-translate-y-0.5">
+        <span class="material-symbols-outlined text-[18px]">add_circle</span>
+        <span class="font-label-lg text-label-lg">طلب توريد عاجل</span>
+      </button>
+      <button onclick="fetchProducts()" class="flex items-center gap-2 px-3 h-10 rounded-full bg-surface-container-low text-text-secondary hover:text-on-surface text-label-sm font-label-sm shadow-sm transition-all" title="تحديث">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+      </button>
+    </div>
+  </header>
 
-    <div class="p-8 max-w-[1400px] mx-auto space-y-6">
+  <main class="w-full pt-6 bg-canvas-bg min-h-screen px-6 py-4">
+    <div class="flex flex-col w-full">
 
-      <!-- Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider mb-1">إجمالي المنتجات</p>
-          <h3 id="stat-total-products" class="text-3xl font-black text-gray-900">0</h3>
+      <!-- رأس الصفحة ومحطة العمليات السريعة -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+            <span class="font-label-sm text-label-sm text-primary tracking-wide">نظام إدارة المستودعات وسلاسل الإمداد الدوائية</span>
+          </div>
+          <h1 class="font-headline-xl text-headline-xl text-on-surface">إدارة المخزون والرقابة المركزية</h1>
+          <p class="font-body-sm text-body-sm text-text-secondary mt-1">متابعة دقيقة للأرصدة وتنبيهات الصلاحية والمزامنة مع المتجر.</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider mb-1">الأقسام النشطة</p>
-          <h3 id="stat-categories" class="text-3xl font-black text-gray-900">0</h3>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="exportCSV()" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-lowest text-text-secondary hover:text-on-surface shadow-sm transition-all transform hover:-translate-y-0.5">
+            <span class="material-symbols-outlined text-[18px]">download</span>
+            <span class="font-label-lg text-label-lg">تصدير Excel</span>
+          </button>
+          <button onclick="inventoryCount()" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-lowest text-primary hover:bg-primary-surface shadow-sm transition-all transform hover:-translate-y-0.5">
+            <span class="material-symbols-outlined text-[18px]">inventory</span>
+            <span class="font-label-lg text-label-lg">جرد المستودع الدوري</span>
+          </button>
+          <button onclick="newProductModal()" class="flex items-center gap-2 px-5 py-2.5 btn-brand-gradient text-on-primary rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] transition-all transform hover:-translate-y-0.5">
+            <span class="material-symbols-outlined text-[20px]">add_circle</span>
+            <span class="font-label-lg text-label-lg">إذن إضافة مخزني جديد</span>
+          </button>
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto min-h-[400px]">
-          <table class="w-full text-right">
+      <!-- شبكة بطاقات المؤشرات الإحصائية الرئيسية (KPIs) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- بطاقة 1: إجمالي الأصناف المخزنة -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-text-secondary mb-1">إجمالي الأصناف بالكتالوج</span>
+              <span class="font-display-lg text-display-lg text-on-surface" id="kpi-total">0</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-primary-surface flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-[26px]">category</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between pt-1">
+            <span class="inline-flex items-center gap-1 font-data-tabular text-data-tabular text-success bg-success-surface px-2 py-0.5 rounded-full">
+              <span class="material-symbols-outlined text-[14px]">trending_up</span>
+              هذا الأسبوع
+            </span>
+            <span class="font-label-sm text-label-sm text-text-secondary"><span id="kpi-cats">0</span> فئة</span>
+          </div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+        <!-- بطاقة 2: أصناف قاربت على النفاد -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-warning mb-1 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-warning animate-ping"></span>
+                أصناف قاربت على النفاد
+              </span>
+              <span class="font-display-lg text-display-lg text-on-surface"><span id="kpi-low">0</span> <span class="font-headline-sm text-headline-sm text-text-secondary">صنف</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-warning-surface flex items-center justify-center text-warning group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-[26px]">warning</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between pt-1">
+            <span class="inline-flex items-center gap-1 font-data-tabular text-data-tabular text-warning bg-warning-surface px-2 py-0.5 rounded-full">دون حد الأمان</span>
+            <button onclick="setStatusFilter('low')" class="font-label-sm text-label-sm text-primary hover:underline font-bold">عرض الأصناف ←</button>
+          </div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-warning/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+        <!-- بطاقة 3: أصناف منتهية الصلاحية قريباً -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-danger mb-1 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-danger"></span>
+                صلاحيات وشيكة (&lt; 90 يوم)
+              </span>
+              <span class="font-display-lg text-display-lg text-danger"><span id="kpi-expiring">0</span> <span class="font-headline-sm text-headline-sm text-text-secondary">صنف</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-danger-surface flex items-center justify-center text-danger group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-[26px]">event_busy</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between pt-1">
+            <span class="font-data-tabular text-data-tabular text-danger bg-danger-surface px-2 py-0.5 rounded-full">تنبيه تلقائي للصلاحية</span>
+            <span class="font-label-sm text-label-sm text-text-secondary">متابعة بروتوكول FEFO</span>
+          </div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-danger/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+        <!-- بطاقة 4: القيمة الإجمالية للمخزون -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-text-secondary mb-1">القيمة المالية للمخزون</span>
+              <span class="font-display-lg text-display-lg text-on-surface"><span id="kpi-value">0</span> <span class="font-headline-sm text-headline-sm text-primary">ج.م</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-success-surface flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-[26px]">account_balance_wallet</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between pt-1">
+            <span class="inline-flex items-center gap-1 font-data-tabular text-data-tabular text-tertiary bg-success-surface px-2 py-0.5 rounded-full">
+              <span class="material-symbols-outlined text-[14px]">verified</span>
+              مؤمن ومطابق
+            </span>
+            <span class="font-label-sm text-label-sm text-text-secondary">بسعر البيع الحالي</span>
+          </div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-success/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+      </div>
+
+      <!-- شريط المراقبة والتحكم اللوجستي السريع -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-full bg-primary-surface flex items-center justify-center text-primary">
+              <span class="material-symbols-outlined text-[22px]">verified</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-label-lg text-label-lg text-on-surface">مطابقة أرصدة المتجر</span>
+              <span class="font-label-sm text-label-sm text-tertiary font-bold flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-success"></span>
+                متزامنة لحظياً مع الطلبات
+              </span>
+            </div>
+          </div>
+          <span class="font-label-sm text-label-sm bg-surface-container px-2 py-1 rounded-full text-text-secondary">100% مطابق</span>
+        </div>
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary">
+              <span class="material-symbols-outlined text-[22px]">local_shipping</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-label-lg text-label-lg text-on-surface">مزامنة الكتالوج</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">الأصناف والعروض منشورة للمتجر</span>
+            </div>
+          </div>
+          <span class="font-label-sm text-label-sm bg-primary-surface text-primary px-2.5 py-1 rounded-full font-bold" id="sync-badge">نشط</span>
+        </div>
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-full bg-success-surface flex items-center justify-center text-tertiary">
+              <span class="material-symbols-outlined text-[22px]">inventory_2</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-label-lg text-label-lg text-on-surface">بث حي للأرصدة</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">كل تحديث ينعكس فوراً على الصفحة</span>
+            </div>
+          </div>
+          <button onclick="supplyRequest()" class="font-label-sm text-label-sm text-primary hover:underline font-bold">طلب توريد ←</button>
+        </div>
+      </div>
+
+      <!-- لوحة التصفية والبحث المتقدم -->
+      <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm mb-6 flex flex-col gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+          <div class="md:col-span-5 relative">
+            <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[20px] pointer-events-none">search</span>
+            <input class="w-full h-11 pr-11 pl-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" id="inventorySearch" placeholder="بحث بالاسم التجاري، الاسم العلمي، أو الباركود..." type="text" oninput="onSearch(this.value)"/>
+          </div>
+          <div class="md:col-span-3 relative">
+            <select class="w-full h-11 px-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer" id="catFilter" onchange="applyFilters()">
+              <option value="all">كافة الفئات</option>
+            </select>
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[18px] pointer-events-none">expand_more</span>
+          </div>
+          <div class="md:col-span-2 relative">
+            <select class="w-full h-11 px-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer" id="statusFilter" onchange="setStatusFilter(this.value)">
+              <option value="all">كافة الحالات</option>
+              <option value="available">متوفر ومطابق</option>
+              <option value="low">منخفض (تحت الأمان)</option>
+              <option value="out">نافد تماماً</option>
+              <option value="disabled">غير نشط</option>
+            </select>
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[18px] pointer-events-none">filter_list</span>
+          </div>
+          <div class="md:col-span-2 flex items-center gap-2 justify-end">
+            <button onclick="toggleCustomize()" class="h-11 px-4 rounded-full bg-surface-container-low text-text-secondary hover:text-on-surface flex items-center justify-center gap-1 transition-all">
+              <span class="material-symbols-outlined text-[18px]">tune</span>
+              <span class="font-label-md text-label-md" id="customize-label">تخصيص العرض</span>
+            </button>
+            <button onclick="resetFilters()" class="h-11 w-11 rounded-full bg-surface-container-low text-text-secondary hover:text-primary flex items-center justify-center transition-all" title="إعادة تعيين">
+              <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-none" id="cat-chips"></div>
+      </div>
+
+      <!-- جدول تفصيلي احترافي للمخزون -->
+      <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-6">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right border-collapse">
             <thead>
-              <tr class="text-[10px] font-black uppercase tracking-widest text-gray-400" style="background:rgba(248,249,251,.8)">
-                <th class="px-6 py-4 text-center w-20">ترتيب</th>
-                <th class="px-6 py-4">المنتج</th>
-                <th class="px-6 py-4">القسم</th>
-                <th class="px-6 py-4 text-center">السعر</th>
-                <th class="px-6 py-4 text-center">الإجراءات</th>
+              <tr class="h-11 bg-surface-container-low text-text-secondary font-label-sm text-label-sm">
+                <th class="px-4 py-2 w-12 text-center">
+                  <input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" onclick="toggleAll(this.checked)" title="تحديد الكل"/>
+                </th>
+                <th class="px-4 py-2">الصنف والاسم العلمي</th>
+                <th class="px-4 py-2">كود SKU / الباركود</th>
+                <th class="px-4 py-2">الفئة</th>
+                <th class="px-4 py-2">التشغيلة (Batch)</th>
+                <th class="px-4 py-2">انتهاء الصلاحية</th>
+                <th class="px-4 py-2">الرصيد ومستوى التوفر</th>
+                <th class="px-4 py-2">حد الطلب</th>
+                <th class="px-4 py-2">السعر / البيع</th>
+                <th class="px-4 py-2">الحالة</th>
+                <th class="px-4 py-2 text-center">إجراءات</th>
               </tr>
             </thead>
-            <tbody id="inventory-body" class="divide-y divide-gray-50">
-              <tr><td colspan="5" class="text-center py-16 text-gray-300 animate-pulse font-bold">جاري تحميل المخزون...</td></tr>
+            <tbody id="inventory-body" class="divide-y divide-border-subtle font-body-sm text-body-sm text-on-surface">
+              <tr><td colspan="11" class="text-center py-12 text-text-secondary font-bold animate-pulse">جاري تحميل المخزون...</td></tr>
             </tbody>
           </table>
         </div>
+        <!-- تذييل الجدول وترقيم الصفحات -->
+        <div class="p-4 bg-surface-container-low/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-2 font-body-sm text-body-sm text-text-secondary">
+            <span id="range-info">عرض 0 من 0 صنف مخزني مسجل</span>
+            <span class="hidden sm:inline" id="bulk-info"></span>
+          </div>
+          <div class="flex items-center gap-1" id="pagination"></div>
+        </div>
       </div>
+
+      <!-- شبكة سفلية مقسمة -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- إحصائيات الفئات والمخزون -->
+        <div class="lg:col-span-6 bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[22px]">insights</span>
+                <h2 class="font-headline-lg text-headline-lg text-on-surface">توزيع الأصناف حسب الفئة</h2>
+              </div>
+              <span class="font-label-sm text-label-sm text-tertiary bg-success-surface px-2 py-0.5 rounded-full font-bold">ضمن الحدود الآمنة</span>
+            </div>
+            <p class="font-body-sm text-body-sm text-text-secondary mb-4">نسب الأصناف النشطة في كتالوج المتجر حسب التصنيف.</p>
+            <div id="category-bars" class="flex flex-col gap-3">
+              <div class="text-center py-6 text-text-secondary">جاري احتساب التوزيع...</div>
+            </div>
+          </div>
+          <div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-text-secondary">آخر مزامنة مع المتجر: لحظياً</span>
+            <button onclick="fetchProducts()" class="font-label-md text-label-md text-primary font-bold hover:underline">تحديث الأرصدة ←</button>
+          </div>
+        </div>
+        <!-- سجل أحدث الأصناف المضافة -->
+        <div class="lg:col-span-6 bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[22px]">history</span>
+                <h2 class="font-headline-lg text-headline-lg text-on-surface">أحدث الأصناف والتحركات</h2>
+              </div>
+              <button onclick="fetchProducts()" class="font-label-sm text-label-sm text-primary font-bold hover:underline">تحديث</button>
+            </div>
+            <div class="flex flex-col divide-y divide-border-subtle" id="recent-list">
+              <div class="py-6 text-center text-text-secondary">جاري التحميل...</div>
+            </div>
+          </div>
+          <div class="mt-4 p-2 rounded-xl bg-surface-container-low flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[20px] text-tertiary">qr_code_scanner</span>
+              <span class="font-label-md text-label-md text-on-surface">ربط مباشر لماسحات الباركود بالمستودع</span>
+            </div>
+            <span class="font-label-sm text-label-sm bg-success-surface text-tertiary px-2.5 py-0.5 rounded-full font-bold">جاهز للمسح</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
 
-<!-- Edit Modal -->
-<div id="edit-modal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
-  <div class="bg-white rounded-3xl p-8 w-full max-w-xl shadow-2xl border border-gray-100 overflow-y-auto max-h-[90vh]">
-    <div class="flex items-center justify-between mb-8">
-      <h2 class="text-xl font-black text-gray-900">تعديل بيانات المنتج</h2>
-      <button onclick="closeEditModal()" class="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"><span class="material-symbols-outlined">close</span></button>
-    </div>
-    <form id="edit-form" onsubmit="submitEditForm(event)" class="space-y-5">
-      <input type="hidden" id="edit-id">
-      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">اسم المنتج</label>
-        <input type="text" id="edit-name" name="name" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 outline-none focus:border-primary focus:bg-white transition-all font-bold" required></div>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">السعر الحالي</label>
-          <input type="number" id="edit-price" name="price" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 outline-none focus:border-primary focus:bg-white transition-all font-bold" required></div>
-        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">السعر القديم</label>
-          <input type="number" id="edit-oldPrice" name="oldPrice" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 outline-none focus:border-primary focus:bg-white transition-all font-bold"></div>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">القسم</label>
-          <select id="edit-category" name="category" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 outline-none focus:border-primary focus:bg-white transition-all font-bold">
-            <option value="العناية بالبشرة">العناية بالبشرة</option><option value="العناية بالشعر">العناية بالشعر</option>
-            <option value="مستحضرات تجميل">مستحضرات تجميل</option><option value="مجموعات متكاملة">مجموعات متكاملة</option>
-          </select></div>
-        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Badge</label>
-          <input type="text" id="edit-badge" name="badge" placeholder="مثال: جديد ✨" class="w-full p-4 bg-gray-50 rounded-2xl border border-gray-200 outline-none focus:border-primary focus:bg-white transition-all font-bold"></div>
-      </div>
-      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">تحديث الصورة</label>
-        <input type="file" name="image" class="w-full text-sm text-gray-400 file:mr-4 file:py-3 file:px-5 file:rounded-xl file:border-0 file:font-bold file:text-primary cursor-pointer bg-gray-50 rounded-2xl border border-gray-200 p-2"></div>
-      <div class="pt-4 flex gap-3">
-        <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all">حفظ التغييرات</button>
-        <button type="button" onclick="closeEditModal()" class="px-8 bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all">إلغاء</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script src="layout.js"></script>
 <script>
-let products=[];
+let products=[],page=1,perPage=10,cat='all',statusF='all',hideCols=new Set(),sel=new Set();
+let HAS_STOCK=false,HAS_ACTIVE=false,HAS_BARCODE=false,HAS_EXPIRY=false,HAS_BATCH=false;
 
-async function load(){
-  const tbody=document.getElementById('inventory-body');
+function lowThreshold(o){const r=Number(o.reorder_level)||10;return r;}
+function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function relTime(iso){
+  if(!iso)return '';
+  const d=new Date(iso),now=new Date(),mins=Math.floor((now-d)/60000);
+  if(mins<1)return 'الآن';
+  if(mins<60)return 'منذ '+mins+' دقيقة';
+  const hrs=Math.floor(mins/60);
+  if(hrs<24)return 'منذ '+hrs+' ساعة';
+  return 'منذ '+Math.floor(hrs/24)+' يوم';
+}
+function expDaysRemaining(o){
+  if(!HAS_EXPIRY||!o.expiry)return null;
+  const days=Math.ceil((new Date(o.expiry)-Date.now())/86400000);
+  return days;
+}
+
+function pctOf(o){
+  if(!HAS_STOCK)return 0;
+  const st=Number(o.stock)||0;
+  const cap=Math.max(50,(lowThreshold(o))*5);
+  return Math.max(0,Math.min(100,Math.round(st/cap*100)));
+}
+
+function statusInfo(o){
+  const st=Number(o.stock)||0;
+  let exp=expDaysRemaining(o);
+  if(exp!==null&&exp<=90)return{label:exp<=0?'منتهية الصلاحية':'انتهاء وشيك',cls:'bg-danger-surface text-danger font-bold',dot:'bg-danger',icon:'event_busy'};
+  if(HAS_STOCK&&st<=0)return{label:'نافد تماماً',cls:'bg-danger-surface text-danger font-bold',dot:'bg-danger',icon:'cancel'};
+  if(HAS_STOCK&&st<=lowThreshold(o))return{label:'قارب على النفاد',cls:'bg-warning-surface text-warning font-bold',dot:'bg-warning',icon:'warning'};
+  if(HAS_ACTIVE&&!o.is_active)return{label:'غير نشط',cls:'bg-surface-container-high text-on-surface-variant font-bold',dot:'bg-outline',icon:'block'};
+  return{label:'متوفر بالكامل',cls:'bg-success-surface text-tertiary font-bold',dot:'bg-success',icon:'check_circle'};
+}
+
+async function detectColumns(){
   try{
-    const{data,error}=await _supabase.from('products').select('*').order('priority',{ascending:false});
-    if(error) throw error;
-    products=data||[];updateStats();render();
+    const{data,error}=await _supabase.from('products').select('*').limit(1);
+    if(error)return;
+    const row=data&&data[0]||{};
+    HAS_STOCK=('stock' in row);
+    HAS_ACTIVE=('is_active' in row);
+    HAS_BARCODE=('barcode' in row||'sku' in row);
+    HAS_EXPIRY=('expiry' in row||'expiry_date' in row);
+    HAS_BATCH=('batch' in row||'batch_no' in row||'lot' in row);
+  }catch(e){}
+}
+
+async function fetchProducts(){
+  try{
+    const{data,error}=await _supabase.from('products').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    products=data||[];
+    fillCatSelect();renderChips();renderKPIs();renderTable();renderRecent();renderCategoryBars();
   }catch(e){
-    tbody.innerHTML=`<tr><td colspan="5" class="text-center py-16 text-red-400 font-bold">فشل جلب بيانات المخزون.</td></tr>`;
+    document.getElementById('inventory-body').innerHTML=`<tr><td colspan="11" class="text-center py-16 text-error font-bold">فشل جلب المخزون.</td></tr>`;
   }
 }
 
-function updateStats(){
-  document.getElementById('stat-total-products').innerText=products.length;
-  document.getElementById('stat-categories').innerText=[...new Set(products.map(p=>p.category))].length;
+function categories(){return[...new Set((products||[]).map(p=>(p.category||'بدون فئة')).filter(Boolean))];}
+function fillCatSelect(){
+  const s=document.getElementById('catFilter');
+  const cur=s.value;
+  s.innerHTML='<option value="all">كافة الفئات</option>'+categories().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  s.value=categories().includes(cur)?cur:'all';
+}
+function renderChips(){
+  const cats=categories();
+  const counts=cats.map(c=>products.filter(p=>(p.category||'بدون فئة')===c).length);
+  const box=document.getElementById('cat-chips');
+  let html=`<button onclick="setCat('all')" class="px-4 py-1.5 rounded-full btn-brand-gradient text-on-primary font-label-md text-label-md shadow-sm whitespace-nowrap ${cat==='all'?'':'bg-surface-container-low text-text-secondary hover:text-on-surface'}">الكل (${products.length})</button>`;
+  cats.slice(0,4).forEach((c,i)=>{
+    html+=`<button onclick="setCat('${escapeHtml(c)}')" class="px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap ${cat===c?'btn-brand-gradient text-on-primary shadow-sm':'bg-surface-container-low text-text-secondary hover:text-on-surface'}">${escapeHtml(c)} (${counts[i]})</button>`;
+  });
+  box.innerHTML=html;
+}
+function setCat(c){cat=c;page=1;renderChips();renderTable();}
+function setStatusFilter(v){
+  statusF=v;
+  const sel=document.getElementById('statusFilter');
+  if(sel&&sel.value!==v)sel.value=v;
+  page=1;renderTable();
+}
+function resetFilters(){
+  document.getElementById('inventorySearch').value='';
+  document.getElementById('statusFilter').value='all';
+  cat='all';statusF='all';page=1;hideCols.clear();
+  document.getElementById('customize-label').textContent='تخصيص العرض';
+  fillCatSelect();renderChips();renderTable();
+}
+function onSearch(){page=1;renderTable();}
+function applyFilters(){page=1;renderTable();}
+
+function getFiltered(){
+  const q=(document.getElementById('inventorySearch').value||'').trim().toLowerCase();
+  return products.filter(p=>{
+    if(cat!=='all'&&(p.category||'بدون فئة')!==cat)return false;
+    if(statusF!=='all'){
+      const st=Number(p.stock)||0;
+      const sLow=HAS_STOCK&&st<=0;
+      const sNear=HAS_STOCK&&st>0&&st<=lowThreshold(p);
+      const sDis=HAS_ACTIVE&&!p.is_active;
+      const sExp=expDaysRemaining(p)!==null&&expDaysRemaining(p)<=90;
+      if(statusF==='available'){if(sLow||sNear||sDis||sExp)return false;}
+      else if(statusF==='low'){if(!sNear)return false;}
+      else if(statusF==='out'){if(!sLow)return false;}
+      else if(statusF==='disabled'){if(!sDis)return false;}
+    }
+    if(q){
+      const hay=String(p.name||'')+' '+String(p.category||'')+' '+String(p.barcode||'')+' '+String(p.sku||'');
+      if(!hay.toLowerCase().includes(q))return false;
+    }
+    return true;
+  });
 }
 
-function render(){
+function renderKPIs(){
+  const n=products.length;
+  const low=products.filter(p=>HAS_STOCK&&Number(p.stock)>0&&Number(p.stock)<=lowThreshold(p)).length;
+  const out=(p=>HAS_STOCK&&Number(p.stock)<=0?1:0);
+  const exp=products.filter(p=>{const d=expDaysRemaining(p);return d!==null&&d<=90;}).length;
+  const val=products.reduce((s,p)=>s+(Number(p.price)||0)*(HAS_STOCK?Math.max(0,Number(p.stock)||0):1),0);
+  document.getElementById('kpi-total').textContent=n;
+  document.getElementById('kpi-cats').textContent=categories().length;
+  document.getElementById('kpi-low').textContent=(low||out(products)).toString();
+  document.getElementById('kpi-expiring').textContent=HAS_EXPIRY?exp:0;
+  document.getElementById('kpi-value').textContent=money(val);
+  document.getElementById('sync-badge').textContent='متزامن'; 
+}
+
+function renderTable(){
+  const filtered=getFiltered();
+  const total=filtered.length,tp=Math.max(1,Math.ceil(total/perPage));
+  if(page>tp)page=tp;
+  const start=(page-1)*perPage,slice=filtered.slice(start,start+perPage);
   const tbody=document.getElementById('inventory-body');
-  if(products.length===0){tbody.innerHTML=`<tr><td colspan="5" class="text-center py-16 text-gray-300 font-bold">المخزون فارغ تماماً حالياً</td></tr>`;return;}
-  tbody.innerHTML=products.map((p,i)=>{
-    const pid=escapeHtml(String(p.id));
-    const name=escapeHtml(p.name)||'منتج';
-    const cat=escapeHtml(p.category)||'-';
-    const badge=escapeHtml(p.badge);
-    const img=p.img?escapeHtml(p.img):'logo.png';
-    const price=escapeHtml(p.price)||0;
-    const oldPrice=p.oldPrice?escapeHtml(p.oldPrice):'';
-    return `
-    <tr class="hover:bg-gray-50/50 transition-colors">
-      <td class="px-6 py-4">
-        <div class="flex flex-col gap-1 items-center">
-          <button onclick="move(${i},-1)" class="${i===0?'invisible':''} size-7 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-primary hover:text-white transition-all text-gray-400">
-            <span class="material-symbols-outlined text-[18px]">expand_less</span></button>
-          <button onclick="move(${i},1)" class="${i===products.length-1?'invisible':''} size-7 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-primary hover:text-white transition-all text-gray-400">
-            <span class="material-symbols-outlined text-[18px]">expand_more</span></button>
-        </div>
-      </td>
-      <td class="px-6 py-4">
-        <div class="flex items-center gap-4">
-          <div class="size-14 rounded-2xl bg-white border border-gray-100 p-1 shrink-0 shadow-sm relative">
-            <img src="${img}" alt="${name}" class="w-full h-full object-contain mix-blend-multiply" onerror="this.src='logo.png'">
-            ${badge?`<span class="absolute -top-2 -right-2 bg-primary text-[8px] text-white px-1.5 py-0.5 rounded-full font-black shadow-lg shadow-primary/30">${badge}</span>`:''}
+
+  document.getElementById('range-info').textContent='عرض '+(total?start+1:0)+' إلى '+Math.min(start+perPage,total)+' من أصل '+total+' صنف مخزني مسجل';
+  document.getElementById('bulk-info').textContent=sel.size?`| المحدد: ${sel.size} — <a href="#" onclick="bulkDelete()" class="text-danger font-bold">حذف المحدد</a>`:'';
+
+  if(!slice.length){
+    tbody.innerHTML=`<tr><td colspan="11" class="text-center py-16 text-text-secondary">لا توجد أصناف مطابقة حالياً</td></tr>`;
+  }else{
+    tbody.innerHTML=slice.map(p=>{
+      const id=String(p.id),rowSel=sel.has(id);
+      const info=statusInfo(p);
+      const sku=p.sku||p.barcode||'#'+id;
+      const barc=p.barcode||p.sku||'';
+      const st=Number(p.stock)||0;
+      const pct=pctOf(p);
+      const barColor=pct<=30?'bg-warning':(info.label==='انتهاء وشيك'||info.label==='منتهية الصلاحية'?'bg-danger':'bg-success');
+      const exp=expDaysRemaining(p);
+      const location=p.category||'—';
+      const batch=HAS_BATCH?(p.batch||p.batch_no||p.lot||'—'):'—';
+      const reorder=Number(p.reorder_level);
+      let actions='';
+      if(info.label==='قارب على النفاد'&&HAS_STOCK){
+        actions=`<button onclick="supplyFor('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-primary font-bold transition-colors" title="إصدار طلب توريد عاجل"><span class="material-symbols-outlined text-[18px]">add_shopping_cart</span></button>
+                 <button onclick="editStock('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="تعديل الرصيد"><span class="material-symbols-outlined text-[18px]">edit_note</span></button>`;
+      }else if(info.label==='انتهاء وشيك'||info.label==='منتهية الصلاحية'){
+        actions=`<button onclick="deleteProduct('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-danger font-bold transition-colors" title="إجراء تخريد أو تصريف عاجل"><span class="material-symbols-outlined text-[18px]">local_fire_department</span></button>
+                 <button onclick="toggleActive('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="تعطيل/تفعيل">${HAS_ACTIVE?`<span class="material-symbols-outlined text-[18px]">swap_horiz</span>`:''}</button>`;
+      }else{
+        actions=`<button onclick="toggleActive('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="${HAS_ACTIVE?'تعطيل/تفعيل':'تحويل بين المستودعات'}"><span class="material-symbols-outlined text-[18px]">swap_horiz</span></button>
+                 <button onclick="editStock('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="تعديل الرصيد/السعر"><span class="material-symbols-outlined text-[18px]">edit_note</span></button>`;
+      }
+      return `
+      <tr class="hover:bg-canvas-bg transition-colors group ${rowSel?'bg-primary/5':''}">
+        <td class="px-4 py-3 text-center"><input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" ${rowSel?'checked':''} onclick="toggleOne('${id}',this.checked)"/></td>
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-2">
+            <img class="w-10 h-10 rounded-lg object-cover shadow-sm bg-surface-container ${hideCols.has('img')?'hidden':''}" onerror="this.style.display='none'" alt="" src="${escapeHtml(p.image)||''}"/>
+            <div class="flex flex-col min-w-0">
+              <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">${escapeHtml(p.name)||'منتج'}</span>
+              <span class="font-label-sm text-label-sm text-text-secondary truncate">${escapeHtml(p.brand||p.science_name||p.category||'')}</span>
+            </div>
           </div>
-          <span class="font-bold text-sm text-gray-900">${name}</span>
+        </td>
+        <td class="px-4 py-3">
+          <div class="flex flex-col">
+            <span class="font-data-tabular text-data-tabular font-bold text-on-surface">${escapeHtml(String(sku))}</span>
+            ${HAS_BARCODE?`<span class="font-label-sm text-label-sm text-text-secondary">${escapeHtml(String(barc))}</span>`:''}
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <div class="flex flex-col">
+            <span class="font-label-md text-label-md text-on-surface font-semibold">${escapeHtml(location)}</span>
+            <span class="font-label-sm text-label-sm text-text-secondary">القاهرة المركزي</span>
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <span class="font-data-tabular text-data-tabular px-2 py-0.5 rounded bg-surface-container font-mono text-on-surface">${escapeHtml(String(batch))}</span>
+        </td>
+        <td class="px-4 py-3">
+          ${HAS_EXPIRY&&p.expiry?`
+            <div class="flex items-center gap-1.5 font-data-tabular text-data-tabular ${exp<=90?'text-danger font-bold':'text-on-surface'}">
+              <span class="material-symbols-outlined text-[16px] ${exp<=90?'text-danger':'text-tertiary'}">${exp<=90?'event_busy':'calendar_today'}</span>
+              <span>${escapeHtml(String(p.expiry).slice(0,10))}</span>
+            </div>
+            <span class="font-label-sm text-label-sm ${exp<=90?'bg-danger text-on-primary px-1.5 py-0.5 rounded font-bold':'text-tertiary'}">${exp<=0?'منتهية':('متبقي '+exp+' يوماً')}</span>`
+          :'<span class="text-text-secondary">—</span>'}
+        </td>
+        <td class="px-4 py-3 w-44">
+          ${HAS_STOCK?`
+            <div class="flex flex-col gap-1">
+              <div class="flex justify-between items-center font-data-tabular text-data-tabular">
+                <span class="font-bold text-on-surface">${st} وحدة</span>
+                <span class="${pct<=30?'text-warning':'text-tertiary'}">${pct}%</span>
+              </div>
+              <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+                <div class="h-full ${barColor} rounded-full" style="width: ${pct}%;"></div>
+              </div>
+            </div>`:'<span class="text-text-secondary">كمية غير مسجلة</span>'}
+        </td>
+        <td class="px-4 py-3 font-data-tabular text-data-tabular">${reorder?reorder+' وحدة':'—'}</td>
+        <td class="px-4 py-3 font-data-tabular text-data-tabular">
+          <div class="flex flex-col">
+            <span class="font-bold text-on-surface">${p.price?money(p.price)+' ج.م':'—'}</span>
+            ${Number(p.discount)?`<span class="text-text-secondary text-label-sm">خصم ${p.discount}%</span>`:''}
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${info.cls} font-label-sm text-label-sm">
+            <span class="w-2 h-2 rounded-full ${info.dot}"></span>
+            ${info.label}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-center">
+          <div class="flex items-center justify-center gap-1">${actions}</div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // pagination
+  const p=document.getElementById('pagination');
+  if(tp<=1){p.innerHTML='';return;}
+  let html=`<button onclick="changePage(${page-1})" class="w-9 h-9 rounded-full bg-surface-container-lowest text-text-secondary hover:text-on-surface flex items-center justify-center shadow-sm disabled:opacity-40 ${page<=1?'pointer-events-none opacity-40':''}"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>`;
+  let pages=[];
+  for(let i=1;i<=tp;i++){
+    if(i===1||i===tp||Math.abs(i-page)<=1)pages.push(i);
+    else if(pages[pages.length-1]!=='…')pages.push('…');
+  }
+  pages.forEach(x=>{
+    if(x==='…')html+=`<span class="px-1 text-text-secondary">...</span>`;
+    else html+=`<button onclick="changePage(${x})" class="w-9 h-9 rounded-full font-bold font-data-tabular text-data-tabular shadow-sm ${x===page?'btn-brand-gradient text-on-primary':'bg-surface-container-lowest text-text-secondary hover:text-on-surface'}">${x}</button>`;
+  });
+  html+=`<button onclick="changePage(${page+1})" class="w-9 h-9 rounded-full bg-surface-container-lowest text-text-secondary hover:text-on-surface flex items-center justify-center shadow-sm ${page>=tp?'pointer-events-none opacity-40':''}"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>`;
+  p.innerHTML=html;
+}
+
+function changePage(pg){
+  const tp=Math.max(1,Math.ceil(getFiltered().length/perPage));
+  if(pg<1||pg>tp)return;
+  page=pg;renderTable();
+}
+
+function toggleOne(id,on){on?sel.add(id):sel.delete(id);renderTable();}
+function toggleAll(on){
+  sel.clear();
+  if(on)getFiltered().forEach(p=>sel.add(String(p.id)));
+  renderTable();
+}
+
+async function bulkDelete(){
+  if(!sel.size)return toast('error','حدد أصنافاً أولاً');
+  const r=await confirmDialog('حذف الأصناف المحددة','سيتم حذف '+sel.size+' صنف نهائياً!');
+  if(!r)return;
+  for(const id of sel){
+    const{error}=await _supabase.from('products').delete().eq('id',id);
+    if(!error)sel.delete(id);
+  }
+  sel.clear();toast('success','تم الحذف');fetchProducts();
+}
+
+async function editStock(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  if(!HAS_STOCK){toast('error','لا يوجد عمود stock في جدول products');return;}
+  const{value}=await Swal.fire({title:'تعديل رصيد: '+p.name,input:'number',inputValue:p.stock??0,showCancelButton:true,confirmButtonColor:'#4d3ceb',confirmButtonText:'حفظ',cancelButtonText:'إلغاء',inputAttributes:{min:'0'}});
+  if(value===undefined||value===null)return;
+  const{error}=await _supabase.from('products').update({stock:Number(value)}).eq('id',p.id);
+  if(error){toast('error','فشل التحديث');return;}
+  p.stock=Number(value);toast('success','تم تحديث الرصيد');renderTable();renderKPIs();
+}
+
+async function toggleActive(id){
+  if(!HAS_ACTIVE){toast('error','لا يوجد عمود is_active');return;}
+  const p=products.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  const newVal=!p.is_active;
+  const{error}=await _supabase.from('products').update({is_active:newVal}).eq('id',p.id);
+  if(error){toast('error','فشل التحديث');return;}
+  p.is_active=newVal;toast('success',newVal?'تم التفعيل':'تم التعطيل');renderTable();renderKPIs();
+}
+
+async function deleteProduct(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  const r=await confirmDialog('تخريد الصنف','سيتم حذف " '+(p?p.name:'')+' " نهائياً!');
+  if(!r)return;
+  const{error}=await _supabase.from('products').delete().eq('id',id);
+  if(error){toast('error','فشل الحذف');return;}
+  sel.delete(id);toast('success','تم التخريد');fetchProducts();
+}
+
+function supplyFor(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  const txt='طلب توريد عاجل: '+(p?p.name:'صنف')+(HAS_STOCK?(' - المتبقي: '+(p.stock||0)):'');
+  navigator.clipboard.writeText(txt).then(()=>toast('success','تم نسخ طلب التوريد'));
+}
+
+function supplyRequest(){
+  const low=products.filter(p=>HAS_STOCK&&((Number(p.stock)||0)<=lowThreshold(p)));
+  if(!low.length){toast('success','لا توجد أصناف تحتاج توريد حالياً');return;}
+  const txt='قائمة التوريد العاجل:\n'+low.slice(0,15).map(p=>'- '+(p.name||'صنف')+' (المتبقي '+(p.stock||0)+')').join('\n');
+  navigator.clipboard.writeText(txt).then(()=>Swal.fire({icon:'success',title:'تم تجهيز قائمة التوريد',text:low.length+' صنف قارب على النفاد — تم نسخ القائمة للحافظة.',confirmButtonColor:'#4d3ceb'}));
+}
+
+function inventoryCount(){
+  const total=products.length;
+  const low=products.filter(p=>HAS_STOCK&&((Number(p.stock)||0)<=lowThreshold(p))).length;
+  const val=products.reduce((s,p)=>s+(Number(p.price)||0)*(HAS_STOCK?Math.max(0,Number(p.stock)||0):1),0);
+  Swal.fire({icon:'success',title:'اكتمل الجرد الدوري',html:`<div class="text-right space-y-2 text-sm"><div>إجمالي الأصناف: <b>${total}</b></div><div>قاربت على النفاد: <b class="text-amber-600">${low}</b></div><div>القيمة المالية: <b>${money(val)} ج.م</b></div></div>`,confirmButtonColor:'#4d3ceb'});
+}
+
+async function newProductModal(){
+  const{value:fv}=await Swal.fire({
+    title:'إذن إضافة مخزني جديد',
+    html:`<div class="text-right space-y-3">
+      <label class="block text-xs font-bold text-gray-500">اسم الصنف *</label>
+      <input id="swal-name" class="swal2-input" placeholder="مثال: سيروم جوزيل 100 مل">
+      <label class="block text-xs font-bold text-gray-500">الفئة</label>
+      <input id="swal-cat" class="swal2-input" placeholder="مثال: سيرومات">
+      <label class="block text-xs font-bold text-gray-500">السعر (ج.م)</label>
+      <input id="swal-price" class="swal2-input" type="number" inputmode="numeric" value="0">
+      <label class="block text-xs font-bold text-gray-500">الخصم %</label>
+      <input id="swal-disc" class="swal2-input" type="number" inputmode="numeric" value="0">
+      ${HAS_STOCK?'<label class="block text-xs font-bold text-gray-500">الرصيد الابتدائي</label><input id="swal-stock" class="swal2-input" type="number" inputmode="numeric" value="0">':''}
+      ${HAS_EXPIRY?'<label class="block text-xs font-bold text-gray-500">تاريخ الانتهاء</label><input id="swal-expiry" class="swal2-input" type="date">':''}
+      <label class="block text-xs font-bold text-gray-500">رابط الصورة (اختياري)</label>
+      <input id="swal-img" class="swal2-input" placeholder="https://...">
+    </div>`,
+    showCancelButton:true,confirmButtonText:'إضافة للمخزون',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
+    preConfirm:()=>({
+      name:document.getElementById('swal-name').value.trim(),
+      category:document.getElementById('swal-cat').value.trim(),
+      price:Number(document.getElementById('swal-price').value)||0,
+      discount:Number(document.getElementById('swal-disc').value)||0,
+      stock:document.getElementById('swal-stock')?Number(document.getElementById('swal-stock').value)||0:undefined,
+      expiry:document.getElementById('swal-expiry')?document.getElementById('swal-expiry').value:undefined,
+      image:document.getElementById('swal-img').value.trim()
+    })
+  });
+  if(!fv)return;
+  if(!fv.name){toast('error','اسم الصنف مطلوب');return;}
+  const payload={name:fv.name,price:fv.price,is_active:true};
+  if(fv.category)payload.category=fv.category;
+  if(fv.discount)payload.discount=fv.discount;
+  if(fv.stock!==undefined)payload.stock=fv.stock;
+  if(fv.expiry)payload.expiry=fv.expiry;
+  if(fv.image)payload.image=fv.image;
+  try{
+    const{error}=await _supabase.from('products').insert(payload);
+    if(error)throw error;
+    toast('success','تمت إضافة الصنف للمخزون');
+    fetchProducts();
+  }catch(e){toast('error','فشل الإضافة');}
+}
+
+function exportCSV(){
+  const filtered=getFiltered();
+  if(!filtered.length){toast('error','لا توجد أصناف للتصدير');return;}
+  const head=['الاسم','الفئة','السعر','الخصم','الرصيد','الحالة','التاريخ'];
+  const lines=filtered.map(p=>[`"${(p.name||'').replace(/"/g,'""')}"`,`"${(p.category||'').replace(/"/g,'""')}"`,p.price,p.discount||0,HAS_STOCK?(p.stock??0):'',statusInfo(p).label,p.created_at||'']);
+  const csv='\ufeff'+[head.join(','),...lines.map(r=>r.join(','))].join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='inventory-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  toast('success','تم تصدير '+filtered.length+' صنف');
+}
+
+function toggleCustomize(){
+  const imgHidden=hideCols.has('img');
+  if(imgHidden)hideCols.delete('img');else hideCols.add('img');
+  document.getElementById('customize-label').textContent=imgHidden?'إظهار الصور':'إخفاء الصور';
+  renderTable();
+}
+
+function renderRecent(){
+  const box=document.getElementById('recent-list');
+  const recent=(products||[]).slice(0,3);
+  if(!recent.length){box.innerHTML='<div class="py-6 text-center text-text-secondary">لا توجد تحركات بعد.</div>';return;}
+  box.innerHTML=recent.map((p,i)=>{
+    const kind=i===0?'إضافة جديدة':'إضافة مخزني';
+    const icon=i===0?'input':'add_box';
+    const cls=i===0?'bg-success-surface text-tertiary':'bg-primary-surface text-primary';
+    return `<div class="py-2.5 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-full ${cls} flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">${icon}</span></div>
+        <div class="flex flex-col">
+          <span class="font-label-lg text-label-lg text-on-surface">${escapeHtml(p.name)||'منتج'}</span>
+          <span class="font-label-sm text-label-sm text-text-secondary">${escapeHtml(p.category)||'بدون فئة'} - ${HAS_STOCK?('الرصيد: '+(p.stock||0)):'متوفر في الكتالوج'}</span>
         </div>
-      </td>
-      <td class="px-6 py-4">
-        <span class="text-[10px] font-black px-3 py-1 rounded-full bg-gray-100 text-gray-500 uppercase tracking-wider">${cat}</span>
-      </td>
-      <td class="px-6 py-4 text-center">
-        <span class="font-black text-primary text-sm">${price} ج.م</span>
-        ${oldPrice?`<span class="block text-[10px] text-gray-400 line-through">${oldPrice} ج.م</span>`:''}
-      </td>
-      <td class="px-6 py-4">
-        <div class="flex gap-2 justify-center">
-          <button onclick="openEdit('${pid}')" class="size-9 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all shadow-sm">
-            <span class="material-symbols-outlined text-[18px]">edit</span></button>
-          <button onclick="del('${pid}','${name.replace(/'/g,"&#039;")}')" class="size-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all shadow-sm">
-            <span class="material-symbols-outlined text-[18px]">delete</span></button>
-        </div>
-      </td>
-    </tr>`;
+      </div>
+      <div class="flex flex-col text-left">
+        <span class="font-data-tabular text-data-tabular font-bold text-tertiary">${kind}</span>
+        <span class="font-label-sm text-label-sm text-text-secondary">${relTime(p.created_at)||'الآن'}</span>
+      </div>
+    </div>`;
   }).join('');
 }
 
-function openEdit(id){
-  const p=products.find(x=>x.id===id);
-  document.getElementById('edit-id').value=p.id;document.getElementById('edit-name').value=p.name;
-  document.getElementById('edit-price').value=p.price;document.getElementById('edit-oldPrice').value=p.oldPrice||'';
-  document.getElementById('edit-category').value=p.category;document.getElementById('edit-badge').value=p.badge||'';
-  const modal=document.getElementById('edit-modal');modal.classList.remove('hidden');modal.classList.add('flex');
-}
-function closeEditModal(){const m=document.getElementById('edit-modal');m.classList.add('hidden');m.classList.remove('flex');}
-
-async function submitEditForm(e){
-  e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');
-  const old=btn.innerText;btn.innerText="جاري الحفظ...";btn.disabled=true;
-  const id=document.getElementById('edit-id').value;const file=e.target.image.files[0];
-  let updateData={name:document.getElementById('edit-name').value,price:Number(document.getElementById('edit-price').value),oldPrice:document.getElementById('edit-oldPrice').value?Number(document.getElementById('edit-oldPrice').value):null,category:document.getElementById('edit-category').value,badge:document.getElementById('edit-badge').value};
-  const existing=products.find(x=>x.id===id);
-  try{
-    if(file){const fn=sanitizeFileName(file.name);const{error:upErr}=await _supabase.storage.from('products').upload(`uploads/${fn}`,file);if(upErr)throw upErr;const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fn}`);updateData.img=publicUrl;}
-    const{error}=await _supabase.from('products').update(updateData).eq('id',id);
-    if(error) throw error;
-    // حذف الصورة القديمة عند استبدالها
-    if(file&&existing&&existing.img) deleteStorageFile(existing.img);
-    closeEditModal();await load();Swal.fire({title:'تم التحديث!',icon:'success',confirmButtonColor:'#ec135b'});
-  }catch(err){Swal.fire({title:'خطأ في التحديث',icon:'error',confirmButtonColor:'#ec135b'});}
-  finally{btn.innerText=old;btn.disabled=false;}
+function renderCategoryBars(){
+  const box=document.getElementById('category-bars');
+  const cats=categories();
+  if(!cats.length){box.innerHTML='<div class="text-center py-6 text-text-secondary">لا توجد فئات بعد.</div>';return;}
+  const active=cats.map(c=>products.filter(p=>(p.category||'بدون فئة')===c).length);
+  const total=products.length||1;
+  box.innerHTML=cats.slice(0,5).map((c,i)=>{
+    const pct=Math.round(active[i]/total*100);
+    return `<div class="flex flex-col gap-1.5">
+      <div class="flex justify-between items-center">
+        <span class="font-label-lg text-label-lg text-on-surface">${escapeHtml(c)}</span>
+        <span class="font-data-tabular text-data-tabular text-primary font-bold">${active[i]} صنف (${pct}%)</span>
+      </div>
+      <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+        <div class="bg-gradient-to-r from-primary to-[#8536ff] h-full rounded-full" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-async function del(id,name){
-  const r=await Swal.fire({title:'هل أنت متأكد؟',text:`سيتم حذف "${name}" نهائياً!`,icon:'warning',showCancelButton:true,confirmButtonColor:'#ec135b',cancelButtonColor:'#e5e7eb',confirmButtonText:'نعم، احذفه',cancelButtonText:'إلغاء'});
-  if(r.isConfirmed){
-    try{
-      const target=products.find(x=>x.id===id);
-      const{error}=await _supabase.from('products').delete().eq('id',id);
-      if(error)throw error;
-      // حذف صورة المنتج من التخزين إن وجدت
-      if(target&&target.img) deleteStorageFile(target.img);
-      await load();Swal.fire({title:'تم الحذف!',icon:'success',confirmButtonColor:'#ec135b'});
-    }catch(e){Swal.fire({title:'فشل في الحذف',icon:'error',confirmButtonColor:'#ec135b'});}
-  }
+function toast(icon,title){
+  if(typeof Swal==='undefined'){alert(title);return;}
+  Swal.fire({icon,title,toast:true,position:'bottom-end',showConfirmButton:false,timer:2500,timerProgressBar:true});
 }
-
-async function move(i,dir){
-  const ti=i+dir;if(ti<0||ti>=products.length)return;
-  const newOrder=products.slice();
-  [newOrder[i],newOrder[ti]]=[newOrder[ti],newOrder[i]];
-  // إعادة كتابة الأولويات حسب الترتيب الجديد لضمان ثبات التصحيح
-  try{
-    await Promise.all(newOrder.map((p,idx)=>_supabase.from('products').update({priority:idx}).eq('id',p.id)));
-    await load();
-  }catch(err){console.error(err);}
+function confirmDialog(title,text){
+  return Swal.fire({title,text,icon:'warning',showCancelButton:true,confirmButtonColor:'#4d3ceb',confirmButtonText:'نعم',cancelButtonText:'إلغاء'}).then(r=>r.isConfirmed);
 }
 
 window.onload=async function(){
   renderSidebar('inventory.html');
   const ok=await requireAdmin();
-  if(ok) load();
+  if(ok){
+    await detectColumns();
+    fetchProducts();
+    try{
+      _supabase.channel('inventory-live')
+        .on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{fetchProducts();})
+        .subscribe();
+    }catch(e){}
+  }
 };
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();const s=document.getElementById('global-search');if(s)s.focus();}
+});
 </script>
 </body>
 </html>

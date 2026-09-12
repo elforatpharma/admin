@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>الكوبونات والعروض - الفرات فارما</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-variant":"#dae2fd","surface-container-highest":"#dae2fd","secondary":"#6a00e1","outline":"#777587","warning-surface":"#fffbeb","secondary-fixed":"#ebdcff","outline-variant":"#c7c4d9","text-secondary":"#64748b","on-secondary":"#ffffff","brand-gradient-hover":"linear-gradient(90deg, #3f2fd4 0%, #7624f2 100%)","background":"#faf8ff","tertiary-fixed":"#6ffbbe","error-container":"#ffdad6","surface-container-lowest":"#ffffff","on-surface":"#131b2e","inverse-primary":"#c4c0ff","on-secondary-fixed":"#260059","surface-container":"#eaedff","on-surface-variant":"#464556","primary-border":"#ddd6fe","danger":"#ef4444","surface-container-high":"#e2e7ff","on-primary":"#ffffff","tertiary":"#004f35","accent-glow":"rgba(77, 60, 235, 0.3)","secondary-fixed-dim":"#d3bbff","on-error-container":"#93000a","warning":"#f59e0b","on-tertiary-container":"#60eeb1","inverse-surface":"#283044","surface-container-low":"#f2f3ff","tertiary-container":"#006a48","surface-tint":"#4f3eed","secondary-container":"#8434fe","primary":"#3312d5","border-strong":"#cbd5e1","success-surface":"#ecfdf5","surface":"#faf8ff","inverse-on-surface":"#eef0ff","on-tertiary-fixed-variant":"#005236","on-primary-fixed":"#110068","canvas-bg":"#f8fafc","brand-gradient":"linear-gradient(90deg, #4d3ceb 0%, #8536ff 100%)","text-primary":"#0f172a","tertiary-fixed-dim":"#4edea3","surface-bright":"#faf8ff","error":"#ba1a1a","on-secondary-container":"#f3e8ff","on-tertiary":"#ffffff","danger-surface":"#fef2f2","on-primary-fixed-variant":"#3517d6","on-background":"#131b2e","success":"#10b981","surface-card":"#ffffff","on-primary-container":"#d5d1ff","border-subtle":"#e2e8f0","primary-fixed":"#e3dfff","on-secondary-fixed-variant":"#5c00c4","surface-dim":"#d2d9f4","primary-container":"#4d3ceb","on-tertiary-fixed":"#002113","primary-surface":"#f5f3ff","primary-fixed-dim":"#c4c0ff","on-error":"#ffffff"},borderRadius:{DEFAULT:"0.75rem",lg:"1rem",xl:"1.5rem",full:"9999px"},spacing:{gutter:"1rem","gutter-lg":"1.5rem","space-lg":"1.5rem","space-sm":"0.5rem","space-md":"1rem","space-xs":"0.25rem","margin-lg":"2rem","space-xl":"2rem",margin:"1rem","margin-md":"1.5rem"},fontFamily:{"body-lg":["Tajawal"],"label-lg":["Tajawal"],"headline-xl":["Cairo"],"data-tabular":["Tajawal"],"headline-sm":["Cairo"],"label-sm":["Tajawal"],"label-md":["Tajawal"],"headline-lg":["Cairo"],"body-md":["Tajawal"],"display-lg-mobile":["Cairo"],"body-sm":["Tajawal"],"display-lg":["Cairo"]},fontSize:{"body-lg":["16px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"600"}],"headline-xl":["24px",{"lineHeight":"32px","letterSpacing":"0","fontWeight":"700"}],"data-tabular":["13px",{"lineHeight":"18px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"500"}],"headline-lg":["20px",{"lineHeight":"28px","letterSpacing":"0","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","letterSpacing":"0","fontWeight":"400"}],"display-lg-mobile":["26px",{"lineHeight":"34px","letterSpacing":"0","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"display-lg":["32px",{"lineHeight":"42px","letterSpacing":"0","fontWeight":"700"}]}}}};</script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#f8fafc;}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;border-radius:9999px!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+    .btn-brand-gradient:hover{background:linear-gradient(90deg,#3f2fd4 0%,#7624f2 100%)!important;box-shadow:0 12px 24px rgba(77,60,235,0.4)!important;}
+    .text-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    body::-webkit-scrollbar{display:none;}
+    .scrollbar-none::-webkit-scrollbar{display:none;}
+  </style>
+</head>
+<body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
+<div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
+
+  <div id="sidebar-placeholder"></div>
+
+  <header class="sticky top-0 z-30 h-16 bg-surface/80 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(15,23,42,0.04)]">
+    <div class="flex items-center gap-4 w-1/2">
+      <div class="relative w-full max-w-xl">
+        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px] pointer-events-none">search</span>
+        <input id="global-search" class="w-full h-11 pr-10 pl-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="بحث باسم أو رمز الكوبون..." type="text" oninput="onSearch(this.value)"/>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="hidden lg:flex items-center gap-2 bg-success-surface text-tertiary px-3 py-1 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-success"></span>
+        <span class="font-label-sm text-label-sm font-bold">نظام التسعير الترويجي متصل</span>
+      </div>
+      <button onclick="document.getElementById('quick-coupon-drawer').scrollIntoView({behavior:'smooth'})" class="flex items-center gap-2 btn-brand-gradient text-on-primary px-4 py-2.5 rounded-full transition-all transform hover:-translate-y-0.5">
+        <span class="material-symbols-outlined text-[18px]">add_circle</span>
+        <span class="font-label-lg text-label-lg">إنشاء كود خصم / عرض جديد</span>
+      </button>
+      <button onclick="fetchAll()" class="flex items-center gap-2 px-3 h-10 rounded-full bg-surface-container-low text-text-secondary hover:text-on-surface text-label-sm font-label-sm shadow-sm transition-all" title="تحديث">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full pt-6 bg-canvas-bg min-h-screen px-6 py-4">
+    <div class="flex flex-col w-full">
+
+      <!-- Top Banner / Control Panel Header -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-6">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-space-xs text-text-secondary font-label-md text-label-md mb-1">
+            <span>لوحة التحكم</span>
+            <span class="material-symbols-outlined text-[14px]">chevron_left</span>
+            <span class="text-primary font-bold">الكوبونات والعروض الترويجية</span>
+          </div>
+          <div class="flex items-center gap-space-sm">
+            <h1 class="font-headline-xl text-headline-xl text-on-surface">إدارة الخصومات والحملات النشطة</h1>
+            <span class="flex items-center gap-1 bg-success-surface text-tertiary px-3 py-0.5 rounded-full font-label-sm text-label-sm shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-success"></span>
+              نظام التسعير الترويجي متصل
+            </span>
+          </div>
+        </div>
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-space-sm">
+          <button onclick="suspendExpired()" class="flex items-center gap-1 bg-surface-container-lowest text-text-secondary hover:text-on-surface px-4 py-2.5 rounded-full shadow-sm hover:shadow transition-all font-label-lg text-label-lg">
+            <span class="material-symbols-outlined text-[20px] text-danger">event_busy</span>
+            <span>تعليق المنتهية</span>
+          </button>
+          <button onclick="whatsappCampaign()" class="flex items-center gap-1 bg-surface-container-lowest text-tertiary hover:bg-success-surface px-4 py-2.5 rounded-full shadow-sm hover:shadow transition-all font-label-lg text-label-lg">
+            <span class="material-symbols-outlined text-[20px] text-success">chat</span>
+            <span>حملات واتساب السريعة</span>
+          </button>
+          <button onclick="document.getElementById('quick-coupon-drawer').scrollIntoView({behavior:'smooth'})" class="flex items-center gap-space-xs bg-brand-gradient hover:bg-brand-gradient-hover text-on-primary px-6 py-2.5 rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] hover:shadow-[0px_12px_24px_rgba(77,60,235,0.4)] transition-all transform hover:-translate-y-0.5 font-label-lg text-label-lg">
+            <span class="material-symbols-outlined text-[20px]">add_circle</span>
+            <span>إنشاء كود خصم / عرض جديد</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Metrics Grid (4-Cards) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md mb-6">
+        <!-- Card 1 -->
+        <div class="bg-surface-card rounded-DEFAULT p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+          <div class="absolute -top-6 -left-6 w-24 h-24 bg-primary-surface rounded-full opacity-60 pointer-events-none"></div>
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-text-secondary">الكوبونات النشطة حالياً</span>
+              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-active">0</span> <span class="font-label-md text-label-md text-text-secondary">كود فعال</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-primary-surface flex items-center justify-center text-primary shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">confirmation_number</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-space-xs mt-4">
+            <span class="bg-success-surface text-tertiary font-label-sm text-label-sm px-2 py-0.5 rounded-full flex items-center gap-0.5">
+              <span class="material-symbols-outlined text-[14px]">trending_up</span> <span id="kpi-new">0</span> أكواد
+            </span>
+            <span class="font-label-sm text-label-sm text-text-secondary">مقارنة بالمجمل</span>
+          </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="bg-surface-card rounded-DEFAULT p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+          <div class="absolute -top-6 -left-6 w-24 h-24 bg-secondary-fixed/30 rounded-full opacity-50 pointer-events-none"></div>
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-text-secondary">إجمالي الخصومات الممنوحة</span>
+              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-discounts">0</span> <span class="font-headline-sm text-headline-sm text-primary">ج.م</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center text-secondary shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">savings</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-space-xs mt-4">
+            <span class="bg-primary-surface text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full flex items-center gap-0.5">
+              <span class="material-symbols-outlined text-[14px]">insights</span> <span id="kpi-usages">0</span> استخدام
+            </span>
+            <span class="font-label-sm text-label-sm text-text-secondary">إجمالي مرات التطبيق الفعلية</span>
+          </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="bg-surface-card rounded-DEFAULT p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+          <div class="absolute -top-6 -left-6 w-24 h-24 bg-success-surface rounded-full opacity-60 pointer-events-none"></div>
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-text-secondary">معدل استخدام العروض</span>
+              <span class="font-display-lg text-display-lg text-tertiary mt-1"><span id="kpi-rate">0</span>% <span class="font-label-md text-label-md text-text-secondary">من الطلبات</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-success-surface flex items-center justify-center text-tertiary shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">percent</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-space-xs mt-4">
+            <span class="bg-success-surface text-tertiary font-label-sm text-label-sm px-2 py-0.5 rounded-full flex items-center gap-0.5">
+              <span class="material-symbols-outlined text-[14px]">arrow_upward</span> مباشر
+            </span>
+            <span class="font-label-sm text-label-sm text-text-secondary"><span id="kpi-orders">0</span> إجمالي الطلبات</span>
+          </div>
+        </div>
+        <!-- Card 4 -->
+        <div class="bg-surface-card rounded-DEFAULT p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+          <div class="absolute -top-6 -left-6 w-24 h-24 bg-surface-container-high rounded-full opacity-60 pointer-events-none"></div>
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-text-secondary">المبيعات المحققة عبر الحملات</span>
+              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-sales">0</span> <span class="font-headline-sm text-headline-sm text-secondary">ج.م</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-primary-surface flex items-center justify-center text-primary-container shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">point_of_sale</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-space-xs mt-4">
+            <span class="bg-surface-container-high text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full flex items-center gap-0.5">
+              <span class="material-symbols-outlined text-[14px]">stars</span> عائد ترويجي
+            </span>
+            <span class="font-label-sm text-label-sm text-text-secondary">مردود الإنفاق الترويجي</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign Visual Highlight / Seasonal Deal -->
+      <div class="relative bg-gradient-to-r from-primary via-primary-container to-secondary rounded-DEFAULT p-space-lg text-on-primary shadow-lg overflow-hidden mb-6" id="campaign-banner">
+        <div class="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-surface-container-lowest/10 blur-2xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-space-lg">
+          <div class="flex items-center gap-space-md">
+            <div class="hidden sm:flex w-20 h-20 rounded-2xl overflow-hidden shadow-md flex-shrink-0 bg-surface-container-lowest/20 items-center justify-center">
+              <span class="material-symbols-outlined text-[40px] text-on-primary/90">dermatology</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="bg-on-primary/20 backdrop-blur-md px-3 py-0.5 rounded-full font-label-sm text-label-sm text-on-primary font-bold">حملة مميزة نشطة</span>
+                <span class="bg-tertiary-fixed text-on-tertiary-fixed px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-bold">أعلى عائد حالياً</span>
+              </div>
+              <h2 class="font-headline-lg text-headline-lg font-bold" id="campaign-title">حملة العروض الترويجية النشطة (خصم + هدية)</h2>
+              <p class="font-body-sm text-body-sm text-on-primary-container mt-1">تستهدف عملاء الصيدليات والعيادات، مع استثناء كامل للأدوية الجبرية وفق البروتوكول الطبي للتسعير.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-space-sm flex-shrink-0 w-full lg:w-auto justify-end">
+            <div class="flex flex-col text-left lg:text-right pl-4">
+              <span class="font-label-sm text-label-sm text-on-primary-container">كود الحملة</span>
+              <span class="font-headline-lg text-headline-lg tracking-wider font-bold" id="campaign-code" dir="ltr">----</span>
+            </div>
+            <button class="bg-surface-container-lowest text-primary hover:bg-surface-container-low px-5 py-2.5 rounded-full font-label-lg text-label-lg shadow-md transition-all flex items-center gap-1" onclick="copyCampaignCode()">
+              <span class="material-symbols-outlined text-[18px]">content_copy</span>
+              <span>نسخ الرابط الترويجي</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Primary Tab Bar & Controls -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-4">
+        <!-- Category Tabs -->
+        <div class="flex items-center gap-space-xs bg-surface-container-low p-1 rounded-full shadow-inner overflow-x-auto scrollbar-none">
+          <button id="tab-coupons" onclick="setTab('coupons')" class="bg-primary-container text-on-primary px-5 py-2 rounded-full font-label-lg text-label-lg shadow-sm transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">confirmation_number</span>
+            <span>أكواد الخصم</span>
+            <span class="bg-on-primary/20 text-on-primary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-coupons">0</span>
+          </button>
+          <button id="tab-bogo" onclick="setTab('bogo')" class="text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+            <span>عروض الحزم والـ BOGO</span>
+            <span class="bg-surface-container text-text-secondary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-bogo">0</span>
+          </button>
+          <button id="tab-ship" onclick="setTab('ship')" class="text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">local_shipping</span>
+            <span>الشحن المجاني</span>
+            <span class="bg-surface-container text-text-secondary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-ship">0</span>
+          </button>
+        </div>
+        <!-- Quick Search and Filter Bar -->
+        <div class="flex items-center gap-space-sm">
+          <div class="relative w-64">
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary text-[18px]">search</span>
+            <input id="coupon-search" class="w-full h-10 pr-9 pl-4 bg-surface-card rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary shadow-sm focus:outline-none" placeholder="بحث باسم أو رمز الكوبون..." type="text" oninput="setQuery(this.value)"/>
+          </div>
+          <div class="flex items-center bg-surface-card rounded-full shadow-sm p-1">
+            <button id="filt-all" onclick="setFilter('all')" class="px-3 py-1 rounded-full font-label-md text-label-md bg-surface-container text-primary font-bold">الكل</button>
+            <button id="filt-active" onclick="setFilter('active')" class="px-3 py-1 rounded-full font-label-md text-label-md text-text-secondary hover:text-on-surface">نشط</button>
+            <button id="filt-expired" onclick="setFilter('expired')" class="px-3 py-1 rounded-full font-label-md text-label-md text-text-secondary hover:text-on-surface">مستنفد</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Layout: Coupons Grid + Interactive Drawer Split View -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg mb-8">
+        <!-- Coupons List Area (8 cols on xl) -->
+        <div class="xl:col-span-8 flex flex-col gap-space-md">
+          <div id="empty-state" class="hidden flex-col items-center justify-center text-center gap-3 py-16 bg-surface-card rounded-2xl shadow-sm">
+            <span class="material-symbols-outlined text-[48px] text-outline">loyalty</span>
+            <p class="font-headline-lg text-headline-lg text-on-surface" id="empty-title">لا توجد كوبونات بعد</p>
+            <p class="font-body-sm text-body-sm text-text-secondary" id="empty-desc">استخدم "إنشاء كود خصم" لإطلاق أول حملة ترويجية لصيدلية الفرات فارما.</p>
+          </div>
+          <div id="coupons-list" class="flex flex-col gap-4"></div>
+        </div>
+
+        <!-- Right Drawer (4 cols on xl) -->
+        <div class="xl:col-span-4 flex flex-col gap-space-md" id="quick-coupon-drawer">
+          <!-- Quick Generator Card -->
+          <div class="bg-surface-card rounded-DEFAULT p-space-lg shadow-sm flex flex-col gap-space-md">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[22px]">magic_button</span>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">إنشاء كود سريع</h3>
+              </div>
+              <span class="font-label-sm text-label-sm text-text-secondary">يُفعَّل عبر المتجر فوراً</span>
+            </div>
+            <form id="quick-coupon-form" class="flex flex-col gap-space-sm">
+              <div>
+                <label class="font-label-md text-label-md text-on-surface block mb-1">رمز الكوبون (Coupon Code)</label>
+                <div class="flex items-center gap-2">
+                  <input id="gen-code" class="w-full h-11 px-4 bg-canvas-bg rounded-xl font-headline-sm text-headline-sm text-primary uppercase focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="مثال: PHARMA10" type="text" value=""/>
+                  <button type="button" class="h-11 px-3 bg-surface-container-high text-primary rounded-xl font-label-md text-label-md hover:bg-primary-surface transition-colors" onclick="randomCode()" title="توليد عشوائي">
+                    <span class="material-symbols-outlined text-[20px]">casino</span>
+                  </button>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-space-sm">
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface block mb-1">نوع الخصم</label>
+                  <select id="gen-type" onchange="updatePreview();" class="w-full h-11 px-3 bg-canvas-bg rounded-xl font-body-sm text-body-sm text-on-surface focus:outline-none">
+                    <option value="percent">نسبة مئوية (%)</option>
+                    <option value="amount">مبلغ ثابت (ج.م)</option>
+                    <option value="ship">شحن مجاني</option>
+                    <option value="gift">هدية مجانية مع الطلب</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface block mb-1" id="gen-value-label">قيمة الخصم</label>
+                  <input id="gen-value" oninput="updatePreview();" class="w-full h-11 px-4 bg-canvas-bg rounded-xl font-body-sm text-body-sm text-on-surface focus:outline-none" type="number" value="20" min="1"/>
+                </div>
+              </div>
+              <div>
+                <label class="font-label-md text-label-md text-on-surface block mb-1">الحد الأدنى للطلبية (ج.م)</label>
+                <input id="gen-min" class="w-full h-11 px-4 bg-canvas-bg rounded-xl font-body-sm text-body-sm text-on-surface focus:outline-none" type="number" value="1500" min="0" step="50"/>
+              </div>
+              <div class="bg-surface-container-low p-space-sm rounded-xl flex flex-col gap-2">
+                <span class="font-label-sm text-label-sm font-bold text-on-surface">قيود التطبيق:</span>
+                <label class="flex items-center gap-2 font-label-md text-label-md text-text-secondary cursor-pointer">
+                  <input id="gen-avoid-jabri" checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+                  <span>استثناء الأدوية المسعرة جبرياً (إلزامي نظامياً)</span>
+                </label>
+                <label class="flex items-center gap-2 font-label-md text-label-md text-text-secondary cursor-pointer">
+                  <input id="gen-phar-only" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
+                  <span>تطبيق على الصيدليات والمراكز المعتمدة فقط</span>
+                </label>
+              </div>
+              <button type="submit" class="w-full bg-brand-gradient hover:bg-brand-gradient-hover text-on-primary py-3 rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] transition-all font-label-lg text-label-lg mt-2 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">publish</span>
+                <span>نشر وتفعيل العرض فوراً</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Live Cart Preview -->
+          <div class="bg-surface-card rounded-DEFAULT p-space-lg shadow-sm flex flex-col gap-space-md relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary text-[22px]">shopping_cart_checkout</span>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">معاينة تجربة العميل بالسلة</h3>
+              </div>
+              <span class="bg-primary-surface text-primary px-2.5 py-0.5 rounded-full font-label-sm text-label-sm">مباشر</span>
+            </div>
+            <div class="bg-canvas-bg rounded-2xl p-space-md flex flex-col gap-space-sm shadow-inner">
+              <div class="flex items-center justify-between pb-space-xs font-label-sm text-label-sm text-text-secondary">
+                <span>عناصر الطلب (صيدلية الشفاء التخصصية)</span>
+                <span>3 منتجات</span>
+              </div>
+              <div class="flex items-center justify-between font-body-sm text-body-sm">
+                <span class="text-on-surface">إجمالي المنتجات المؤهلة</span>
+                <span class="font-bold text-on-surface font-data-tabular">2,450.00 ج.م</span>
+              </div>
+              <div id="preview-coupon" class="flex items-center justify-between bg-primary-surface p-space-sm rounded-xl">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-[18px]">local_offer</span>
+                  <div class="flex flex-col">
+                    <span class="font-label-md text-label-md text-primary font-bold" id="preview-code-text">لم يُطبق كود بعد</span>
+                    <span class="font-label-sm text-label-sm text-text-secondary" id="preview-desc-text">حدد نوع الخصم وقيمته</span>
+                  </div>
+                </div>
+                <span class="font-headline-sm text-headline-sm text-primary font-bold font-data-tabular" id="preview-discount">- 0.00 ج.م</span>
+              </div>
+              <div class="flex items-center justify-between font-body-sm text-body-sm text-text-secondary">
+                <span>الشحن الطبي السريع</span>
+                <span class="text-tertiary font-bold" id="preview-shipping">مجاني</span>
+              </div>
+              <div class="pt-2 flex items-center justify-between">
+                <span class="font-headline-sm text-headline-sm text-on-surface font-bold">المجموع بعد الخصم</span>
+                <span class="font-headline-xl text-headline-xl text-primary font-bold font-data-tabular"><span id="preview-total">2,450.00</span> <span class="font-headline-sm text-headline-sm">ج.م</span></span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 text-text-secondary font-label-sm text-label-sm px-1">
+              <span class="material-symbols-outlined text-[16px] text-success">verified_user</span>
+              <span>يتم احتساب الضرائب الطبية والاستثناءات آلياً قبل الاعتماد النهائي</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wholesale & Pharmacy Bundles Section (BOGO) -->
+      <div class="flex flex-col gap-space-md">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-space-xs">
+            <span class="w-3 h-3 rounded-full bg-secondary"></span>
+            <h2 class="font-headline-lg text-headline-lg text-on-surface">عروض الحزم والكميات التراكمية (B2B Volume Deals)</h2>
+          </div>
+          <span class="font-label-lg text-label-lg text-primary flex items-center gap-1 cursor-pointer" onclick="toast('info','عروض الحزم مُدارة في صفحة المخزون والعروض الكمية.')">
+            <span>عرض كافة الحزم الطبية</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          </span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+          <!-- Bundle Card 1 -->
+          <div class="bg-surface-card rounded-DEFAULT p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-space-md">
+            <div class="flex flex-col gap-space-sm">
+              <div class="flex items-center justify-between">
+                <span class="bg-primary-surface text-primary px-3 py-1 rounded-full font-label-sm text-label-sm font-bold">اشترِ 5 + 1 مجاناً</span>
+                <span class="font-label-sm text-label-sm text-text-secondary">صلاحية مستمرة</span>
+              </div>
+              <h3 class="font-headline-sm text-headline-sm text-on-surface">حزمة معقمات ومطهرات العيادات (سعة 5 لتر)</h3>
+              <p class="font-body-sm text-body-sm text-text-secondary">مخصص للعيادات والمراكز الجراحية مع ضمان شهادة الجودة والسلامة.</p>
+            </div>
+            <div class="flex items-center justify-between pt-space-sm bg-canvas-bg p-space-sm rounded-xl">
+              <div class="flex flex-col">
+                <span class="font-label-sm text-label-sm text-text-secondary">سعر الحزمة</span>
+                <span class="font-headline-sm text-headline-sm text-primary font-bold font-data-tabular">1,850 ج.م</span>
+              </div>
+              <button onclick="toast('info','حزمة تجارية تجريبية - تُدار من نظام الترويج في المتجر.')" class="bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary px-4 py-2 rounded-full font-label-md text-label-md transition-all">
+                تعديل الحزمة
+              </button>
+            </div>
+          </div>
+          <!-- Bundle Card 2 -->
+          <div class="bg-surface-card rounded-DEFAULT p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-space-md">
+            <div class="flex flex-col gap-space-sm">
+              <div class="flex items-center justify-between">
+                <span class="bg-success-surface text-tertiary px-3 py-1 rounded-full font-label-sm text-label-sm font-bold">خصم 25% على الكمية</span>
+                <span class="font-label-sm text-label-sm text-text-secondary">ينتهي خلال 5 أيام</span>
+              </div>
+              <h3 class="font-headline-sm text-headline-sm text-on-surface">حزمة مكملات وأوميغا 3 للمجموعات الصيدلانية</h3>
+              <p class="font-body-sm text-body-sm text-text-secondary">عند شراء أكثر من 50 عبوة صيدلانية، يتم تطبيق الخصم فوراً في الفاتورة.</p>
+            </div>
+            <div class="flex items-center justify-between pt-space-sm bg-canvas-bg p-space-sm rounded-xl">
+              <div class="flex flex-col">
+                <span class="font-label-sm text-label-sm text-text-secondary">الحد الأدنى</span>
+                <span class="font-headline-sm text-headline-sm text-tertiary font-bold font-data-tabular">50 عبوة</span>
+              </div>
+              <button onclick="toast('info','حزمة تجارية تجريبية - تُدار من نظام الترويج في المتجر.')" class="bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary px-4 py-2 rounded-full font-label-md text-label-md transition-all">
+                تعديل الحزمة
+              </button>
+            </div>
+          </div>
+          <!-- Bundle Card 3 -->
+          <div class="bg-surface-card rounded-DEFAULT p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-space-md">
+            <div class="flex flex-col gap-space-sm">
+              <div class="flex items-center justify-between">
+                <span class="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full font-label-sm text-label-sm font-bold">باقة الشتاء السريرية</span>
+                <span class="font-label-sm text-label-sm text-text-secondary">عرض محدود</span>
+              </div>
+              <h3 class="font-headline-sm text-headline-sm text-on-surface">مستلزمات فحص المناعة ولقاحات الإنفلونزا</h3>
+              <p class="font-body-sm text-body-sm text-text-secondary">تخفيض خاص مع شحن مبرد مؤمّن مجاني لجميع المشافي بالمحافظات.</p>
+            </div>
+            <div class="flex items-center justify-between pt-space-sm bg-canvas-bg p-space-sm rounded-xl">
+              <div class="flex flex-col">
+                <span class="font-label-sm text-label-sm text-text-secondary">الوفورات التقديرية</span>
+                <span class="font-headline-sm text-headline-sm text-secondary font-bold font-data-tabular">3,400 ج.م</span>
+              </div>
+              <button onclick="toast('info','حزمة تجارية تجريبية - تُدار من نظام الترويج في المتجر.')" class="bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary px-4 py-2 rounded-full font-label-md text-label-md transition-all">
+                تعديل الحزمة
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  // ===================== State & Helpers =====================
+  let coupons=[], orders=[], query='', filter='all', tab='coupons';
+
+  function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function todayStr(){return new Date().toISOString().split('T')[0];}
+  function faDate(d){
+    if(!d)return '—';
+    try{return new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric'}).format(new Date(d+'T00:00:00'));}
+    catch(e){return String(d);}
+  }
+  function isExpired(c){return String(c.expiry_date||'').slice(0,10)<todayStr();}
+  function couponCode(o){return o.coupon||o.couponCode||o.coupon_code;}
+  function usageCount(c){
+    const code=String(c.code||'').toUpperCase();
+    if(!code)return 0;
+    return orders.filter(o=>{
+      const oc=couponCode(o);return oc&&String(oc).trim().toUpperCase()===code;
+    }).length;
+  }
+
+  // ===================== Data Fetch =====================
+  async function fetchCoupons(){
+    const{data,error}=await _supabase.from('coupons').select('*').order('created_at',{ascending:false});
+    if(!error&&data)coupons=data;
+    else console.warn('coupons fetch:',error);
+  }
+  async function fetchOrders(){
+    const{data,error}=await _supabase.from('orders').select('*');
+    if(!error&&data)orders=data;
+    else console.warn('orders fetch:',error);
+  }
+  async function fetchAll(){
+    await Promise.all([fetchCoupons(),fetchOrders()]);
+    render();
+  }
+
+  // ===================== KPIs =====================
+  function computeKPIs(){
+    const today=todayStr();
+    const cancelled=['ملغي','ملغية','مرجوع','مرفوض'];
+    const valid=orders.filter(o=>!cancelled.includes(String(o.status||'')).trim());
+    const active=coupons.filter(c=>c.is_active!==false&&!isExpired(c));
+    const withCoupon=valid.filter(o=>couponCode(o));
+
+    let discounts=0;
+    withCoupon.forEach(o=>{
+      let sub=0;
+      (o.items||[]).forEach(it=>{if(!it.isGift)sub+=Number(it.price||0)*(Number(it.qty)||1);});
+      if(sub>0)discounts+=Math.max(0,sub-(Number(o.total)||0));
+    });
+    const sales=withCoupon.reduce((s,o)=>s+(Number(o.total)||0),0);
+    const rate=valid.length?Math.round(withCoupon.length/valid.length*1000)/10:0;
+
+    document.getElementById('kpi-active').textContent=active.length;
+    document.getElementById('kpi-new').textContent=coupons.length;
+    document.getElementById('kpi-discounts').textContent=Math.round(discounts).toLocaleString('en-US');
+    document.getElementById('kpi-usages').textContent=withCoupon.length;
+    document.getElementById('kpi-rate').textContent=rate;
+    document.getElementById('kpi-orders').textContent=valid.length;
+    document.getElementById('kpi-sales').textContent=Math.round(sales).toLocaleString('en-US');
+
+    document.getElementById('tab-count-coupons').textContent=coupons.length;
+    document.getElementById('tab-count-bogo').textContent=coupons.filter(c=>/حزمة|BOGO|هدية|اشترِ|bundle/i.test((c.description||'')+' '+(c.code||''))).length;
+    document.getElementById('tab-count-ship').textContent=coupons.filter(c=>/شحن|SHIP|توصيل/i.test((c.description||'')+' '+(c.code||''))).length;
+  }
+
+  // ===================== Campaign Banner =====================
+  function renderCampaign(){
+    const today=todayStr();
+    const best=coupons.filter(c=>c.is_active!==false&&!isExpired(c))
+      .sort((a,b)=>usageCount(b)-usageCount(a))[0];
+    const code=best?best.code:'FORAT15';
+    const pct=best?best.discount_percentage:'20';
+    document.getElementById('campaign-code').textContent=code;
+    document.getElementById('campaign-title').textContent=best
+      ?`حملة "${best.code}" النشطة (خصم ${pct}% على الطلب)`
+      :'حملة العروض الترويجية النشطة (خصم 20% + هدية)';
+  }
+  function copyCampaignCode(){
+    const code=document.getElementById('campaign-code').textContent||'';
+    navigator.clipboard.writeText(code).then(()=>toast('success','تم نسخ كود العرض '+code)).catch(()=>toast('error','تعذر النسخ'));
+  }
+
+  // ===================== Coupon Card Render =====================
+  function statusChip(c){
+    if(isExpired(c))return {cls:'bg-surface-container-high text-text-secondary',dot:'bg-outline',label:'منتهي'};
+    if(c.is_active===false)return {cls:'bg-warning-surface text-warning',dot:'bg-warning',label:'متوقف'};
+    return {cls:'bg-success-surface text-tertiary',dot:'bg-success',label:'فعال ونشط'};
+  }
+  function typeInfo(c){
+    const hay=(c.description||'')+' '+(c.code||'');
+    if(/شحن|SHIP|توصيل|مبرد/i.test(hay))return {label:'شحن مجاني',cls:'bg-success-surface text-tertiary',icon:'local_shipping'};
+    if(/هدية|gift/i.test(hay))return {label:'خصم + هدية',cls:'bg-secondary-fixed text-on-secondary-fixed',icon:'featured_seasonal_and_gifts'};
+    if(/مبلغ|نقدي|amount/i.test(hay))return {label:'خصم مبلغ نقدي',cls:'bg-primary-surface text-primary',icon:'payments'};
+    return {label:'نسبة مئوية',cls:'bg-secondary-fixed/60 text-secondary',icon:'percent'};
+  }
+  function couponCard(c){
+    const usage=usageCount(c);
+    const cap=500;
+    const pct=Math.min(100,Math.round(usage/cap*100));
+    const st=statusChip(c);
+    const ty=typeInfo(c);
+    const desc=c.description||'كوبون خصم فعال لمتجر الفرات فارما';
+    const toggleChecked=c.is_active!==false&&!isExpired(c);
+    return `<div class="bg-surface-card rounded-DEFAULT p-space-md shadow-sm hover:shadow-md transition-all flex flex-col gap-space-sm relative">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm bg-canvas-bg/50 p-space-sm rounded-xl">
+        <div class="flex items-center gap-space-sm">
+          <div class="w-12 h-12 rounded-xl bg-primary-surface flex items-center justify-center text-primary font-bold">
+            <span class="font-headline-sm text-headline-sm">${c.discount_percentage}%</span>
+          </div>
+          <div class="flex flex-col">
+            <div class="flex items-center gap-2">
+              <span class="font-headline-sm text-headline-sm text-on-surface font-bold" dir="ltr">${esc(c.code)}</span>
+              <button class="p-1 text-text-secondary hover:text-primary transition-colors" onclick="copyCode('${esc(c.code)}')" title="نسخ الكود">
+                <span class="material-symbols-outlined text-[18px]">content_copy</span>
+              </button>
+              <span class="${ty.cls} px-2.5 py-0.5 rounded-full font-label-sm text-label-sm flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full ${isExpired(c)?'bg-outline':(c.is_active===false?'bg-warning':'bg-primary')}"></span> ${ty.label}
+              </span>
+            </div>
+            <span class="font-body-sm text-body-sm text-text-secondary mt-0.5">${esc(desc)}</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-space-md">
+          <button onclick="deleteCoupon('${c.id}')" class="p-1.5 text-text-secondary hover:text-danger transition-colors" title="حذف الكوبون">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          </button>
+          <div class="flex flex-col text-left sm:text-right">
+            <span class="font-label-sm text-label-sm text-text-secondary">الحالة التشغيلية</span>
+            <span class="${st.cls} font-label-md text-label-md font-bold px-2 py-0.5 rounded-full mt-0.5 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${st.dot}"></span>${st.label}</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" ${toggleChecked?'checked':''} onchange="toggleCoupon('${c.id}',this.checked)" ${isExpired(c)?'disabled':''}/>
+            <div class="w-11 h-6 bg-border-strong peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary ${isExpired(c)?'opacity-40':''}"></div>
+          </label>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm pt-space-xs font-label-md text-label-md text-text-secondary">
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[18px] text-primary">rule</span>
+          <span>الحد الأدنى: <strong class="text-on-surface font-data-tabular">${desc.includes('الحد الأدنى')?desc.match(/\d[\d,]*\.?\d*/)?.[0]??'—':'—'} ج.م</strong></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[18px] text-tertiary">verified_user</span>
+          <span>التطبيق: <strong class="text-on-surface">استخدامات متعددة</strong></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[18px] text-text-secondary">date_range</span>
+          <span>الانتهاء: <strong class="text-on-surface font-data-tabular">${faDate(c.expiry_date)}</strong></span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1 pt-space-xs">
+        <div class="flex items-center justify-between font-label-sm text-label-sm">
+          <span class="text-text-secondary">معدل الاستخدام (السعة المتبقية: ${Math.max(0,cap-usage)} استخدام)</span>
+          <span class="text-on-surface font-bold font-data-tabular">${usage} / ${cap} كود (${pct}%)</span>
+        </div>
+        <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+          <div class="h-full bg-brand-gradient rounded-full" style="width:${pct}%"></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ===================== Filtering & Rendering =====================
+  function filterCoupons(){
+    let list=coupons.filter(c=>{
+      const hay=(c.code||'').toUpperCase()+' '+(c.description||'').toUpperCase();
+      if(tab==='bogo'&&!/حزمة|BOGO|هدية|اشترِ|bundle/i.test(hay))return false;
+      if(tab==='ship'&&!/شحن|SHIP|توصيل/i.test(hay))return false;
+      if(query&&!hay.includes(query.toUpperCase()))return false;
+      if(filter==='active')return c.is_active!==false&&!isExpired(c);
+      if(filter==='expired')return c.is_active===false||isExpired(c);
+      return true;
+    });
+    return list;
+  }
+  function renderList(){
+    const list=filterCoupons();
+    const el=document.getElementById('coupons-list');
+    const empty=document.getElementById('empty-state');
+    el.innerHTML=list.map(couponCard).join('');
+    if(!list.length){
+      empty.classList.remove('hidden');empty.classList.add('flex');
+      document.getElementById('empty-title').textContent=tab==='bogo'?'لا توجد عروض حزم أو هدايا':(tab==='ship'?'لا توجد عروض شحن مجاني':'لا توجد كوبونات مطابقة');
+      document.getElementById('empty-desc').textContent=query||filter!=='all'?'جرب تعديل البحث أو المرشّحات.':'استخدم "إنشاء كود خصم" لإطلاق أول حملة ترويجية.';
+    }else{empty.classList.add('hidden');empty.classList.remove('flex');}
+  }
+  function render(){
+    computeKPIs();
+    renderCampaign();
+    updateTabUI();
+    renderList();
+    updatePreview();
+  }
+
+  // ===================== Tabs / Search / Filters =====================
+  const tabs=['coupons','bogo','ship'];
+  function setTab(t){tab=t;updateTabUI();renderList();}
+  function updateTabUI(){
+    tabs.forEach(t=>{
+      const btn=document.getElementById('tab-'+t);
+      btn.className=(t===tab)
+        ?'bg-primary-container text-on-primary px-5 py-2 rounded-full font-label-lg text-label-lg shadow-sm transition-all flex items-center gap-2'
+        :'text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2';
+    });
+  }
+  function setQuery(q){query=q.trim();renderList();}
+  function setFilter(f){
+    filter=f;
+    ['all','active','expired'].forEach(k=>{
+      const b=document.getElementById('filt-'+k);
+      b.className=(k===f)
+        ?'px-3 py-1 rounded-full font-label-md text-label-md bg-surface-container text-primary font-bold'
+        :'px-3 py-1 rounded-full font-label-md text-label-md text-text-secondary hover:text-on-surface';
+    });
+    renderList();
+  }
+  function onSearch(v){document.getElementById('coupon-search').value=v;setQuery(v);}
+
+  // ===================== Actions =====================
+  function copyCode(code){
+    navigator.clipboard.writeText(code).then(()=>toast('success','تم نسخ الكود '+code)).catch(()=>toast('error','تعذر النسخ'));
+  }
+  async function toggleCoupon(id,state){
+    const{error}=await _supabase.from('coupons').update({is_active:state}).eq('id',id);
+    if(error){toast('error','تعذر التحديث: '+error.message);fetchAll();return;}
+    toast('success',state?'تم تفعيل الكوبون':'تم إيقاف الكوبون');
+    await Promise.all([fetchCoupons(),fetchOrders()]);
+    render();
+  }
+  async function deleteCoupon(id){
+    const ok=await confirmDialog('حذف الكوبون','سيتم حذف هذا الكوبون نهائياً من قاعدة البيانات. هل أنت متأكد؟');
+    if(!ok)return;
+    const{error}=await _supabase.from('coupons').delete().eq('id',id);
+    if(error){toast('error','تعذر الحذف: '+error.message);return;}
+    toast('success','تم حذف الكوبون');
+    await fetchCoupons();render();
+  }
+  async function suspendExpired(){
+    const expired=coupons.filter(c=>isExpired(c)&&c.is_active!==false);
+    if(!expired.length){toast('info','لا توجد كوبونات منتهية الصلاحية');return;}
+    const ok=await confirmDialog('تعليق الكوبونات المنتهية','سيتم إيقاف '+expired.length+' كوبون منتهي تلقائياً.');
+    if(!ok)return;
+    if(typeof _supabase!=='undefined'){
+      const{error}=await _supabase.from('coupons').update({is_active:false}).in('id',expired.map(c=>c.id)).eq('is_active',true);
+      if(error){toast('error','تعذر التعليق: '+error.message);return;}
+    }
+    toast('success','تم تعليق '+expired.length+' كوبون منتهٍ');
+    await fetchCoupons();render();
+  }
+  async function whatsappCampaign(){
+    const active=coupons.filter(c=>c.is_active!==false&&!isExpired(c));
+    if(!active.length){toast('error','لا توجد عروض نشطة لإرسالها');return;}
+    const codes=active.slice(0,5).map(c=>c.code).join(' - ');
+    const msg=encodeURIComponent('🎉 عروض مميزة من صيدلية الفرات فارما:\nكوبونات الخصم النشطة الآن: '+codes+'\nاستخدم الكود عند إتمام الطلب.');
+    const phones=[...new Set(orders.filter(o=>o.phone).map(o=>String(o.phone).replace(/\D/g,'')))].slice(0,1);
+    const link=phones.length?('https://wa.me/2'+phones[0]+'?text='+msg):('https://wa.me/?text='+msg);
+    window.open(link,'_blank');
+    toast('success','جارٍ تجهيز بث رسالة الواتساب');
+  }
+
+  // ===================== Quick Generator =====================
+  function randomCode(){const el=document.getElementById('gen-code');el.value='FORAT'+Math.floor(10+Math.random()*90);updatePreview();}
+  function updatePreview(){
+    const code=(document.getElementById('gen-code').value||'').trim().toUpperCase();
+    const type=document.getElementById('gen-type').value;
+    const value=Number(document.getElementById('gen-value').value)||0;
+    const sub=2450;
+    let disc=0;
+    if(type==='percent')disc=sub*(Math.min(value,100)/100);
+    else if(type==='amount')disc=Math.min(value,sub);
+    document.getElementById('preview-code-text').textContent=code?('كود مُطبق: '+code):'لم يُطبق كود بعد';
+    document.getElementById('preview-desc-text').textContent=code
+      ?(type==='percent'?('خصم '+value+'% على المشتريات'):type==='amount'?('خصم '+value+' ج.م'):type==='ship'?'شحن مجاني للطلب':'هدية مجانية مع الطلب')
+      :'حدد نوع الخصم وقيمته';
+    document.getElementById('preview-discount').textContent='- '+money(disc)+' ج.م';
+    document.getElementById('preview-shipping').textContent=type==='ship'?'مجاني':'٢٥ ج.م';
+    document.getElementById('preview-total').textContent=money(Math.max(0,sub-disc));
+  }
+  document.getElementById('quick-coupon-form').onsubmit=async(e)=>{
+    e.preventDefault();
+    const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;
+    try{
+      let code=document.getElementById('gen-code').value.trim().toUpperCase();
+      if(!code)throw new Error('أدخل رمز الكوبون');
+      const type=document.getElementById('gen-type').value;
+      const value=Number(document.getElementById('gen-value').value)||0;
+      const min=Number(document.getElementById('gen-min').value)||0;
+      if(!value)throw new Error('أدخل قيمة الخصم');
+      const avoidJabri=document.getElementById('gen-avoid-jabri').checked;
+      const pharOnly=document.getElementById('gen-phar-only').checked;
+      const typeLabel={percent:'نسبة مئوية',amount:'مبلغ ثابت',ship:'شحن مجاني',gift:'هدية مجانية'}[type];
+      const desc=`${typeLabel} (${value}${type==='percent'?'%':' ج.م'}) · الحد الأدنى ${min} ج.م`+(avoidJabri?' · يستثني الأدوية الجبرية':'')+(pharOnly?' · للصيدليات المعتمدة فقط':'');
+      const expires=new Date(Date.now()+30*86400000).toISOString().split('T')[0];
+      const discount=Math.min(99,Math.max(1,type==='percent'?Math.round(value):Math.round(value/10)));
+      const{error}=await _supabase.from('coupons').insert([{code,discount_percentage:discount,expiry_date:expires,description:desc,is_active:true}]);
+      if(error)throw error;
+      toast('success','تم نشر وتفعيل العرض '+code+' بنجاح!');
+      e.target.reset();
+      document.getElementById('gen-type').value='percent';
+      document.getElementById('gen-value').value='20';
+      await fetchCoupons();render();
+    }catch(err){toast('error',err.message);}
+    finally{btn.disabled=false;}
+  };
+
+  // ===================== Realtime =====================
+  let sub=null;
+  try{
+    sub=_supabase.channel('coupons-live')
+      .on('postgres_changes',{event:'*',schema:'public',table:'coupons'},()=>{fetchCoupons().then(render);})
+      .on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{fetchOrders().then(render);})
+      .subscribe();
+  }catch(e){}
+
+  // ===================== Boot =====================
+  function toast(icon,title){
+    if(typeof Swal==='undefined'){alert(title);return;}
+    Swal.fire({icon,title,toast:true,position:'bottom-end',showConfirmButton:false,timer:2500,timerProgressBar:true});
+  }
+  function confirmDialog(title,text){
+    return Swal.fire({title,text,icon:'warning',showCancelButton:true,confirmButtonColor:'#4d3ceb',confirmButtonText:'نعم',cancelButtonText:'إلغاء'}).then(r=>r.isConfirmed);
+  }
+
+  window.onload=async function(){
+    renderSidebar('coupons.html');
+    const ok=await requireAdmin();
+    if(ok){
+      document.getElementById('gen-code').value='';updatePreview();
+      await fetchAll();
+    }
+  };
+</script>
+</body>
+</html>

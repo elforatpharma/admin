@@ -6,16 +6,20 @@
   <title>إعدادات المتجر - الفرات فارما</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#4d3ceb"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#3312d5",secondary:"#6a00e1"},fontFamily:{display:["Cairo","sans-serif"]}}}};</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabaseClient.js"></script>
+  <script src="imageUploader.js"></script>
   <style>
-    body{font-family:'Tajawal',sans-serif;background:#f8f9fb;}
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
     ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
     .nav-active{background:linear-gradient(135deg,rgba(77,60,235,.08),rgba(77,60,235,.04));color:#4d3ceb;border-right:3px solid #4d3ceb;}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+    .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
+    .font-display{font-family:'Cairo',sans-serif;}
     .input{width:100%;border:1px solid #e5e7eb;border-radius:14px;padding:12px 16px;font-size:14px;font-weight:700;background:#f9fafb;outline:none;transition:all .15s;}
     .input:focus{border-color:rgba(77,60,235,.5);background:#fff;box-shadow:0 0 0 3px rgba(77,60,235,.08);}
   </style>
@@ -28,10 +32,10 @@
   <main class="flex-1 lg:mr-64 overflow-y-auto">
     <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-black text-gray-900 tracking-tight">إعدادات المتجر</h2>
+        <h2 class="font-display text-xl font-black text-gray-900 tracking-tight">إعدادات المتجر</h2>
         <p class="text-xs text-gray-400 font-medium mt-0.5">بيانات التواصل وأسعار التوصيل (متاحة للمتجر تلقائياً)</p>
       </div>
-      <button onclick="saveSettings()" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
+      <button onclick="saveSettings()" class="flex items-center gap-2 btn-brand-gradient px-5 py-2.5 rounded-xl text-sm font-bold transition-all">
         <span class="material-symbols-outlined text-[18px]">save</span>حفظ الإعدادات
       </button>
     </header>
@@ -55,6 +59,32 @@
             <div class="space-y-1.5 md:col-span-2"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">العنوان</label>
               <input type="text" id="s-address" class="input" placeholder="العنوان الكامل للمتجر"/></div>
           </div>
+        </div>
+
+        <!-- هوية المتجر: اللوجو وصورة الهيرو -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/40 flex items-center justify-between">
+            <h3 class="text-sm font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-rose-500 text-[20px]">image</span>هوية المتجر (اللوجو وصورة الواجهة)</h3>
+          </div>
+          <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">لوجو المتجر</label>
+              <div id="logo-drop-zone" class="border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center cursor-pointer hover:border-primary/50 transition-colors min-h-[140px] flex items-center justify-center">
+                <div id="logo-preview"></div>
+                <p id="logo-upload-hint" class="text-xs text-gray-400">اسحبي الصورة هنا أو اضغطي للاختيار (JPG/PNG/WebP)</p>
+              </div>
+              <input type="file" id="s-logo-file" accept="image/jpeg,image/png,image/webp" class="hidden"/>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">صورة الهيرو (واجهة الصفحة الرئيسية)</label>
+              <div id="hero-drop-zone" class="border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center cursor-pointer hover:border-primary/50 transition-colors min-h-[140px] flex items-center justify-center">
+                <div id="hero-preview"></div>
+                <p id="hero-upload-hint" class="text-xs text-gray-400">اسحبي الصورة هنا أو اضغطي للاختيار (JPG/PNG/WebP)</p>
+              </div>
+              <input type="file" id="s-hero-file" accept="image/jpeg,image/png,image/webp" class="hidden"/>
+            </div>
+          </div>
+          <p class="px-6 pb-5 text-[11px] text-gray-400">اختياري: لو ما اخترتيش صورة جديدة هيفضل المستخدم اللي محفوظ حالياً. لو المتجر ماعندوش صورة محفوظة أصلاً، هتفضل صورة اللوجو/الهيرو الافتراضية في ملفات المتجر شغالة عادي.</p>
         </div>
 
         <!-- التوصيل -->
@@ -89,7 +119,7 @@
         </div>
 
         <div class="flex gap-3">
-          <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">حفظ الإعدادات</button>
+          <button type="submit" class="flex-1 btn-brand-gradient py-4 rounded-2xl font-black text-sm transition-all">حفظ الإعدادات</button>
           <button type="button" onclick="loadSettings()" class="px-8 bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">إعادة تحميل</button>
         </div>
       </form>
@@ -114,12 +144,65 @@
 const DEFAULTS={
   store_name:'الفرات فارما',phone:'',whatsapp:'',email:'',address:'',
   shipping_fee:60,free_shipping_threshold:500,delivery_areas:[],
-  facebook:'',instagram:'',notes:''
+  facebook:'',instagram:'',notes:'',logo_url:'',hero_image_url:''
 };
 
 function areaString(areas){
   if(!Array.isArray(areas)||areas.length===0)return '';
   try{return JSON.stringify(areas,null,2);}catch(e){return '';}
+}
+
+// ---- رفع الصور (اللوجو وصورة الهيرو) ----
+let logoUploader=null,heroUploader=null;
+let selectedLogoFile=null,selectedHeroFile=null;
+let currentLogoUrl='',currentHeroUrl='';
+
+function renderExistingImage(container,hintEl,url){
+  if(!url){ container.innerHTML=''; if(hintEl) hintEl.style.display='block'; return; }
+  container.innerHTML=`<img src="${url}" alt="الصورة الحالية" class="max-h-32 rounded-xl object-contain mx-auto">`;
+  if(hintEl) hintEl.style.display='none';
+}
+
+function setupBrandingUploaders(){
+  logoUploader=new ImageUploader({
+    dropZone:document.getElementById('logo-drop-zone'),
+    fileInput:document.getElementById('s-logo-file'),
+    previewContainer:document.getElementById('logo-preview'),
+    maxSize:5*1024*1024,
+    onImageSelect:(file)=>{
+      selectedLogoFile=file;
+      const hint=document.getElementById('logo-upload-hint');
+      if(hint) hint.style.display=file?'none':'block';
+      if(!file) renderExistingImage(document.getElementById('logo-preview'),hint,currentLogoUrl);
+    }
+  });
+  heroUploader=new ImageUploader({
+    dropZone:document.getElementById('hero-drop-zone'),
+    fileInput:document.getElementById('s-hero-file'),
+    previewContainer:document.getElementById('hero-preview'),
+    maxSize:5*1024*1024,
+    onImageSelect:(file)=>{
+      selectedHeroFile=file;
+      const hint=document.getElementById('hero-upload-hint');
+      if(hint) hint.style.display=file?'none':'block';
+      if(!file) renderExistingImage(document.getElementById('hero-preview'),hint,currentHeroUrl);
+    }
+  });
+}
+
+// ---- رفع صورة واحدة إلى Supabase Storage وإرجاع الرابط العام ----
+async function uploadBrandingImage(file,folder){
+  let upFile=file;
+  if(window.resizeImage){
+    const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);
+    upFile=await dataUrlToBlob(dataUrl,'image/jpeg');
+  }
+  const fileName=sanitizeFileName(file.name);
+  const path=`${folder}/${fileName}`;
+  const{error}=await _supabase.storage.from('products').upload(path,upFile,{contentType:upFile.type||'image/jpeg'});
+  if(error) throw error;
+  const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(path);
+  return publicUrl;
 }
 
 async function loadSettings(){
@@ -136,6 +219,14 @@ async function loadSettings(){
   document.getElementById('s-facebook').value=s.facebook||'';
   document.getElementById('s-instagram').value=s.instagram||'';
   document.getElementById('s-notes').value=s.notes||'';
+
+  currentLogoUrl=s.logo_url||'';
+  currentHeroUrl=s.hero_image_url||'';
+  selectedLogoFile=null;
+  selectedHeroFile=null;
+  if(!logoUploader) setupBrandingUploaders();
+  renderExistingImage(document.getElementById('logo-preview'),document.getElementById('logo-upload-hint'),currentLogoUrl);
+  renderExistingImage(document.getElementById('hero-preview'),document.getElementById('hero-upload-hint'),currentHeroUrl);
 }
 
 async function saveSettings(e){
@@ -155,6 +246,16 @@ async function saveSettings(e){
         return;
       }
     }
+    // رفع الصور الجديدة (لو اتختارت) قبل الحفظ
+    let logo_url=currentLogoUrl;
+    let hero_image_url=currentHeroUrl;
+    if(selectedLogoFile){
+      logo_url=await uploadBrandingImage(selectedLogoFile,'branding');
+    }
+    if(selectedHeroFile){
+      hero_image_url=await uploadBrandingImage(selectedHeroFile,'branding');
+    }
+
     const data={
       store_name:document.getElementById('s-name').value.trim()||'الفرات فارما',
       phone:document.getElementById('s-phone').value.trim(),
@@ -166,11 +267,17 @@ async function saveSettings(e){
       delivery_areas,
       facebook:document.getElementById('s-facebook').value.trim(),
       instagram:document.getElementById('s-instagram').value.trim(),
-      notes:document.getElementById('s-notes').value.trim()
+      notes:document.getElementById('s-notes').value.trim(),
+      logo_url,
+      hero_image_url
     };
     const{error}=await _supabase.from('settings').upsert({id:1,data,updated_at:new Date().toISOString()});
     if(error) throw error;
-    toast('success','تم حفظ إعدادات المتجر بنجاح!');
+    currentLogoUrl=logo_url;
+    currentHeroUrl=hero_image_url;
+    selectedLogoFile=null;
+    selectedHeroFile=null;
+    toast('success','تم حفظ إعدادات المتجر بنجاح! المتجر هياخد الصور الجديدة تلقائياً.');
   }catch(err){
     console.error(err);
     toast('error','حدث خطأ أثناء الحفظ: '+(err.message||'تأكد من جدول settings في قاعدة البيانات'));

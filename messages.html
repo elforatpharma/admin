@@ -6,16 +6,19 @@
   <title>رسائل العملاء - الفرات فارما</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#4d3ceb"},fontFamily:{display:["Tajawal","sans-serif"]}}}};</script>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#3312d5",secondary:"#6a00e1"},fontFamily:{display:["Cairo","sans-serif"]}}}};</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabaseClient.js"></script>
   <style>
-    body{font-family:'Tajawal',sans-serif;background:#f8f9fb;}
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
     ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
     .nav-active{background:linear-gradient(135deg,rgba(77,60,235,.08),rgba(77,60,235,.04));color:#4d3ceb;border-right:3px solid #4d3ceb;}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+    .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
+    .font-display{font-family:'Cairo',sans-serif;}
   </style>
 </head>
 <body class="text-gray-900 antialiased">
@@ -26,10 +29,10 @@
   <main class="flex-1 lg:mr-64 overflow-y-auto">
     <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-black text-gray-900 tracking-tight">رسائل العملاء</h2>
+        <h2 class="font-display text-xl font-black text-gray-900 tracking-tight">رسائل العملاء</h2>
         <p class="text-xs text-gray-400 font-medium mt-0.5">رسائل نموذج التواصل بالمتجر + الرد المباشر بالواتساب</p>
       </div>
-      <button onclick="loadMessages()" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
+      <button onclick="loadMessages()" class="flex items-center gap-2 btn-brand-gradient px-5 py-2.5 rounded-xl text-sm font-bold transition-all">
         <span class="material-symbols-outlined text-[18px]">refresh</span>تحديث
       </button>
     </header>

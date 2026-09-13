@@ -6,13 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>تسجيل دخول | الفرات فارما</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #f8f6f6 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #faf8ff 0%, #ffffff 100%);
         }
+        .font-display { font-family: 'Cairo', sans-serif; }
+        .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+        .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
 
         /* أنيميشن الطفو للوجو */
         @keyframes float {
@@ -56,7 +59,7 @@
                 <img src="logo.png" alt="الفرات فارما" class="h-20 w-auto object-contain mix-blend-multiply" />
             </div>
             <div class="fade-up delay-1">
-                <h1 class="text-2xl font-black text-slate-800">لوحة التحكم</h1>
+                <h1 class="font-display text-2xl font-black text-slate-800">لوحة التحكم</h1>
                 <p class="text-sm text-slate-500 font-medium">أهلاً بك مجدداً في الفرات فارما</p>
             </div>
         </div>
@@ -75,7 +78,7 @@
             </div>
 
             <button type="submit" id="submit-btn"
-                class="w-full bg-[#4d3ceb] text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-[#4d3ceb]/20 hover:bg-[#3f2fd4] hover:shadow-[#4d3ceb]/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group">
+                class="w-full btn-brand-gradient py-5 rounded-[24px] font-black text-lg hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group">
                 <span>دخول الآدمن</span>
                 <svg class="size-5 group-hover:translate-x-[-4px] transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />

@@ -177,7 +177,7 @@ function render(){
 async function loadMessages(){
   const tbody=document.getElementById('messages-body');
   try{
-    const{data,error}=await _supabase.from('messages').select('*').order('created_at',{ascending:false});
+    const{data,error}=await _supabase.from('messages').select('id,name,phone,message,status,created_at').order('created_at',{ascending:false}).limit(500);
     if(error) throw error;
     allMessages=data||[];
     document.getElementById('stat-total').textContent=allMessages.length;
@@ -193,7 +193,7 @@ async function loadMessages(){
 async function markStatus(id,status){
   const{error}=await _supabase.from('messages').update({status}).eq('id',id);
   if(error){toast('error','فشل التحديث');return;}
-  const m=allMessages.find(x=>x.id===id);
+  const m=allMessages.find(x=>String(x.id)===String(id));
   if(m)m.status=status;
   document.getElementById('stat-new').textContent=allMessages.filter(x=>(x.status||'new')==='new').length;
   document.getElementById('stat-replied').textContent=allMessages.filter(x=>x.status==='replied').length;
@@ -206,7 +206,7 @@ async function deleteMessage(id){
   if(!ok) return;
   const{error}=await _supabase.from('messages').delete().eq('id',id);
   if(error){toast('error','فشل الحذف');return;}
-  allMessages=allMessages.filter(x=>x.id!==id);
+  allMessages=allMessages.filter(x=>String(x.id)!==String(id));
   document.getElementById('stat-total').textContent=allMessages.length;
   document.getElementById('stat-new').textContent=allMessages.filter(x=>(x.status||'new')==='new').length;
   document.getElementById('stat-replied').textContent=allMessages.filter(x=>x.status==='replied').length;
@@ -222,7 +222,7 @@ window.onload=async function(){
 
 // تحديث تلقائي عند وصول رسالة جديدة
 _supabase.channel('messages-live')
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{loadMessages();})
+  .on('postgres_changes',{event:'*',schema:'public',table:'messages'},payload=>{loadMessages();})
   .subscribe();
 </script>
 </body>

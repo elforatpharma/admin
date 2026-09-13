@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>فحص الربط - الفرات فارما</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;color:#131b2e}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%);border-radius:9999px;color:#fff}
+  </style>
+</head>
+<body>
+<div class="flex min-h-screen">
+  <div id="sidebar-placeholder"></div>
+  <main class="pr-0 lg:pr-64 flex-1 p-6">
+    <div class="max-w-6xl mx-auto space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 class="font-[Cairo] text-2xl font-bold">فحص ربط المتجر بالداشبورد</h1>
+          <p class="text-sm text-slate-500 mt-1">اختبار مباشر للجداول الأساسية وسياسات الوصول وأعمدة الدفع والكوبونات.</p>
+        </div>
+        <button onclick="runChecks()" class="btn-brand-gradient h-11 px-5 font-bold inline-flex items-center gap-2">
+          <span class="material-symbols-outlined text-lg">refresh</span><span>إعادة الفحص</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3" id="score-cards"></div>
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="font-[Cairo] font-bold">نتائج الفحص</h2>
+          <span id="score-label" class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">جاري الفحص...</span>
+        </div>
+        <div id="checks-list" class="divide-y divide-slate-100"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="layout.js"></script>
+<script>
+const checks=[
+  {id:'products',label:'قراءة المنتجات من المتجر',run:()=>_supabase.from('products').select('id,name,stock').limit(1)},
+  {id:'orders',label:'قراءة الطلبات في الداشبورد',run:()=>_supabase.from('orders').select('id,total,status,created_at').order('created_at',{ascending:false}).limit(1)},
+  {id:'paymob-columns',label:'أعمدة Paymob والكوبونات في الطلبات',run:()=>_supabase.from('orders').select('payment_method,payment_status,merchant_order_id,paymob_order_id,coupon_code,discount_amount').limit(1)},
+  {id:'coupons',label:'قراءة الكوبونات النشطة للمتجر',run:()=>_supabase.from('coupons').select('id,code,discount_percentage,is_active,expiry_date').limit(1)},
+  {id:'messages',label:'جدول رسائل العملاء متصل',run:()=>_supabase.from('messages').select('id,name,phone,message,status,created_at').limit(1)},
+  {id:'settings',label:'إعدادات المتجر والهوية',run:()=>_supabase.from('settings').select('id,data,updated_at').limit(1)},
+  {id:'visitors',label:'عداد الزيارات القديم',run:()=>_supabase.from('visitors').select('id,count').limit(1)},
+  {id:'visitor-events',label:'التتبع التفصيلي للزيارات',run:()=>_supabase.from('visitor_events').select('id,session_id,page_path,source,device_type,created_at').limit(1)}
+  ,{id:'store-events',label:'أحداث المتجر والفانل',run:()=>_supabase.from('store_events').select('id,session_id,event_name,product_id,coupon_code,created_at').limit(1)}
+  ,{id:'order-session',label:'ربط الطلب بالجلسة والحملة',run:()=>_supabase.from('orders').select('id,session_id,traffic_source,traffic_campaign').limit(1)}
+];
+function row(c,state,msg){
+  const cls=state==='ok'?'text-emerald-700 bg-emerald-50':state==='warn'?'text-amber-700 bg-amber-50':'text-red-700 bg-red-50';
+  const ico=state==='ok'?'check_circle':state==='warn'?'warning':'error';
+  return `<div class="p-4 flex items-start justify-between gap-4">
+    <div class="flex items-start gap-3"><span class="material-symbols-outlined ${cls.split(' ')[0]}">${ico}</span><div><p class="font-bold">${c.label}</p><p class="text-xs text-slate-500 mt-1">${msg}</p></div></div>
+    <span class="px-3 py-1 rounded-full ${cls} text-xs font-bold">${state==='ok'?'سليم':state==='warn'?'تنبيه':'مشكلة'}</span>
+  </div>`;
+}
+function renderCards(ok,total){
+  const pct=Math.round(ok/total*100);
+  document.getElementById('score-cards').innerHTML=[
+    ['نسبة الترابط',pct+'%','hub'],
+    ['اختبارات ناجحة',ok+' / '+total,'task_alt'],
+    ['آخر فحص',new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}),'schedule'],
+    ['الحالة العامة',pct>=90?'جاهز':'يحتاج متابعة','health_and_safety']
+  ].map(x=>`<div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center justify-between"><span class="text-sm text-slate-500">${x[0]}</span><span class="material-symbols-outlined text-[#4d3ceb]">${x[2]}</span></div><p class="text-2xl font-black mt-2">${x[1]}</p></div>`).join('');
+  document.getElementById('score-label').textContent='نسبة الترابط الحالية: '+pct+'%';
+}
+async function runChecks(){
+  const list=document.getElementById('checks-list');
+  list.innerHTML='<div class="p-8 text-center text-slate-400 font-bold">جاري تشغيل الاختبارات...</div>';
+  const results=[];
+  for(const c of checks){
+    try{
+      const r=await c.run();
+      results.push({c,state:r.error?'bad':'ok',msg:r.error?(r.error.message||'فشل الاتصال'):'الاتصال والقراءة يعملان بنجاح'});
+    }catch(e){results.push({c,state:'bad',msg:e.message||'فشل غير متوقع'});}
+  }
+  const ok=results.filter(r=>r.state==='ok').length;
+  renderCards(ok,checks.length);
+  list.innerHTML=results.map(r=>row(r.c,r.state,r.msg)).join('');
+}
+window.onload=async function(){
+  renderSidebar('system-check.html');
+  const ok=await requireAdmin();
+  if(ok)runChecks();
+};
+</script>
+</body>
+</html>

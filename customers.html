@@ -387,9 +387,14 @@ function initialsColors(name){
 }
 
 /* ---------- data loading ---------- */
+const CUSTOMER_ORDER_COLUMNS='id,customerName,phone,address,total,status,items,created_at';
 async function loadCustomers(){
   try{
-    const{data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false});
+    let{data,error}=await _supabase.from('orders').select(CUSTOMER_ORDER_COLUMNS).order('created_at',{ascending:false}).limit(3000);
+    if(error){
+      console.warn('Optimized customer orders query failed, falling back to full order rows:',error.message);
+      ({data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false}).limit(3000));
+    }
     if(error)throw error;
     allOrders=data||[];
     aggregate();

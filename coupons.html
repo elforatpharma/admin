@@ -427,9 +427,12 @@
   </main>
 </div>
 
+<script src="layout.js"></script>
 <script>
   // ===================== State & Helpers =====================
   let coupons=[], orders=[], query='', filter='all', tab='coupons';
+  const COUPON_COLUMNS='id,code,discount_percentage,expiry_date,description,is_active,created_at';
+  const COUPON_ORDER_COLUMNS='id,status,total,items,phone,coupon,couponCode,coupon_code,discount_amount,created_at';
 
   function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -451,12 +454,16 @@
 
   // ===================== Data Fetch =====================
   async function fetchCoupons(){
-    const{data,error}=await _supabase.from('coupons').select('*').order('created_at',{ascending:false});
+    const{data,error}=await _supabase.from('coupons').select(COUPON_COLUMNS).order('created_at',{ascending:false});
     if(!error&&data)coupons=data;
     else console.warn('coupons fetch:',error);
   }
   async function fetchOrders(){
-    const{data,error}=await _supabase.from('orders').select('*');
+    let{data,error}=await _supabase.from('orders').select(COUPON_ORDER_COLUMNS).order('created_at',{ascending:false}).limit(3000);
+    if(error){
+      console.warn('Optimized coupon orders query failed, falling back to full order rows:',error.message);
+      ({data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false}).limit(3000));
+    }
     if(!error&&data)orders=data;
     else console.warn('orders fetch:',error);
   }
@@ -475,9 +482,12 @@
 
     let discounts=0;
     withCoupon.forEach(o=>{
-      let sub=0;
-      (o.items||[]).forEach(it=>{if(!it.isGift)sub+=Number(it.price||0)*(Number(it.qty)||1);});
-      if(sub>0)discounts+=Math.max(0,sub-(Number(o.total)||0));
+      if(Number(o.discount_amount)>0)discounts+=Number(o.discount_amount);
+      else{
+        let sub=0;
+        (o.items||[]).forEach(it=>{if(!it.isGift)sub+=Number(it.price||0)*(Number(it.qty)||1);});
+        if(sub>0)discounts+=Math.max(0,sub-(Number(o.total)||0));
+      }
     });
     const sales=withCoupon.reduce((s,o)=>s+(Number(o.total)||0),0);
     const rate=valid.length?Math.round(withCoupon.length/valid.length*1000)/10:0;

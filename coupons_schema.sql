@@ -1,9 +1,8 @@
 -- ==========================================
 -- SQL Schema for Coupons System
--- الفرات فارما - نظام كوبونات الخصم
+-- Elforat Pharma
 -- ==========================================
 
--- إنشاء جدول الكوبونات
 CREATE TABLE IF NOT EXISTS coupons (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   code TEXT NOT NULL UNIQUE,
@@ -15,82 +14,47 @@ CREATE TABLE IF NOT EXISTS coupons (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- إنشاء فهرس للكود للبحث السريع
 CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
-
--- إنشاء فهرس للحالة والتاريخ
 CREATE INDEX IF NOT EXISTS idx_coupons_active_expiry ON coupons(is_active, expiry_date);
 
--- إضافة تعليقات على الأعمدة
-COMMENT ON TABLE coupons IS 'كوبونات الخصم المتاحة في المتجر';
-COMMENT ON COLUMN coupons.code IS 'كود الكوبون الفريد';
-COMMENT ON COLUMN coupons.discount_percentage IS 'نسبة الخصم من 1 إلى 99';
-COMMENT ON COLUMN coupons.expiry_date IS 'تاريخ انتهاء صلاحية الكوبون';
-COMMENT ON COLUMN coupons.is_active IS 'حالة الكوبون (نشط/متوقف)';
+COMMENT ON TABLE coupons IS 'Discount coupons available in the store';
+COMMENT ON COLUMN coupons.code IS 'Unique coupon code';
+COMMENT ON COLUMN coupons.discount_percentage IS 'Discount percentage from 1 to 99';
+COMMENT ON COLUMN coupons.expiry_date IS 'Coupon expiry date';
+COMMENT ON COLUMN coupons.is_active IS 'Whether the coupon is active';
 
--- ==========================================
--- Row Level Security (RLS) Policies
--- ==========================================
+-- Keep coupon policies in sync with rls_policies.sql.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SET search_path = public
+AS $$
+  SELECT lower(coalesce(auth.jwt() ->> 'email', '')) = 'ahmedsalamaahmed21@gmail.com';
+$$;
 
--- تفعيل RLS على الجدول
 ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
 
--- سياسة السماح للمصادقين فقط بالقراءة
-CREATE POLICY "Allow authenticated users to read coupons"
-  ON coupons FOR SELECT
-  TO authenticated
-  USING (true);
+DROP POLICY IF EXISTS "public_read_coupons" ON coupons;
+DROP POLICY IF EXISTS "Allow authenticated users to read coupons" ON coupons;
+CREATE POLICY "public_read_coupons" ON coupons
+  FOR SELECT TO anon, authenticated
+  USING (is_active = true AND expiry_date >= current_date);
 
--- سياسة السماح للمصادقين بإدراج كوبونات جديدة
-CREATE POLICY "Allow authenticated users to insert coupons"
-  ON coupons FOR INSERT
-  TO authenticated
-  WITH CHECK (true);
+DROP POLICY IF EXISTS "auth_write_coupons" ON coupons;
+DROP POLICY IF EXISTS "Allow authenticated users to insert coupons" ON coupons;
+DROP POLICY IF EXISTS "Allow authenticated users to update coupons" ON coupons;
+DROP POLICY IF EXISTS "Allow authenticated users to delete coupons" ON coupons;
+CREATE POLICY "auth_write_coupons" ON coupons
+  FOR ALL TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
--- سياسة السماح للمصادقين بتحديث الكوبونات
-CREATE POLICY "Allow authenticated users to update coupons"
-  ON coupons FOR UPDATE
-  TO authenticated
-  USING (true);
-
--- سياسة السماح للمصادقين بحذف الكوبونات
-CREATE POLICY "Allow authenticated users to delete coupons"
-  ON coupons FOR DELETE
-  TO authenticated
-  USING (true);
-
--- ==========================================
--- أمثلة على كوبونات افتراضية (اختياري)
--- ==========================================
-
--- يمكنك إضافة كوبونات تجريبية هنا
--- INSERT INTO coupons (code, discount_percentage, expiry_date, description)
--- VALUES
---   ('WELCOME20', 20, '2025-12-31', 'خصم ترحيبي للعملاء الجدد'),
---   ('SUMMER15', 15, '2025-09-30', 'خصم الصيف'),
---   ('FLASH30', 30, '2025-06-30', 'عرض فلاش محدود');
-
--- ==========================================
--- ملاحظة هامة للاستخدام في المتجر
--- ==========================================
-/*
-لاستخدام نظام الكوبونات في صفحة الدفع (checkout):
-
-1. أضف حقل إدخال للكود في صفحة الدفع
-2. عند إدخال الكود، قم بالاستعلام عنه:
-
-   const { data, error } = await _supabase
-     .from('coupons')
-     .select('*')
-     .eq('code', couponCode.toUpperCase())
-     .eq('is_active', true)
-     .gte('expiry_date', new Date().toISOString().split('T')[0])
-     .single();
-
-3. إذا كان الكوبون صالحاً، احسب الخصم:
-
-   const discountAmount = (total * data.discount_percentage) / 100;
-   const finalTotal = total - discountAmount;
-
-4. احفظ معلومات الكوبون مع الطلب في جدول orders
-*/
+-- Example validation query for checkout:
+-- const { data, error } = await _supabase
+--   .from('coupons')
+--   .select('code,discount_percentage,expiry_date,description')
+--   .eq('code', couponCode.toUpperCase())
+--   .eq('is_active', true)
+--   .gte('expiry_date', new Date().toISOString().split('T')[0])
+--   .single();

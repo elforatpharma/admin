@@ -21,8 +21,8 @@
     .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;border-radius:50px!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
     .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
     .nav-active{background:linear-gradient(135deg,rgba(77,60,235,.1),rgba(77,60,235,.04))!important;color:#4d3ceb!important;border-right:3px solid #4d3ceb!important;border-radius:0 9999px 9999px 0!important;}
-    .modal-enter{animation:modalIn .25s cubic-bezier(.34,1.56,.64,1) forwards;}
-    @keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .modal-enter{animation:modalIn .28s cubic-bezier(.2,.9,.3,1.2) forwards;}
+    @keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
   </style>
 </head>
 <body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
@@ -71,9 +71,6 @@
                 <span class="material-symbols-outlined text-sm leading-none text-primary">refresh</span>
               </button>
             </div>
-            <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02]">
-              <span class="material-symbols-outlined text-base">add_circle</span><span>إضافة منتج</span>
-            </button>
           </div>
         </div>
 
@@ -231,15 +228,15 @@
             <div class="flex flex-wrap items-center gap-4 pb-3 mb-3 font-label-sm text-label-sm">
               <div class="flex items-center gap-1.5">
                 <span class="w-3 h-3 rounded-full bg-gradient-to-r from-[#4d3ceb] to-[#8536ff]"></span>
-                <span class="text-on-surface font-semibold">مبيعات الشهر الحالي (482,950 ج.م)</span>
+                <span class="text-on-surface font-semibold" id="insight-month-sales">مبيعات الشهر الحالي (0 ج.م)</span>
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="w-3 h-0.5 bg-on-surface-variant/40"></span>
-                <span class="text-on-surface-variant">الشهر السابق (420,700 ج.م)</span>
+                <span class="text-on-surface-variant" id="insight-prev-sales">الشهر السابق (0 ج.م)</span>
               </div>
               <div class="flex items-center gap-1 mr-auto text-primary font-semibold">
                 <span class="material-symbols-outlined text-sm">stars</span>
-                <span>ذروة الحملة: أسبوع العناية بالبشرة (24 نوفمبر)</span>
+                <span id="insight-top-product">أكثر منتج مبيعاً: —</span>
               </div>
             </div>
             <!-- Vectorized Graphic Presentation (SVG Line Chart with Purple/Indigo Gradient) -->
@@ -374,20 +371,8 @@
               </table>
             </div>
           </div>
-          <!-- Sidebar: Coupons + Gifts -->
+          <!-- Sidebar: Gifts + Quick Links -->
           <div id="sidebar-sections" class="lg:col-span-4 flex flex-col gap-6">
-            <!-- Coupons -->
-            <div id="coupons-section" class="rounded-2xl bg-surface-container-lowest p-6 shadow-sm flex flex-col border border-border-subtle/70">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
-                  <span class="material-symbols-outlined text-primary text-xl">loyalty</span>الكوبونات
-                </h3>
-                <button onclick="openCouponModal()" class="px-3 py-1.5 rounded-full btn-brand-gradient font-label-sm text-label-sm">+ كوبون</button>
-              </div>
-              <div id="coupons-mini-list" class="space-y-2 max-h-48 overflow-y-auto">
-                <p class="text-gray-300 text-xs text-center py-4">جاري التحميل...</p>
-              </div>
-            </div>
             <!-- Gifts -->
             <div id="gifts-section" class="rounded-2xl bg-surface-container-lowest p-6 shadow-sm flex flex-col border border-border-subtle/70">
               <div class="flex items-center justify-between mb-4">
@@ -406,6 +391,10 @@
                 <span class="material-symbols-outlined text-primary">monitoring</span>
                 <span class="font-label-lg text-label-lg text-on-surface">تقرير المبيعات</span>
               </a>
+              <a href="coupons.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary-surface transition-colors">
+                <span class="material-symbols-outlined text-primary">confirmation_number</span>
+                <span class="font-label-lg text-label-lg text-on-surface">إدارة الكوبونات</span>
+              </a>
               <a href="messages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary-surface transition-colors">
                 <span class="material-symbols-outlined text-primary">chat</span>
                 <span class="font-label-lg text-label-lg text-on-surface">رسائل العملاء</span>
@@ -423,11 +412,11 @@
 </div>
 
 <!-- Add Product Modal -->
-<div id="product-modal" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden modal-enter">
-    <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/60">
-      <h3 class="text-lg font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-primary">add_circle</span>تفاصيل المنتج الجديد</h3>
-      <button onclick="closeModal()" class="text-gray-300 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"><span class="material-symbols-outlined">close</span></button>
+<div id="product-modal" class="fixed inset-0 efp-native-overlay z-50 hidden items-center justify-center p-4">
+  <div class="bg-white efp-native-card w-full max-w-3xl overflow-hidden modal-enter">
+    <div class="efp-native-header">
+      <div class="efp-native-title-wrap"><span class="material-symbols-outlined efp-native-icon">add_circle</span><div><h3>تفاصيل المنتج الجديد</h3><p>سيظهر في المتجر مباشرة بعد الحفظ</p></div></div>
+      <button onclick="closeModal()" class="efp-native-close p-1 rounded-lg"><span class="material-symbols-outlined">close</span></button>
     </div>
     <form id="add-form" class="p-6 overflow-y-auto max-h-[70vh] space-y-5">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -462,18 +451,18 @@
         </div></div>
       <div class="flex gap-3 pt-2">
         <button type="submit" class="flex-1 btn-brand-gradient py-3.5 font-black text-sm transition-transform hover:scale-[1.01]">حفظ المنتج في المتجر</button>
-        <button type="button" onclick="closeModal()" class="px-6 bg-gray-100 text-gray-600 py-3.5 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">إلغاء</button>
+        <button type="button" onclick="closeModal()" class="px-6 bg-gray-100 text-gray-600 py-3.5 rounded-full font-bold text-sm hover:bg-gray-200 transition-all">إلغاء</button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- Gift Modal -->
-<div id="gift-modal" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden modal-enter">
-    <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/60">
-      <h3 class="text-lg font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-primary">card_giftcard</span>إضافة هدية جديدة</h3>
-      <button onclick="closeGiftModal()" class="text-gray-300 hover:text-red-500 transition-colors rounded-lg p-1 hover:bg-red-50"><span class="material-symbols-outlined">close</span></button>
+<div id="gift-modal" class="fixed inset-0 efp-native-overlay z-50 hidden items-center justify-center p-4">
+  <div class="bg-white efp-native-card w-full max-w-lg overflow-hidden modal-enter">
+    <div class="efp-native-header">
+      <div class="efp-native-title-wrap"><span class="material-symbols-outlined efp-native-icon">card_giftcard</span><div><h3>إضافة هدية جديدة</h3><p>تُمنح تلقائياً عند شراء المنتج المشترط</p></div></div>
+      <button onclick="closeGiftModal()" class="efp-native-close p-1 rounded-lg"><span class="material-symbols-outlined">close</span></button>
     </div>
     <form id="gift-form" class="p-6 space-y-5">
       <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">اسم الهدية <span class="text-red-400">*</span></label>
@@ -491,33 +480,7 @@
       </div>
       <div class="flex gap-3 pt-2">
         <button type="submit" class="flex-1 btn-brand-gradient py-3.5 font-black text-sm transition-transform hover:scale-[1.01]">حفظ الهدية</button>
-        <button type="button" onclick="closeGiftModal()" class="px-6 bg-gray-100 text-gray-600 py-3.5 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">إلغاء</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Coupon Modal -->
-<div id="coupon-modal" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden modal-enter">
-    <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/60">
-      <h3 class="text-lg font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-primary">local_offer</span>إضافة كوبون جديد</h3>
-      <button onclick="closeCouponModal()" class="text-gray-300 hover:text-red-500 transition-colors rounded-lg p-1 hover:bg-red-50"><span class="material-symbols-outlined">close</span></button>
-    </div>
-    <form id="coupon-form" class="p-6 space-y-5">
-      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">كود الكوبون <span class="text-red-400">*</span></label>
-        <input type="text" id="c-code" required maxlength="30" placeholder="مثال: WELCOME20" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-black tracking-widest uppercase focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">نسبة الخصم % <span class="text-red-400">*</span></label>
-          <input type="number" id="c-discount" required min="1" max="99" placeholder="20" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
-        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">تاريخ الانتهاء <span class="text-red-400">*</span></label>
-          <input type="date" id="c-expiry" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
-      </div>
-      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">الوصف</label>
-        <input type="text" id="c-desc" maxlength="120" placeholder="اختياري - مثال: خصم ترحيبي" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
-      <div class="flex gap-3 pt-2">
-        <button type="submit" class="flex-1 btn-brand-gradient py-3.5 font-black text-sm transition-transform hover:scale-[1.01]">حفظ الكوبون</button>
-        <button type="button" onclick="closeCouponModal()" class="px-6 bg-gray-100 text-gray-600 py-3.5 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">إلغاء</button>
+        <button type="button" onclick="closeGiftModal()" class="px-6 bg-gray-100 text-gray-600 py-3.5 rounded-full font-bold text-sm hover:bg-gray-200 transition-all">إلغاء</button>
       </div>
     </form>
   </div>
@@ -537,7 +500,6 @@ Chart.defaults.font.family='Tajawal,sans-serif';Chart.defaults.color='#64748b';
 
 // روابط إضافية في السايدبار (الصفحة الرئيسية)
 function showGiftsSection(){document.getElementById('gifts-section').scrollIntoView({behavior:'smooth'});fetchGifts();}
-function showCouponsSection(){document.getElementById('coupons-section').scrollIntoView({behavior:'smooth'});fetchCoupons();}
 
 // Modals
 const modal=document.getElementById("product-modal");
@@ -545,8 +507,6 @@ function openModal(){modal.classList.remove("hidden");modal.classList.add("flex"
 function closeModal(){modal.classList.add("hidden");modal.classList.remove("flex");}
 function openGiftModal(){const m=document.getElementById('gift-modal');m.classList.remove('hidden');m.classList.add('flex');}
 function closeGiftModal(){const m=document.getElementById('gift-modal');m.classList.add('hidden');m.classList.remove('flex');document.getElementById('gift-form').reset();}
-function openCouponModal(){document.getElementById('c-expiry').value=new Date().toISOString().split('T')[0];const m=document.getElementById('coupon-modal');m.classList.remove('hidden');m.classList.add('flex');}
-function closeCouponModal(){const m=document.getElementById('coupon-modal');m.classList.add('hidden');m.classList.remove('flex');document.getElementById('coupon-form').reset();}
 
 // Product Form
 document.getElementById("add-form").onsubmit=async(e)=>{
@@ -570,10 +530,10 @@ function setupImageUploader(){imageUploader=new ImageUploader({dropZone:document
 async function fetchStats(){
   try{
     const today=new Date();today.setHours(0,0,0,0);const todayISO=today.toISOString();
-    const[ordersSnap,productsSnap,customersSnap]=await Promise.all([
-      _supabase.from('orders').select('id,total,status,customerName,phone,created_at,items'),
-      _supabase.from('products').select('id,stock', {count:'exact'}),
-      _supabase.from('orders').select('customerName,phone',{count:'exact',head:true})
+    const[ordersSnap,productsSnap,visitorEventsSnap]=await Promise.all([
+      _supabase.from('orders').select('id,total,status,customerName,phone,created_at,items,payment_method,payment_status,coupon_code,discount_amount').order('created_at',{ascending:false}).limit(1000),
+      _supabase.from('products').select('id,name,stock', {count:'exact'}).limit(1000),
+      _supabase.from('visitor_events').select('session_id,created_at').gte('created_at',todayISO).limit(5000)
     ]);
     const allOrders=ordersSnap.data||[];const allProducts=productsSnap.data||[];
     const totalProducts=productsSnap.count||0;
@@ -588,17 +548,35 @@ async function fetchStats(){
     const pending=allOrders.filter(o=>o.status==='قيد التنفيذ'||o.status==='جديد'||o.status==='قيد التجهيز');
     const cancelled=allOrders.filter(o=>o.status==='ملغي');
     const totalAll=allOrders.length||1;
+    const paid=allOrders.filter(o=>String(o.payment_status||'').toLowerCase()==='paid');
+    const withCoupon=allOrders.filter(o=>o.coupon_code||Number(o.discount_amount)>0);
 
     document.getElementById('kpi-sales').innerHTML=`${Math.round(totalSales).toLocaleString('en')} <span class="font-label-md text-label-md font-normal text-on-surface-variant">ج.م</span>`;
     document.getElementById('kpi-orders').innerHTML=`${allOrders.length} <span class="font-label-md text-label-md font-normal text-on-surface-variant">طلب</span>`;
     document.getElementById('kpi-aov').innerHTML=`${delivered.length?Math.round(totalSales/delivered.length).toLocaleString('en'):0} <span class="font-label-md text-label-md font-normal text-on-surface-variant">ج.م</span>`;
     document.getElementById('kpi-products').innerHTML=`${totalProducts} <span class="font-label-md text-label-md font-normal text-on-surface-variant">صنف</span>`;
+    document.getElementById('kpi-sales-trend').innerHTML=`<span class="material-symbols-outlined text-xs">payments</span><span>${paid.length} طلب مدفوع / ${withCoupon.length} بكوبون</span>`;
 
     // Today stats
     const todayOrders=allOrders.filter(o=>{const d=new Date(o.created_at);return d>=today;});
     const todaySales=todayOrders.filter(o=>o.status==='تم التوصيل').reduce((s,o)=>s+(parseFloat(o.total)||0),0);
     document.getElementById('kpi-today-sales').textContent=Math.round(todaySales).toLocaleString('en')+' ج.م';
     document.getElementById('kpi-today-orders').textContent=todayOrders.length+' طلب';
+    if(!visitorEventsSnap.error&&visitorEventsSnap.data){
+      const sessions=new Set(visitorEventsSnap.data.map(v=>v.session_id).filter(Boolean));
+      const conversion=sessions.size?Math.round(todayOrders.length/sessions.size*1000)/10:0;
+      document.getElementById('kpi-today-orders').textContent=todayOrders.length+' طلب / '+conversion+'% تحويل';
+    }
+    const monthStart=new Date(today.getFullYear(),today.getMonth(),1);
+    const prevMonthStart=new Date(today.getFullYear(),today.getMonth()-1,1);
+    const curMonthSales=delivered.filter(o=>new Date(o.created_at)>=monthStart).reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+    const prevMonthSales=delivered.filter(o=>{const d=new Date(o.created_at);return d>=prevMonthStart&&d<monthStart;}).reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+    document.getElementById('insight-month-sales').textContent='مبيعات الشهر الحالي ('+Math.round(curMonthSales).toLocaleString('en')+' ج.م)';
+    document.getElementById('insight-prev-sales').textContent='الشهر السابق ('+Math.round(prevMonthSales).toLocaleString('en')+' ج.م)';
+    const productMap=new Map();
+    delivered.forEach(o=>(Array.isArray(o.items)?o.items:[]).forEach(it=>{if(!it.isGift&&it.name)productMap.set(it.name,(productMap.get(it.name)||0)+(Number(it.qty)||1));}));
+    const topProduct=[...productMap.entries()].sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('insight-top-product').textContent=topProduct?`أكثر منتج مبيعاً: ${topProduct[0]} (${topProduct[1]} قطعة)`:'أكثر منتج مبيعاً: لا توجد مبيعات مكتملة';
 
     // Order status
     document.getElementById('kpi-pending').textContent=pending.length;
@@ -653,26 +631,9 @@ async function fetchStats(){
   }catch(e){console.error('fetchStats error:',e);}
 }
 
-// ====== Coupons (mini list) ======
-async function fetchCoupons(){
-  const{data,error}=await _supabase.from('coupons').select('*').order('created_at',{ascending:false}).limit(5);
-  const el=document.getElementById('coupons-mini-list');
-  if(error||!data||data.length===0){el.innerHTML='<p class="text-gray-300 text-xs text-center py-4">لا توجد كوبونات</p>';return;}
-  const today=new Date().toISOString().split('T')[0];
-  el.innerHTML=data.map(c=>{
-    const expired=c.expiry_date<today;
-    const statusCls=expired?'bg-gray-100 text-gray-400':(c.is_active?'bg-emerald-50 text-emerald-600':'bg-amber-50 text-amber-600');
-    const statusLabel=expired?'منتهي':(c.is_active?'نشط':'متوقف');
-    return `<div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low border border-border-subtle/50">
-      <div><span class="font-mono font-black text-xs text-on-surface" dir="ltr">${escapeHtml(c.code)}</span><span class="text-[10px] text-on-surface-variant mr-2">-${c.discount_percentage}%</span></div>
-      <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${statusCls}">${statusLabel}</span>
-    </div>`;
-  }).join('');
-}
-
 // ====== Gifts (mini list) ======
 async function fetchGifts(){
-  const{data,error}=await _supabase.from('gifts').select('*').order('created_at',{ascending:false}).limit(5);
+  const{data,error}=await _supabase.from('gifts').select('id,gift_name,is_active,created_at').order('created_at',{ascending:false}).limit(5);
   const el=document.getElementById('gifts-mini-list');
   if(error||!data||data.length===0){el.innerHTML='<p class="text-gray-300 text-xs text-center py-4">لا توجد هدايا</p>';return;}
   el.innerHTML=data.map(g=>{
@@ -697,23 +658,12 @@ document.getElementById('gift-form').onsubmit=async(e)=>{
   finally{btn.disabled=false;btn.innerHTML='حفظ الهدية';}
 };
 
-// Coupon Form
-document.getElementById('coupon-form').onsubmit=async(e)=>{
-  e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;btn.innerHTML='جاري الحفظ...';
-  try{const code=document.getElementById('c-code').value.trim().toUpperCase();const discount=parseInt(document.getElementById('c-discount').value,10);const expiryDate=document.getElementById('c-expiry').value;
-  if(!code)throw new Error('أدخل كود الكوبون');if(discount<1||discount>99)throw new Error('نسبة الخصم بين 1 و 99');
-  const{error}=await _supabase.from('coupons').insert([{code,discount_percentage:discount,expiry_date:expiryDate,description:document.getElementById('c-desc').value.trim()||null,is_active:true}]);
-  if(error){if(error.code==='23505')throw new Error('هذا الكود موجود بالفعل');throw error;}
-  closeCouponModal();fetchCoupons();toast('success','تم حفظ الكوبون!');}catch(err){toast('error','حدث خطأ: '+err.message);}
-  finally{btn.disabled=false;btn.innerHTML='حفظ الكوبون';}
-};
-
 // ====== INIT ======
 window.onload=async function(){
   renderSidebar('admin.html');
   setupImageUploader();
   const ok=await requireAdmin();
-  if(ok){fetchStats();fetchCoupons();fetchGifts();}
+  if(ok){fetchStats();fetchGifts();}
 };
 </script>
 </body>

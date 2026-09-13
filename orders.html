@@ -161,11 +161,11 @@
             <!-- Filter Bar Card -->
             <div class="flex flex-col gap-2 p-4 rounded-xl bg-surface-container-lowest shadow-sm">
               <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
-                <div class="md:col-span-6 relative">
+                <div class="md:col-span-4 relative">
                   <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none">search</span>
                   <input id="table-search" class="w-full h-10 pr-9 pl-3 rounded-full bg-surface-container-low font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/30 focus:shadow-sm transition-all" placeholder="بحث برقم الطلب #ORD، اسم العميل، الهاتف..." type="text" oninput="onSearch(this.value)"/>
                 </div>
-                <div class="md:col-span-3">
+                <div class="md:col-span-2">
                   <select id="payment-filter" class="w-full h-10 px-3 rounded-full bg-surface-container-low font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/30 focus:shadow-sm" onchange="applyFilters()">
                     <option value="">جميع وسائل الدفع</option>
                     <option value="cod">الدفع عند الاستلام (COD)</option>
@@ -173,7 +173,22 @@
                     <option value="wallet">محفظة إلكترونية (فودافون كاش)</option>
                   </select>
                 </div>
-                <div class="md:col-span-3">
+                <div class="md:col-span-2">
+                  <select id="pay-status-filter" class="w-full h-10 px-3 rounded-full bg-surface-container-low font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/30 focus:shadow-sm" onchange="applyFilters()">
+                    <option value="">كل حالات الدفع</option>
+                    <option value="paid">مدفوع</option>
+                    <option value="pending">بانتظار الدفع</option>
+                    <option value="failed">فشل الدفع</option>
+                  </select>
+                </div>
+                <div class="md:col-span-2">
+                  <select id="coupon-filter" class="w-full h-10 px-3 rounded-full bg-surface-container-low font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/30 focus:shadow-sm" onchange="applyFilters()">
+                    <option value="">كل الكوبونات</option>
+                    <option value="with">عليه كوبون</option>
+                    <option value="without">بدون كوبون</option>
+                  </select>
+                </div>
+                <div class="md:col-span-2">
                   <select id="period-filter" class="w-full h-10 px-3 rounded-full bg-surface-container-low font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/30 focus:shadow-sm" onchange="applyFilters()">
                     <option value="">كل الفترات</option>
                     <option value="today">طلبات اليوم</option>
@@ -289,11 +304,20 @@
 <script src="layout.js"></script>
 <script>
 let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20;
+const ORDER_COLUMNS='id,customerName,phone,address,total,status,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,paymob_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
 const PENDING=new Set(['جديد','قيد التنفيذ']);
 const PROCESSING=['قيد التجهيز'],DELIVERED=['تم التوصيل'],CANCELLED=['ملغي'];
 
 function payOf(o){return o.paymentMethod||o.payment||o.payment_method||'';}
+function paymentStatusOf(o){return String(o.payment_status||'').toLowerCase();}
 function normStatus(s){return (s||'قيد التنفيذ').trim();}
+function paymentKind(o){
+  const p=String(payOf(o)).toLowerCase();
+  if(p.includes('paymob')||p.includes('card')||p.includes('visa')||p.includes('master')||p.includes('فيزا')||p.includes('بطاقة'))return 'card';
+  if(p.includes('wallet')||p.includes('vodafone')||p.includes('فودافون')||p.includes('محفظة'))return 'wallet';
+  if(p.includes('cod')||p.includes('cash')||p.includes('كاش')||p.includes('الاستلام'))return 'cod';
+  return p;
+}
 
 function statusInfo(s){
   s=normStatus(s);
@@ -338,7 +362,11 @@ function itemStats(o){
 
 async function fetchOrders(){
   try{
-    const{data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false});
+    let{data,error}=await _supabase.from('orders').select(ORDER_COLUMNS).order('created_at',{ascending:false}).limit(1000);
+    if(error){
+      console.warn('Optimized orders query failed, falling back to full order rows:',error.message);
+      ({data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false}).limit(1000));
+    }
     if(error)throw error;
     allOrders=data||[];
     renderKPIs();renderOrders();
@@ -385,6 +413,8 @@ function perPageChanged(v){perPage=Number(v);page=1;renderOrders();}
 function getFiltered(){
   const q=(document.getElementById('table-search').value||'').trim().toLowerCase();
   const pay=document.getElementById('payment-filter').value;
+  const payStatus=document.getElementById('pay-status-filter')?.value||'';
+  const couponFilter=document.getElementById('coupon-filter')?.value||'';
   const period=document.getElementById('period-filter').value;
   const now=new Date();
   return allOrders.filter(o=>{
@@ -398,7 +428,13 @@ function getFiltered(){
       const hay=String(o.id||'')+' '+String(o.customerName||'')+' '+String(o.phone||'');
       if(!hay.toLowerCase().includes(q))return false;
     }
-    if(pay){if(String(payOf(o)).toLowerCase()!==pay)return false;}
+    if(pay&&paymentKind(o)!==pay)return false;
+    if(payStatus&&paymentStatusOf(o)!==payStatus)return false;
+    if(couponFilter){
+      const hasCoupon=Boolean(o.coupon||o.couponCode||o.coupon_code||Number(o.discount_amount)>0);
+      if(couponFilter==='with'&&!hasCoupon)return false;
+      if(couponFilter==='without'&&hasCoupon)return false;
+    }
     if(period&&o.created_at){
       const d=new Date(o.created_at);
       if(period==='today'&&d.toDateString()!==now.toDateString())return false;
@@ -412,6 +448,11 @@ function getFiltered(){
 
 function payBadge(o){
   const p=String(payOf(o)).toLowerCase();
+  const ps=paymentStatusOf(o);
+  if(ps==='paid')return{html:'<span class="material-symbols-outlined text-xs">verified</span> <span>مدفوع Paymob</span>',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200'};
+  if(ps==='pending')return{html:'<span class="material-symbols-outlined text-xs">schedule</span> <span>بانتظار الدفع</span>',cls:'bg-amber-50 text-amber-800 border border-amber-200'};
+  if(ps==='failed')return{html:'<span class="material-symbols-outlined text-xs">error</span> <span>فشل الدفع</span>',cls:'bg-red-50 text-red-700 border border-red-200'};
+  if(p.includes('paymob'))return{html:'<span class="material-symbols-outlined text-xs">credit_card</span> <span>Paymob</span>',cls:'bg-blue-50 text-blue-700 border border-blue-200'};
   if(p==='cod'||p==='كاش'||p==='الدفع عند الاستلام')return{html:'<span class="material-symbols-outlined text-xs">payments</span> <span>كاش COD</span>',cls:'bg-amber-100 text-amber-800 border border-amber-200'};
   if(p==='card'||p==='بطاقة'||p==='فيزا')return{html:'<span class="material-symbols-outlined text-xs">credit_card</span> <span>فيزا مدفوعة</span>',cls:'bg-blue-50 text-blue-700 border border-blue-200'};
   if(p==='wallet'||p==='محفظة'||p==='فودافون كاش')return{html:'<span class="material-symbols-outlined text-xs">account_balance_wallet</span> <span>فودافون كاش</span>',cls:'bg-purple-50 text-purple-700 border border-purple-200'};
@@ -517,10 +558,13 @@ function changePage(pg){
 async function updateStatus(id,newStatus){
   if(!id)return;
   try{
-    const{error}=await _supabase.from('orders').update({status:newStatus}).eq('id',id);
+    const o=allOrders.find(x=>String(x.id)===String(id));
+    const patch={status:newStatus};
+    if(newStatus==='تم التوصيل'&&o&&paymentStatusOf(o)==='paid')patch.payment_status='paid';
+    const{error}=await _supabase.from('orders').update(patch).eq('id',id);
     if(error)throw error;
     const i=allOrders.findIndex(o=>String(o.id)===String(id));
-    if(i!==-1){allOrders[i].status=newStatus;}
+    if(i!==-1){Object.assign(allOrders[i],patch);}
     renderKPIs();renderOrders();
     if(String(selectedId)===String(id))renderDetail();
     toast('تم تحديث حالة الطلب','success');
@@ -652,12 +696,18 @@ function renderDetail(){
   its.items.forEach(it=>{if(!it.isGift)subtotal+=Number(it.price||0)*(Number(it.qty)||1);});
   if(!subtotal)subtotal=Number(o.total)||0;
   const hasCoupon=o.coupon||o.couponCode||o.coupon_code;
+  const discountAmount=Number(o.discount_amount)||Math.max(0,subtotal-(Number(o.total)||0));
   const hasShip=o.shipping!=null;
   let fin=`<div class="p-4 rounded-xl bg-surface-container flex flex-col gap-2">
     <span class="font-label-lg text-label-lg text-on-surface font-semibold">ملخص الحساب والفاتورة</span>
     <div class="flex items-center justify-between font-body-sm text-body-sm text-outline pt-1"><span>المجموع الفرعي للمنتجات:</span><span class="font-data-tabular font-medium text-on-surface">${money(subtotal)} ج.م</span></div>`;
-  if(hasCoupon)fin+=`<div class="flex items-center justify-between font-body-sm text-body-sm text-emerald-700"><span class="flex items-center gap-1"><span>كوبون التخفيض المطبق:</span><span class="px-2 py-0.5 rounded-full bg-emerald-100 font-data-tabular text-emerald-800 font-bold text-[11px]">${escapeHtml(hasCoupon)}</span></span><span class="font-data-tabular font-bold">${money(subtotal-(Number(o.total)||0))} ج.م</span></div>`;
+  if(hasCoupon||discountAmount>0)fin+=`<div class="flex items-center justify-between font-body-sm text-body-sm text-emerald-700"><span class="flex items-center gap-1"><span>كوبون التخفيض المطبق:</span><span class="px-2 py-0.5 rounded-full bg-emerald-100 font-data-tabular text-emerald-800 font-bold text-[11px]">${escapeHtml(hasCoupon||'خصم')}</span></span><span class="font-data-tabular font-bold">-${money(discountAmount)} ج.م</span></div>`;
   if(hasShip)fin+=`<div class="flex items-center justify-between font-body-sm text-body-sm text-outline"><span>مصاريف الشحن والتوصيل:</span><span class="font-data-tabular font-medium text-on-surface">${money(o.shipping)} ج.م</span></div>`;
+  if(o.merchant_order_id||o.paymob_order_id||o.payment_status){
+    const ps=paymentStatusOf(o);
+    const label=ps==='paid'?'مدفوع':ps==='pending'?'بانتظار الدفع':ps==='failed'?'فشل الدفع':'غير محدد';
+    fin+=`<div class="flex items-center justify-between font-body-sm text-body-sm text-outline"><span>حالة الدفع الإلكتروني:</span><span class="font-data-tabular font-bold text-on-surface">${escapeHtml(label)}</span></div>`;
+  }
   fin+=`<div class="h-px bg-outline-variant/40 my-1"></div>
     <div class="flex items-center justify-between"><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface font-bold">المبلغ الإجمالي المستحق:</span><span class="text-[11px] text-tertiary font-semibold">${payOf(o)?('الدفع: '+escapeHtml(payOf(o))):'الدفع عند الاستلام'}</span></div>
     <span class="font-data-tabular text-headline-xl font-bold text-brand-gradient">${money(o.total)} ج.م</span></div></div>`;
@@ -684,17 +734,25 @@ async function editOrder(id){
   if(!o)return;
   const itTxt=itsText(o);
   const {value:formValues}=await Swal.fire({
-    title:'تعديل محتويات الطلب',
-    html:`<div class="text-right space-y-3">
-      <label class="block text-xs font-bold text-gray-500">اسم العميل</label>
-      <input id="swal-name" class="swal2-input" value="${escapeHtml(o.customerName||'')}">
-      <label class="block text-xs font-bold text-gray-500">الهاتف</label>
-      <input id="swal-phone" class="swal2-input" value="${escapeHtml(o.phone||'')}">
-      <label class="block text-xs font-bold text-gray-500">الأصناف (سطر لكل منتج: الاسم - الكمية - السعر)</label>
-      <textarea id="swal-items" class="swal2-textarea">${escapeHtml(itTxt)}</textarea>
-      <label class="block text-xs font-bold text-gray-500">الإجمالي (ج.م)</label>
-      <input id="swal-total" class="swal2-input" type="number" inputmode="numeric" value="${Number(o.total)||0}">
-    </div>`,
+    title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">edit_note</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">تعديل محتويات الطلب</span><span class="efp-modal-title-sub">#ORD-${escapeHtml(String(o.id))}</span></div></div>`,
+    width:560,padding:0,showCloseButton:true,
+    customClass:{popup:'efp-modal-popup',htmlContainer:'efp-modal-html',actions:'efp-modal-actions'},
+    html:`<div class="efp-field-group">
+        <label class="efp-label">اسم العميل</label>
+        <input id="swal-name" class="swal2-input efp-input" value="${escapeHtml(o.customerName||'')}">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الهاتف</label>
+        <input id="swal-phone" class="swal2-input efp-input" value="${escapeHtml(o.phone||'')}">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الأصناف (سطر لكل منتج: الاسم - الكمية - السعر)</label>
+        <textarea id="swal-items" class="swal2-textarea efp-input">${escapeHtml(itTxt)}</textarea>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الإجمالي (ج.م)</label>
+        <input id="swal-total" class="swal2-input efp-input" type="number" inputmode="numeric" value="${Number(o.total)||0}">
+      </div>`,
     showCancelButton:true,confirmButtonText:'حفظ',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',focusConfirm:false,preConfirm:()=>({
       customerName:document.getElementById('swal-name').value.trim(),
       phone:document.getElementById('swal-phone').value.trim(),
@@ -728,17 +786,25 @@ function itsText(o){
 
 async function newOrderModal(){
   const {value:fv}=await Swal.fire({
-    title:'إنشاء طلب يدوي',
-    html:`<div class="text-right space-y-3">
-      <label class="block text-xs font-bold text-gray-500">اسم العميل *</label>
-      <input id="swal-name" class="swal2-input" placeholder="مثال: محمد أحمد">
-      <label class="block text-xs font-bold text-gray-500">الهاتف *</label>
-      <input id="swal-phone" class="swal2-input" placeholder="01xxxxxxxxx" dir="ltr">
-      <label class="block text-xs font-bold text-gray-500">الإجمالي (ج.م)</label>
-      <input id="swal-total" class="swal2-input" type="number" inputmode="numeric" value="0">
-      <label class="block text-xs font-bold text-gray-500">الأصناف (اختياري: سطر لكل منتج)</label>
-      <textarea id="swal-items" class="swal2-textarea" placeholder="مثال: سيروم جوزيل - 1 - 450"></textarea>
-    </div>`,
+    title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">add_shopping_cart</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">إنشاء طلب يدوي</span><span class="efp-modal-title-sub">أضف طلباً مباشرة بدون المتجر</span></div></div>`,
+    width:560,padding:0,showCloseButton:true,
+    customClass:{popup:'efp-modal-popup',htmlContainer:'efp-modal-html',actions:'efp-modal-actions'},
+    html:`<div class="efp-field-group">
+        <label class="efp-label">اسم العميل *</label>
+        <input id="swal-name" class="swal2-input efp-input" placeholder="مثال: محمد أحمد">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الهاتف *</label>
+        <input id="swal-phone" class="swal2-input efp-input" placeholder="01xxxxxxxxx" dir="ltr">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الإجمالي (ج.م)</label>
+        <input id="swal-total" class="swal2-input efp-input" type="number" inputmode="numeric" value="0">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الأصناف (اختياري: سطر لكل منتج)</label>
+        <textarea id="swal-items" class="swal2-textarea efp-input" placeholder="مثال: سيروم جوزيل - 1 - 450"></textarea>
+      </div>`,
     showCancelButton:true,confirmButtonText:'إنشاء الطلب',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',focusConfirm:false,
     preConfirm:()=>({customerName:document.getElementById('swal-name').value.trim(),phone:document.getElementById('swal-phone').value.trim(),total:Number(document.getElementById('swal-total').value)||0,items:textToItems(document.getElementById('swal-items').value)})
   });

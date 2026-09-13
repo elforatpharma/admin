@@ -1,9 +1,7 @@
 -- ==========================================
--- SQL Schema: Settings (إعدادات المتجر)
--- الفرات فارما
+-- SQL Schema: Store Settings
+-- Elforat Pharma
 -- ==========================================
--- جدول يخزّن إعدادات المتجر في صف واحد (id=1) داخل عمود JSON
--- حتى يقرأها المتجر (anon) ويعدّلها الآدمن فقط (authenticated)
 
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -11,44 +9,43 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- فهرس المساعد لو حبيت تبحث جوه الـ JSON مستقبلاً
 CREATE INDEX IF NOT EXISTS idx_settings_updated ON settings(updated_at);
 
-COMMENT ON TABLE settings IS 'إعدادات المتجر العامة (JSON)';
+COMMENT ON TABLE settings IS 'Public store settings stored as JSON';
 
--- ==========================================
--- RLS
--- ==========================================
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SET search_path = public
+AS $$
+  SELECT lower(coalesce(auth.jwt() ->> 'email', '')) = 'ahmedsalamaahmed21@gmail.com';
+$$;
+
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
--- المتجر (عام) يقرأ الإعدادات لعرض أسعار التوصيل وبيانات التواصل
 DROP POLICY IF EXISTS "public_read_settings" ON settings;
 CREATE POLICY "public_read_settings" ON settings
-  FOR SELECT TO anon, authenticated USING (true);
+  FOR SELECT TO anon, authenticated
+  USING (true);
 
--- الآدمن (المسجل) فقط يستطيع الكتابة
 DROP POLICY IF EXISTS "auth_write_settings" ON settings;
 CREATE POLICY "auth_write_settings" ON settings
-  FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  FOR ALL TO authenticated
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
--- ==========================================
--- شكل البيانات المتوقع في عمود `data` (مثال):
--- ==========================================
-/*
-{
-  "store_name": "الفرات فارما",
-  "phone": "01000000000",
-  "whatsapp": "01000000000",
-  "email": "store@example.com",
-  "address": "العنوان الكامل",
-  "shipping_fee": 60,
-  "free_shipping_threshold": 500,
-  "delivery_areas": [
-    { "area": "القاهرة", "fee": 70 },
-    { "area": "الجيزة", "fee": 70 }
-  ],
-  "facebook": "https://facebook.com/...",
-  "instagram": "https://instagram.com/...",
-  "notes": "ملاحظات"
-}
-*/
+-- Expected JSON shape:
+-- {
+--   "store_name": "Elforat Pharma",
+--   "phone": "01000000000",
+--   "whatsapp": "01000000000",
+--   "email": "store@example.com",
+--   "address": "Store address",
+--   "shipping_fee": 60,
+--   "free_shipping_threshold": 500,
+--   "delivery_areas": [{ "area": "Cairo", "fee": 70 }],
+--   "facebook": "https://facebook.com/...",
+--   "instagram": "https://instagram.com/...",
+--   "notes": ""
+-- }

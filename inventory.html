@@ -23,6 +23,7 @@
     .btn-brand-gradient:hover{background:linear-gradient(90deg,#3f2fd4 0%,#7624f2 100%)!important;box-shadow:0 12px 24px rgba(77,60,235,0.4)!important;}
     body::-webkit-scrollbar{display:none;}
     .scrollbar-none::-webkit-scrollbar{display:none;}
+    /* هوية النوافذ المنبثقة (SweetAlert2) موحّدة الآن في layout.js لتطبق على كل صفحات اللوحة */
   </style>
 </head>
 <body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
@@ -383,9 +384,23 @@ async function detectColumns(){
   }catch(e){}
 }
 
+function productSelectColumns(){
+  const cols=['id','name','category','price','oldPrice','discount','img','image','brand','science_name','desc','ingredients','created_at','reorder_level'];
+  if(HAS_STOCK)cols.push('stock');
+  if(HAS_ACTIVE)cols.push('is_active');
+  if(HAS_BARCODE)cols.push('barcode','sku');
+  if(HAS_EXPIRY)cols.push('expiry','expiry_date');
+  if(HAS_BATCH)cols.push('batch','batch_no','lot');
+  return [...new Set(cols)].join(',');
+}
+
 async function fetchProducts(){
   try{
-    const{data,error}=await _supabase.from('products').select('*').order('created_at',{ascending:false});
+    let{data,error}=await _supabase.from('products').select(productSelectColumns()).order('created_at',{ascending:false}).limit(1000);
+    if(error){
+      console.warn('Optimized products query failed, falling back to full product rows:',error.message);
+      ({data,error}=await _supabase.from('products').select('*').order('created_at',{ascending:false}).limit(1000));
+    }
     if(error)throw error;
     products=data||[];
     fillWarehouseSelect();renderKPIs();renderTable();renderRecent();renderCategoryBars();
@@ -645,21 +660,33 @@ function inventoryCount(){
 
 async function newProductModal(){
   const{value:fv}=await Swal.fire({
-    title:'إذن إضافة مخزني جديد',
-    html:`<div class="text-right space-y-3">
-      <label class="block text-xs font-bold text-gray-500">اسم الصنف *</label>
-      <input id="swal-name" class="swal2-input" placeholder="مثال: سيروم جوزيل 100 مل">
-      <label class="block text-xs font-bold text-gray-500">الفئة</label>
-      <input id="swal-warehouse" class="swal2-input" placeholder="مثال: سيرومات">
-      <label class="block text-xs font-bold text-gray-500">السعر (ج.م)</label>
-      <input id="swal-price" class="swal2-input" type="number" inputmode="numeric" value="0">
-      <label class="block text-xs font-bold text-gray-500">الخصم %</label>
-      <input id="swal-disc" class="swal2-input" type="number" inputmode="numeric" value="0">
-      ${HAS_STOCK?'<label class="block text-xs font-bold text-gray-500">الرصيد الابتدائي</label><input id="swal-stock" class="swal2-input" type="number" inputmode="numeric" value="0">':''}
-      ${HAS_EXPIRY?'<label class="block text-xs font-bold text-gray-500">تاريخ الانتهاء</label><input id="swal-expiry" class="swal2-input" type="date">':''}
-      <label class="block text-xs font-bold text-gray-500">رابط الصورة (اختياري)</label>
-      <input id="swal-img" class="swal2-input" placeholder="https://...">
-    </div>`,
+    title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">add_box</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">إضافة صنف جديد للمخزون</span><span class="efp-modal-title-sub">سيظهر في المتجر مباشرة بعد الحفظ</span></div></div>`,
+    width:560,padding:0,showCloseButton:true,
+    customClass:{popup:'efp-modal-popup',htmlContainer:'efp-modal-html',actions:'efp-modal-actions'},
+    html:`<div class="efp-field-group">
+        <label class="efp-label">اسم الصنف *</label>
+        <input id="swal-name" class="swal2-input efp-input" placeholder="مثال: سيروم جوزيل 100 مل">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الفئة</label>
+        <input id="swal-warehouse" class="swal2-input efp-input" placeholder="مثال: سيرومات">
+      </div>
+      <div class="efp-row-2">
+        <div class="efp-field-group">
+          <label class="efp-label">السعر (ج.م)</label>
+          <input id="swal-price" class="swal2-input efp-input" type="number" inputmode="numeric" value="0">
+        </div>
+        <div class="efp-field-group">
+          <label class="efp-label">الخصم %</label>
+          <input id="swal-disc" class="swal2-input efp-input" type="number" inputmode="numeric" value="0">
+        </div>
+      </div>
+      ${HAS_STOCK?'<div class="efp-field-group"><label class="efp-label">الرصيد الابتدائي</label><input id="swal-stock" class="swal2-input efp-input" type="number" inputmode="numeric" value="0"></div>':''}
+      ${HAS_EXPIRY?'<div class="efp-field-group"><label class="efp-label">تاريخ الانتهاء</label><input id="swal-expiry" class="swal2-input efp-input" type="date"></div>':''}
+      <div class="efp-field-group">
+        <label class="efp-label">رابط الصورة (اختياري)</label>
+        <input id="swal-img" class="swal2-input efp-input" placeholder="https://...">
+      </div>`,
     showCancelButton:true,confirmButtonText:'إضافة للمخزون',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
     preConfirm:()=>({
       name:document.getElementById('swal-name').value.trim(),
@@ -695,36 +722,52 @@ async function editProduct(id){
   if(!p)return;
   const currentImg=p.img||p.image||'';
   const{value:fv}=await Swal.fire({
-    title:'تعديل بيانات الصنف',
-    width:560,
-    html:`<div class="text-right space-y-3">
-      <label class="block text-xs font-bold text-gray-500">اسم الصنف *</label>
-      <input id="e-name" class="swal2-input" value="${escapeHtml(p.name||'')}">
-      <label class="block text-xs font-bold text-gray-500">الفئة</label>
-      <input id="e-cat" class="swal2-input" value="${escapeHtml(p.category||'')}">
-      <div style="display:flex;gap:8px;">
-        <div style="flex:1;text-align:right;">
-          <label class="block text-xs font-bold text-gray-500">السعر الحالي (ج.م) *</label>
-          <input id="e-price" class="swal2-input" type="number" min="0" value="${Number(p.price)||0}">
+    title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">edit_square</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">تعديل بيانات الصنف</span><span class="efp-modal-title-sub">${escapeHtml(p.name||'')}</span></div></div>`,
+    width:600,
+    padding:0,
+    showCloseButton:true,
+    backdrop:'rgba(19,27,46,0.55)',
+    customClass:{container:'efp-modal-container',popup:'efp-modal-popup',htmlContainer:'efp-modal-html',closeButton:'efp-modal-close',actions:'efp-modal-actions',confirmButton:'efp-modal-confirm',cancelButton:'efp-modal-cancel'},
+    showClass:{popup:'efp-modal-show'},
+    hideClass:{popup:'efp-modal-hide'},
+    html:`<div class="efp-field-group">
+        <label class="efp-label">اسم الصنف *</label>
+        <input id="e-name" class="swal2-input efp-input" value="${escapeHtml(p.name||'')}">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الفئة</label>
+        <input id="e-cat" class="swal2-input efp-input" value="${escapeHtml(p.category||'')}">
+      </div>
+      <div class="efp-row-2">
+        <div class="efp-field-group">
+          <label class="efp-label">السعر الحالي (ج.م) *</label>
+          <input id="e-price" class="swal2-input efp-input" type="number" min="0" value="${Number(p.price)||0}">
         </div>
-        <div style="flex:1;text-align:right;">
-          <label class="block text-xs font-bold text-gray-500">السعر قبل الخصم (اختياري)</label>
-          <input id="e-oldprice" class="swal2-input" type="number" min="0" value="${p.oldPrice!=null?Number(p.oldPrice):''}">
+        <div class="efp-field-group">
+          <label class="efp-label">السعر قبل الخصم (اختياري)</label>
+          <input id="e-oldprice" class="swal2-input efp-input" type="number" min="0" value="${p.oldPrice!=null?Number(p.oldPrice):''}">
         </div>
       </div>
-      <label class="block text-xs font-bold text-gray-500">شارة العرض (اختياري)</label>
-      <input id="e-badge" class="swal2-input" value="${escapeHtml(p.badge||'')}" placeholder="مثال: خصم 20%">
-      <label class="block text-xs font-bold text-gray-500">الوصف</label>
-      <textarea id="e-desc" class="swal2-textarea">${escapeHtml(p.desc||'')}</textarea>
-      <label class="block text-xs font-bold text-gray-500">المكونات</label>
-      <textarea id="e-ingredients" class="swal2-textarea">${escapeHtml(p.ingredients||'')}</textarea>
-      ${HAS_STOCK?`<label class="block text-xs font-bold text-gray-500">الرصيد</label><input id="e-stock" class="swal2-input" type="number" min="0" value="${p.stock??0}">`:''}
-      <label class="block text-xs font-bold text-gray-500">صورة المنتج</label>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <img id="e-img-preview" src="${escapeHtml(currentImg)}" onerror="this.style.visibility='hidden'" style="width:56px;height:56px;border-radius:10px;object-fit:cover;background:#f3f4f6;border:1px solid #e5e7eb;">
-        <input id="e-img-file" type="file" accept="image/jpeg,image/png,image/webp" class="text-xs">
+      <div class="efp-field-group">
+        <label class="efp-label">شارة العرض (اختياري)</label>
+        <input id="e-badge" class="swal2-input efp-input" value="${escapeHtml(p.badge||'')}" placeholder="مثال: خصم 20%">
       </div>
-    </div>`,
+      <div class="efp-field-group">
+        <label class="efp-label">الوصف</label>
+        <textarea id="e-desc" class="swal2-textarea efp-input">${escapeHtml(p.desc||'')}</textarea>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">المكونات</label>
+        <textarea id="e-ingredients" class="swal2-textarea efp-input">${escapeHtml(p.ingredients||'')}</textarea>
+      </div>
+      ${HAS_STOCK?`<div class="efp-field-group"><label class="efp-label">الرصيد</label><input id="e-stock" class="swal2-input efp-input" type="number" min="0" value="${p.stock??0}"></div>`:''}
+      <div class="efp-field-group">
+        <label class="efp-label">صورة المنتج</label>
+        <div class="efp-img-row">
+          <img id="e-img-preview" src="${escapeHtml(currentImg)}" onerror="this.style.visibility='hidden'">
+          <input id="e-img-file" type="file" accept="image/jpeg,image/png,image/webp">
+        </div>
+      </div>`,
     showCancelButton:true,confirmButtonText:'حفظ التعديلات',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
     focusConfirm:false,
     preConfirm:async()=>{

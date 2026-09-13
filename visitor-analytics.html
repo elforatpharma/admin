@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>تحليلات الزيارات - الفرات فارما</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;color:#131b2e}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24}
+  </style>
+</head>
+<body>
+<div class="flex min-h-screen">
+  <div id="sidebar-placeholder"></div>
+  <main class="pr-0 lg:pr-64 flex-1 p-6">
+    <div class="max-w-7xl mx-auto space-y-5">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h1 class="font-[Cairo] text-2xl font-bold">تحليلات الزيارات والفانل</h1>
+          <p class="text-sm text-slate-500 mt-1">مصادر الزيارات، أحداث المتجر، أداء المنتجات، وربط الجلسات بالطلبات.</p>
+        </div>
+        <button onclick="loadAnalytics()" class="h-10 px-4 rounded-full bg-[#4d3ceb] text-white font-bold inline-flex items-center gap-2"><span class="material-symbols-outlined text-lg">refresh</span>تحديث</button>
+      </div>
+      <div id="kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <section class="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <h2 class="font-[Cairo] font-bold mb-4">مسار التحويل</h2>
+          <div id="funnel" class="space-y-3"></div>
+        </section>
+        <section class="lg:col-span-5 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <h2 class="font-[Cairo] font-bold mb-4">مصادر الزيارات</h2>
+          <div id="sources" class="space-y-2"></div>
+        </section>
+        <section class="lg:col-span-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <h2 class="font-[Cairo] font-bold mb-4">أداء المنتجات</h2>
+          <div id="products" class="space-y-2"></div>
+        </section>
+        <section class="lg:col-span-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <h2 class="font-[Cairo] font-bold mb-4">المحافظات الأكثر طلباً</h2>
+          <div id="regions" class="space-y-2"></div>
+        </section>
+        <section class="lg:col-span-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <h2 class="font-[Cairo] font-bold mb-4">تنبيهات ذكية</h2>
+          <div id="alerts" class="space-y-2"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="layout.js"></script>
+<script>
+function esc(s){return s==null?'':String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function n(v){return Number(v)||0}
+function groupBy(list,key){const m=new Map();list.forEach(x=>{const k=key(x)||'direct';m.set(k,(m.get(k)||0)+1)});return [...m.entries()].sort((a,b)=>b[1]-a[1]);}
+function unique(list,key){return new Set(list.map(key).filter(Boolean)).size;}
+function kpi(label,value,icon){return `<div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center justify-between text-slate-500 text-sm"><span>${label}</span><span class="material-symbols-outlined text-[#4d3ceb]">${icon}</span></div><p class="text-2xl font-black mt-2">${value}</p></div>`;}
+function bar(label,value,max){const pct=max?Math.round(value/max*100):0;return `<div><div class="flex justify-between text-sm mb-1"><span class="font-bold">${esc(label)}</span><span class="text-slate-500">${value}</span></div><div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-[#4d3ceb]" style="width:${pct}%"></div></div></div>`;}
+async function loadAnalytics(){
+  const since=new Date();since.setDate(since.getDate()-30);
+  const [eventsRes,visitsRes,ordersRes]=await Promise.all([
+    _supabase.from('store_events').select('event_name,session_id,product_id,product_name,coupon_code,source,campaign,device_type,created_at').gte('created_at',since.toISOString()).limit(10000),
+    _supabase.from('visitor_events').select('session_id,source,device_type,created_at').gte('created_at',since.toISOString()).limit(10000),
+    _supabase.from('orders').select('id,total,status,session_id,traffic_source,traffic_campaign,address,created_at').gte('created_at',since.toISOString()).limit(5000)
+  ]);
+  const events=eventsRes.data||[], visits=visitsRes.data||[], orders=ordersRes.data||[];
+  const sessions=unique(visits.length?visits:events,x=>x.session_id);
+  const orderSessions=unique(orders,x=>x.session_id);
+  const revenue=orders.filter(o=>o.status==='تم التوصيل').reduce((s,o)=>s+n(o.total),0);
+  const conversion=sessions?Math.round(orderSessions/sessions*1000)/10:0;
+  document.getElementById('kpis').innerHTML=[
+    kpi('جلسات 30 يوم',sessions,'groups'),
+    kpi('أحداث المتجر',events.length,'ads_click'),
+    kpi('طلبات مربوطة',orderSessions,'shopping_bag'),
+    kpi('معدل التحويل',conversion+'%','conversion_path'),
+    kpi('مبيعات مكتملة',Math.round(revenue).toLocaleString('en')+' ج.م','payments')
+  ].join('');
+  const counts=Object.fromEntries(groupBy(events,x=>x.event_name));
+  const funnel=[['زيارة',sessions],['مشاهدة منتج',counts.product_view||0],['إضافة للسلة',counts.add_to_cart||0],['بدء الدفع',counts.checkout_started||0],['بدء Paymob',counts.payment_started||0],['طلب مكتمل',orders.length]];
+  const max=Math.max(...funnel.map(x=>x[1]),1);
+  document.getElementById('funnel').innerHTML=funnel.map(x=>bar(x[0],x[1],max)).join('');
+  const sourceRows=groupBy([...(visits.length?visits:events),...orders],x=>x.source||x.traffic_source).slice(0,8);
+  document.getElementById('sources').innerHTML=sourceRows.length?sourceRows.map(x=>bar(x[0],x[1],sourceRows[0][1])).join(''):'<p class="text-sm text-slate-400">لا توجد مصادر بعد.</p>';
+  const prod=new Map();
+  events.filter(e=>e.product_name).forEach(e=>{const cur=prod.get(e.product_name)||{views:0,carts:0}; if(e.event_name==='product_view')cur.views++; if(e.event_name==='add_to_cart')cur.carts++; prod.set(e.product_name,cur);});
+  const prodRows=[...prod.entries()].sort((a,b)=>b[1].views-a[1].views).slice(0,8);
+  document.getElementById('products').innerHTML=prodRows.length?prodRows.map(([name,v])=>`<div class="flex items-center justify-between py-2 border-b border-slate-100"><span class="font-bold">${esc(name)}</span><span class="text-xs text-slate-500">${v.views} مشاهدة / ${v.carts} سلة</span></div>`).join(''):'<p class="text-sm text-slate-400">لا توجد أحداث منتجات بعد.</p>';
+  const knownRegions=['القاهرة','الجيزة','الإسكندرية','الدقهلية','الشرقية','الغربية','المنوفية','البحيرة','القليوبية','الفيوم','بني سويف','المنيا','أسيوط','سوهاج','قنا','الأقصر','أسوان','دمياط','بورسعيد','الإسماعيلية','السويس','كفر الشيخ','مطروح','البحر الأحمر','الوادي الجديد','شمال سيناء','جنوب سيناء'];
+  const regions=groupBy(orders,x=>knownRegions.find(r=>String(x.address||'').includes(r))||'غير محدد').slice(0,8);
+  document.getElementById('regions').innerHTML=regions.length?regions.map(x=>bar(x[0],x[1],regions[0][1])).join(''):'<p class="text-sm text-slate-400">لا توجد عناوين كافية بعد.</p>';
+  const failed=(counts.payment_failed||0), started=(counts.payment_started||0);
+  const lowCartProducts=prodRows.filter(([_,v])=>v.views>=5&&v.carts===0).slice(0,3).map(([name])=>name);
+  const alerts=[];
+  if(started&&failed/started>.2)alerts.push('معدل فشل الدفع أعلى من 20%.');
+  if(conversion&&conversion<2)alerts.push('معدل التحويل أقل من 2%.');
+  lowCartProducts.forEach(p=>alerts.push('منتج عليه مشاهدات بدون إضافات للسلة: '+p));
+  document.getElementById('alerts').innerHTML=alerts.length?alerts.map(a=>`<div class="p-3 rounded-xl bg-amber-50 text-amber-800 text-sm font-bold">${esc(a)}</div>`).join(''):'<div class="p-3 rounded-xl bg-emerald-50 text-emerald-800 text-sm font-bold">لا توجد تنبيهات حرجة حالياً.</div>';
+}
+window.onload=async function(){renderSidebar('visitor-analytics.html');const ok=await requireAdmin();if(ok)loadAnalytics();};
+</script>
+</body>
+</html>

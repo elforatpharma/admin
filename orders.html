@@ -369,7 +369,11 @@ async function fetchOrders(){
     }
     if(error)throw error;
     allOrders=data||[];
-    renderKPIs();renderOrders();
+    renderKPIs();
+    renderOrders();
+    if(selectedId){
+      try { renderDetail(); } catch(_) {}
+    }
   }catch(e){
     document.getElementById('orders-body').innerHTML=`<tr><td colspan="7" class="text-center py-16 text-error font-bold">فشل جلب الطلبات.</td></tr>`;
   }
@@ -560,7 +564,10 @@ async function updateStatus(id,newStatus){
   try{
     const o=allOrders.find(x=>String(x.id)===String(id));
     const patch={status:newStatus};
-    if(newStatus==='تم التوصيل'&&o&&paymentStatusOf(o)==='paid')patch.payment_status='paid';
+    if(newStatus==='تم التوصيل'){
+      if(o&&paymentStatusOf(o)==='paid')patch.payment_status='paid';
+      patch.delivered_at=new Date().toISOString();
+    }
     const{error}=await _supabase.from('orders').update(patch).eq('id',id);
     if(error)throw error;
     const i=allOrders.findIndex(o=>String(o.id)===String(id));
@@ -878,10 +885,18 @@ window.onload=async function(){
   if(ok){
     fetchOrders();
     try{
-      _supabase.channel('orders-live')
-        .on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>fetchOrders())
-        .subscribe();
-    }catch(e){}
+      _supabase
+        .channel('orders-live-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+          console.log('تحديث لحظي لجدول الطلبات:', payload);
+          fetchOrders();
+        })
+        .subscribe((status) => {
+          console.log('Orders page realtime status:', status);
+        });
+    }catch(e){
+      console.warn('Realtime error on orders.html:', e);
+    }
   }
 };
 document.addEventListener('keydown',e=>{

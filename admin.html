@@ -216,9 +216,9 @@
               </div>
               <!-- Interval Switcher -->
               <div class="flex items-center gap-1 p-1 rounded-full bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm self-start border border-border-subtle">
-                <button class="px-3 py-1 rounded-full btn-brand-gradient text-white font-bold shadow-xs">يومياً</button>
-                <button class="px-3 py-1 rounded-full hover:text-primary transition-colors">أسبوعياً</button>
-                <button class="px-3 py-1 rounded-full hover:text-primary transition-colors">شهرياً</button>
+                <button class="chart-interval-btn px-3 py-1 rounded-full btn-brand-gradient text-white font-bold shadow-xs" data-interval="daily" onclick="setChartInterval('daily')">يومياً</button>
+                <button class="chart-interval-btn px-3 py-1 rounded-full hover:text-primary transition-colors" data-interval="weekly" onclick="setChartInterval('weekly')">أسبوعياً</button>
+                <button class="chart-interval-btn px-3 py-1 rounded-full hover:text-primary transition-colors" data-interval="monthly" onclick="setChartInterval('monthly')">شهرياً</button>
               </div>
               <button class="p-1 rounded-full hover:bg-surface-container-high transition-colors" id="refreshBtn" title="تحديث البيانات">
                 <span class="material-symbols-outlined text-sm leading-none text-primary">refresh</span>
@@ -247,19 +247,19 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 mt-4 bg-surface-container-lowest">
               <div class="p-2.5 rounded-2xl bg-surface-container-low border border-border-subtle/60">
                 <span class="block font-label-sm text-label-sm text-on-surface-variant">الطلبات المباشرة</span>
-                <span class="font-headline-sm text-headline-sm text-on-surface">1,040 طلب</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface" id="kpi-direct-orders">0 طلب</span>
               </div>
               <div class="p-2.5 rounded-2xl bg-surface-container-low border border-border-subtle/60">
                 <span class="block font-label-sm text-label-sm text-on-surface-variant">طلبات الواتساب / الهاتف</span>
-                <span class="font-headline-sm text-headline-sm text-on-surface">244 طلب</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface" id="kpi-contact-orders">0 طلب</span>
               </div>
               <div class="p-2.5 rounded-2xl bg-surface-container-low border border-border-subtle/60">
                 <span class="block font-label-sm text-label-sm text-on-surface-variant">متوسط سرعة التوصيل</span>
-                <span class="font-headline-sm text-headline-sm text-primary font-bold">3.4 ساعات</span>
+                <span class="font-headline-sm text-headline-sm text-primary font-bold" id="kpi-avg-delivery">—</span>
               </div>
               <div class="p-2.5 rounded-2xl bg-surface-container-low border border-border-subtle/60">
                 <span class="block font-label-sm text-label-sm text-on-surface-variant">رضا العملاء</span>
-                <span class="font-headline-sm text-headline-sm text-on-surface">4.9 / 5.0 ★</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface" id="kpi-satisfaction">—</span>
               </div>
             </div>
           </div>
@@ -268,22 +268,9 @@
             <!-- Payment Channels Card -->
             <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm flex flex-col border border-border-subtle/70">
               <h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">طرق الدفع</h3>
-              <div class="space-y-2">
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
-                  <span class="material-symbols-outlined text-primary text-xl">payments</span>
-                  <span class="font-label-sm text-label-sm text-on-surface">بطاقة الائتمان</span>
-                  <span class="ml-auto font-data-tabular text-data-tabular font-bold text-primary">68%</span>
-                </div>
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
-                  <span class="material-symbols-outlined text-secondary text-xl">smartphone</span>
-                  <span class="font-label-sm text-label-sm text-on-surface">الدفع عند الاستلام</span>
-                  <span class="ml-auto font-data-tabular text-data-tabular font-bold text-secondary">24%</span>
-                </div>
-                <div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
-                  <span class="material-symbols-outlined text-tertiary text-xl">confirmation_number</span>
-                  <span class="font-label-sm text-label-sm text-on-surface">التحويل البنكي</span>
-                  <span class="ml-auto font-data-tabular text-data-tabular font-bold text-tertiary">8%</span>
-                </div>
+              <p class="font-label-sm text-label-sm text-on-surface-variant -mt-2 mb-3">من الطلبات المدفوعة فقط</p>
+              <div class="space-y-2" id="payment-channels-list">
+                <div class="text-center py-6 text-on-surface-variant/60 text-xs">جاري التحميل...</div>
               </div>
             </div>
           </div>
@@ -448,8 +435,45 @@ function showOrderToast(name){const t=document.createElement('div');t.className=
 
 Chart.defaults.font.family='Tajawal,sans-serif';Chart.defaults.color='#64748b';
 
+// نفس منطق تصنيف طرق الدفع الموجود في orders.html (payOf/paymentKind) عشان الأرقام تفضل متطابقة
+function payOf(o){return o.paymentMethod||o.payment||o.payment_method||'';}
+function paymentKind(o){
+  const p=String(payOf(o)).toLowerCase();
+  if(p.includes('paymob')||p.includes('card')||p.includes('visa')||p.includes('master')||p.includes('فيزا')||p.includes('بطاقة'))return 'card';
+  if(p.includes('wallet')||p.includes('vodafone')||p.includes('فودافون')||p.includes('محفظة'))return 'wallet';
+  if(p.includes('cod')||p.includes('cash')||p.includes('كاش')||p.includes('الاستلام'))return 'cod';
+  return 'other';
+}
+const PAYMENT_KIND_META={
+  card:{label:'بطاقة بنكية / فيزا',icon:'payments',cls:'text-primary'},
+  wallet:{label:'محفظة إلكترونية (فودافون كاش)',icon:'account_balance_wallet',cls:'text-secondary'},
+  cod:{label:'الدفع عند الاستلام',icon:'smartphone',cls:'text-tertiary'},
+  other:{label:'طريقة أخرى',icon:'confirmation_number',cls:'text-on-surface-variant'}
+};
+function renderPaymentChannels(paidOrders){
+  const box=document.getElementById('payment-channels-list');
+  if(!box)return;
+  if(!paidOrders.length){
+    box.innerHTML='<div class="text-center py-6 text-on-surface-variant/60 text-xs">لا توجد طلبات مدفوعة بعد</div>';
+    return;
+  }
+  const counts={};
+  paidOrders.forEach(o=>{const k=paymentKind(o);counts[k]=(counts[k]||0)+1;});
+  const total=paidOrders.length;
+  const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([kind,count])=>{
+    const meta=PAYMENT_KIND_META[kind]||PAYMENT_KIND_META.other;
+    const pct=Math.round(count/total*100);
+    return `<div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
+      <span class="material-symbols-outlined ${meta.cls} text-xl">${meta.icon}</span>
+      <span class="font-label-sm text-label-sm text-on-surface">${meta.label}</span>
+      <span class="ml-auto font-data-tabular text-data-tabular font-bold ${meta.cls}">${pct}%</span>
+    </div>`;
+  }).join('');
+  box.innerHTML=rows;
+}
+
 let salesChart=null;
-function renderSalesChart(labels,curSeries,prevSeries){
+function renderSalesChart(labels,curSeries,prevSeries,curLabel='الفترة الحالية',prevLabel='الفترة السابقة'){
   const canvas=document.getElementById('dashboard-sales-chart');
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
@@ -460,8 +484,8 @@ function renderSalesChart(labels,curSeries,prevSeries){
   salesChart=new Chart(ctx,{
     type:'line',
     data:{labels,datasets:[
-      {label:'الشهر الحالي',data:curSeries,borderColor:'#4d3ceb',backgroundColor:gradient,fill:true,tension:.35,pointRadius:0,borderWidth:2.5,spanGaps:false},
-      {label:'الشهر السابق',data:prevSeries,borderColor:'#94a3b8',borderDash:[5,5],backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2,spanGaps:false}
+      {label:curLabel,data:curSeries,borderColor:'#4d3ceb',backgroundColor:gradient,fill:true,tension:.35,pointRadius:0,borderWidth:2.5,spanGaps:false},
+      {label:prevLabel,data:prevSeries,borderColor:'#94a3b8',borderDash:[5,5],backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2,spanGaps:false}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
@@ -475,6 +499,87 @@ function renderSalesChart(labels,curSeries,prevSeries){
       }
     }
   });
+}
+
+// ====== Chart interval switching (يومياً / أسبوعياً / شهرياً) ======
+let deliveredOrdersCache=[];
+let currentChartInterval='daily';
+
+function buildDailySeries(delivered,today){
+  const monthStart=new Date(today.getFullYear(),today.getMonth(),1);
+  const prevMonthStart=new Date(today.getFullYear(),today.getMonth()-1,1);
+  const curDayMap={},prevDayMap={};
+  delivered.forEach(o=>{
+    const d=new Date(o.created_at);const total=parseFloat(o.total)||0;
+    if(d>=monthStart){const day=d.getDate();curDayMap[day]=(curDayMap[day]||0)+total;}
+    else if(d>=prevMonthStart&&d<monthStart){const day=d.getDate();prevDayMap[day]=(prevDayMap[day]||0)+total;}
+  });
+  const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+  const todayDay=today.getDate();
+  const labels=[],cur=[],prev=[];
+  for(let day=1;day<=daysInMonth;day++){
+    labels.push(String(day));
+    cur.push(day<=todayDay?(curDayMap[day]||0):null);
+    prev.push(prevDayMap[day]!=null?prevDayMap[day]:null);
+  }
+  return{labels,cur,prev,curLabel:'الشهر الحالي',prevLabel:'الشهر السابق'};
+}
+
+function buildWeeklySeries(delivered,today){
+  const msDay=86400000,weeksToShow=8;
+  const startCur=new Date(today);startCur.setDate(startCur.getDate()-(weeksToShow*7-1));startCur.setHours(0,0,0,0);
+  const startPrev=new Date(startCur);startPrev.setDate(startPrev.getDate()-weeksToShow*7);
+  const curMap={},prevMap={};
+  delivered.forEach(o=>{
+    const d=new Date(o.created_at);const total=parseFloat(o.total)||0;
+    if(d>=startCur){const idx=Math.floor((d-startCur)/msDay/7);curMap[idx]=(curMap[idx]||0)+total;}
+    else if(d>=startPrev&&d<startCur){const idx=Math.floor((d-startPrev)/msDay/7);prevMap[idx]=(prevMap[idx]||0)+total;}
+  });
+  const todayIdx=Math.floor((today-startCur)/msDay/7);
+  const labels=[],cur=[],prev=[];
+  for(let i=0;i<weeksToShow;i++){
+    labels.push('أسبوع '+(i+1));
+    cur.push(i<=todayIdx?(curMap[i]||0):null);
+    prev.push(prevMap[i]!=null?prevMap[i]:null);
+  }
+  return{labels,cur,prev,curLabel:'آخر 8 أسابيع',prevLabel:'الـ8 أسابيع السابقة'};
+}
+
+function buildMonthlySeries(delivered,today){
+  const year=today.getFullYear();
+  const curMap={},prevMap={};
+  delivered.forEach(o=>{
+    const d=new Date(o.created_at);const total=parseFloat(o.total)||0;
+    if(d.getFullYear()===year)curMap[d.getMonth()]=(curMap[d.getMonth()]||0)+total;
+    else if(d.getFullYear()===year-1)prevMap[d.getMonth()]=(prevMap[d.getMonth()]||0)+total;
+  });
+  const monthNames=['ينا','فبر','مار','أبر','ماي','يون','يول','أغس','سبت','أكت','نوف','ديس'];
+  const curMonthIdx=today.getMonth();
+  const labels=[],cur=[],prev=[];
+  for(let m=0;m<12;m++){
+    labels.push(monthNames[m]);
+    cur.push(m<=curMonthIdx?(curMap[m]||0):null);
+    prev.push(prevMap[m]!=null?prevMap[m]:null);
+  }
+  return{labels,cur,prev,curLabel:year+' (السنة الحالية)',prevLabel:(year-1)+' (السنة السابقة)'};
+}
+
+function renderChartForInterval(interval){
+  const today=new Date();today.setHours(0,0,0,0);
+  let built;
+  if(interval==='weekly')built=buildWeeklySeries(deliveredOrdersCache,today);
+  else if(interval==='monthly')built=buildMonthlySeries(deliveredOrdersCache,today);
+  else built=buildDailySeries(deliveredOrdersCache,today);
+  renderSalesChart(built.labels,built.cur,built.prev,built.curLabel,built.prevLabel);
+}
+
+function setChartInterval(interval){
+  currentChartInterval=interval;
+  document.querySelectorAll('.chart-interval-btn').forEach(btn=>{
+    const active=btn.dataset.interval===interval;
+    btn.className='chart-interval-btn px-3 py-1 rounded-full '+(active?'btn-brand-gradient text-white font-bold shadow-xs':'hover:text-primary transition-colors');
+  });
+  renderChartForInterval(interval);
 }
 
 // روابط إضافية في السايدبار (الصفحة الرئيسية)
@@ -510,7 +615,7 @@ async function fetchStats(){
   try{
     const today=new Date();today.setHours(0,0,0,0);const todayISO=today.toISOString();
     const[ordersSnap,productsSnap,visitorEventsSnap]=await Promise.all([
-      _supabase.from('orders').select('id,total,status,customerName,phone,created_at,items,payment_method,payment_status,coupon_code,discount_amount').order('created_at',{ascending:false}).limit(1000),
+      _supabase.from('orders').select('id,total,status,customerName,phone,created_at,items,payment_method,payment_status,coupon_code,discount_amount,order_source,delivered_at').order('created_at',{ascending:false}).limit(1000),
       _supabase.from('products').select('id,name,stock', {count:'exact'}).limit(1000),
       _supabase.from('visitor_events').select('session_id,created_at').gte('created_at',todayISO).limit(5000)
     ]);
@@ -536,6 +641,28 @@ async function fetchStats(){
     document.getElementById('kpi-products').innerHTML=`${totalProducts} <span class="font-label-md text-label-md font-normal text-on-surface-variant">صنف</span>`;
     document.getElementById('kpi-sales-trend').innerHTML=`<span class="material-symbols-outlined text-xs">payments</span><span>${paid.length} طلب مدفوع / ${withCoupon.length} بكوبون</span>`;
 
+    // مصدر الطلب: موقع مباشر مقابل واتساب/هاتف (عمود order_source)
+    const directOrders=allOrders.filter(o=>(o.order_source||'website')==='website');
+    const contactOrders=allOrders.filter(o=>['whatsapp','phone'].includes(o.order_source));
+    document.getElementById('kpi-direct-orders').textContent=`${directOrders.length.toLocaleString('en')} طلب`;
+    document.getElementById('kpi-contact-orders').textContent=`${contactOrders.length.toLocaleString('en')} طلب`;
+
+    // متوسط سرعة التوصيل من created_at إلى delivered_at (بالساعات)
+    const deliveredWithTime=delivered.filter(o=>o.delivered_at);
+    if(deliveredWithTime.length){
+      const totalHours=deliveredWithTime.reduce((s,o)=>s+((new Date(o.delivered_at)-new Date(o.created_at))/36e5),0);
+      const avgHours=totalHours/deliveredWithTime.length;
+      document.getElementById('kpi-avg-delivery').textContent=`${avgHours.toFixed(1)} ساعات`;
+    }else{
+      document.getElementById('kpi-avg-delivery').textContent='لا توجد بيانات بعد';
+    }
+
+    // رضا العملاء: لسه مفيش نظام تقييمات مربوط (جدول reviews)
+    document.getElementById('kpi-satisfaction').textContent='قريباً';
+
+    // طرق الدفع: نسب حقيقية من الطلبات المدفوعة فقط (payment_status = paid)
+    renderPaymentChannels(paid);
+
     // Today stats
     const todayOrders=allOrders.filter(o=>{const d=new Date(o.created_at);return d>=today;});
     const todaySales=todayOrders.filter(o=>o.status==='تم التوصيل').reduce((s,o)=>s+(parseFloat(o.total)||0),0);
@@ -553,22 +680,9 @@ async function fetchStats(){
     document.getElementById('insight-month-sales').textContent='مبيعات الشهر الحالي ('+Math.round(curMonthSales).toLocaleString('en')+' ج.م)';
     document.getElementById('insight-prev-sales').textContent='الشهر السابق ('+Math.round(prevMonthSales).toLocaleString('en')+' ج.م)';
 
-    // Daily buckets (real data) لرسم منحنى المبيعات
-    const curDayMap={},prevDayMap={};
-    delivered.forEach(o=>{
-      const d=new Date(o.created_at);const total=parseFloat(o.total)||0;
-      if(d>=monthStart){const day=d.getDate();curDayMap[day]=(curDayMap[day]||0)+total;}
-      else if(d>=prevMonthStart&&d<monthStart){const day=d.getDate();prevDayMap[day]=(prevDayMap[day]||0)+total;}
-    });
-    const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
-    const todayDay=today.getDate();
-    const chartLabels=[],curSeries=[],prevSeries=[];
-    for(let day=1;day<=daysInMonth;day++){
-      chartLabels.push(String(day));
-      curSeries.push(day<=todayDay?(curDayMap[day]||0):null);
-      prevSeries.push(prevDayMap[day]!=null?prevDayMap[day]:null);
-    }
-    renderSalesChart(chartLabels,curSeries,prevSeries);
+    // Daily/Weekly/Monthly chart data (real data) — يُعاد بناؤها عند تغيير الفترة من setChartInterval
+    deliveredOrdersCache=delivered;
+    renderChartForInterval(currentChartInterval);
 
     const productMap=new Map();
     delivered.forEach(o=>(Array.isArray(o.items)?o.items:[]).forEach(it=>{if(!it.isGift&&it.name)productMap.set(it.name,(productMap.get(it.name)||0)+(Number(it.qty)||1));}));
@@ -687,7 +801,25 @@ window.onload=async function(){
   const refreshBtn=document.getElementById('refreshBtn');
   if(refreshBtn)refreshBtn.onclick=()=>fetchStats();
   const ok=await requireAdmin();
-  if(ok){fetchStats();fetchGifts();}
+  if(ok){
+    fetchStats();
+    fetchGifts();
+
+    // تفعيل التحديث اللحظي المباشر لجميع إحصائيات وطلبات الرئيسية فوراً بدون ريفريش
+    try {
+      _supabase
+        .channel('admin-home-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+          console.log('تحديث لحظي وارد للطلبات في الرئيسية:', payload);
+          fetchStats();
+        })
+        .subscribe((status) => {
+          console.log('Realtime subscription status (admin.html):', status);
+        });
+    } catch(e) {
+      console.warn('Realtime error on admin.html:', e);
+    }
+  }
 };
 </script>
 </body>

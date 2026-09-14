@@ -45,7 +45,16 @@
 <script src="layout.js"></script>
 <script>
 const checks=[
-  {id:'products',label:'قراءة المنتجات من المتجر',run:()=>_supabase.from('products').select('id,name,stock').limit(1)},
+  {id:'products',label:'قراءة المنتجات من المتجر',run:async()=>{
+    const withStock=await _supabase.from('products').select('id,name,stock').limit(1);
+    if(!withStock.error)return withStock;
+    if(/stock/i.test(withStock.error.message||'')){
+      const noStock=await _supabase.from('products').select('id,name').limit(1);
+      if(!noStock.error)return{data:noStock.data,error:null,warn:'القراءة تعمل، لكن جدول المنتجات بدون عمود stock (طبيعي لو المخزون مش متتبّع بعدد — نظام المخزون في inventory.html بيتعامل مع الحالة دي تلقائياً).'};
+      return noStock;
+    }
+    return withStock;
+  }},
   {id:'orders',label:'قراءة الطلبات في الداشبورد',run:()=>_supabase.from('orders').select('id,total,status,created_at').order('created_at',{ascending:false}).limit(1)},
   {id:'paymob-columns',label:'أعمدة Paymob والكوبونات في الطلبات',run:()=>_supabase.from('orders').select('payment_method,payment_status,merchant_order_id,paymob_order_id,coupon_code,discount_amount').limit(1)},
   {id:'coupons',label:'قراءة الكوبونات النشطة للمتجر',run:()=>_supabase.from('coupons').select('id,code,discount_percentage,is_active,expiry_date').limit(1)},
@@ -81,10 +90,12 @@ async function runChecks(){
   for(const c of checks){
     try{
       const r=await c.run();
-      results.push({c,state:r.error?'bad':'ok',msg:r.error?(r.error.message||'فشل الاتصال'):'الاتصال والقراءة يعملان بنجاح'});
+      const state=r.error?'bad':(r.warn?'warn':'ok');
+      const msg=r.error?(r.error.message||'فشل الاتصال'):(r.warn||'الاتصال والقراءة يعملان بنجاح');
+      results.push({c,state,msg});
     }catch(e){results.push({c,state:'bad',msg:e.message||'فشل غير متوقع'});}
   }
-  const ok=results.filter(r=>r.state==='ok').length;
+  const ok=results.filter(r=>r.state==='ok'||r.state==='warn').length;
   renderCards(ok,checks.length);
   list.innerHTML=results.map(r=>row(r.c,r.state,r.msg)).join('');
 }

@@ -803,18 +803,26 @@ async function newOrderModal(){
         <input id="swal-phone" class="swal2-input efp-input" placeholder="01xxxxxxxxx" dir="ltr">
       </div>
       <div class="efp-field-group">
-        <label class="efp-label">الإجمالي (ج.م)</label>
-        <input id="swal-total" class="swal2-input efp-input" type="number" inputmode="numeric" value="0">
+        <label class="efp-label">الإجمالي (ج.م) *</label>
+        <input id="swal-total" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0">
       </div>
       <div class="efp-field-group">
         <label class="efp-label">الأصناف (اختياري: سطر لكل منتج)</label>
         <textarea id="swal-items" class="swal2-textarea efp-input" placeholder="مثال: سيروم جوزيل - 1 - 450"></textarea>
       </div>`,
     showCancelButton:true,confirmButtonText:'إنشاء الطلب',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',focusConfirm:false,
-    preConfirm:()=>({customerName:document.getElementById('swal-name').value.trim(),phone:document.getElementById('swal-phone').value.trim(),total:Number(document.getElementById('swal-total').value)||0,items:textToItems(document.getElementById('swal-items').value)})
+    preConfirm:()=>{
+      const customerName=document.getElementById('swal-name').value.trim();
+      const phone=document.getElementById('swal-phone').value.trim();
+      if(!customerName||!phone){Swal.showValidationMessage('اسم العميل والهاتف مطلوبان');return false;}
+      const totalRaw=document.getElementById('swal-total').value;
+      if(totalRaw===''){Swal.showValidationMessage('الإجمالي مطلوب — اكتب رقم حقيقي');return false;}
+      const total=Number(totalRaw);
+      if(!(total>0)){Swal.showValidationMessage('الإجمالي لازم يكون أكبر من صفر');return false;}
+      return{customerName,phone,total,items:textToItems(document.getElementById('swal-items').value)};
+    }
   });
   if(!fv)return;
-  if(!fv.customerName||!fv.phone){toast('اسم العميل والهاتف مطلوبان','error');return;}
   try{
     const{error}=await _supabase.from('orders').insert({customerName:fv.customerName,phone:fv.phone,total:fv.total,items:fv.items,status:'جديد'});
     if(error)throw error;

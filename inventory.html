@@ -680,33 +680,42 @@ async function newProductModal(){
       </div>
       <div class="efp-row-2">
         <div class="efp-field-group">
-          <label class="efp-label">السعر (ج.م)</label>
-          <input id="swal-price" class="swal2-input efp-input" type="number" inputmode="numeric" value="0">
+          <label class="efp-label">السعر (ج.م) *</label>
+          <input id="swal-price" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0">
         </div>
         <div class="efp-field-group">
           <label class="efp-label">الخصم %</label>
-          <input id="swal-disc" class="swal2-input efp-input" type="number" inputmode="numeric" value="0">
+          <input id="swal-disc" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0">
         </div>
       </div>
-      ${HAS_STOCK?'<div class="efp-field-group"><label class="efp-label">الرصيد الابتدائي</label><input id="swal-stock" class="swal2-input efp-input" type="number" inputmode="numeric" value="0"></div>':''}
+      ${HAS_STOCK?'<div class="efp-field-group"><label class="efp-label">الرصيد الابتدائي</label><input id="swal-stock" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0"></div>':''}
       ${HAS_EXPIRY?'<div class="efp-field-group"><label class="efp-label">تاريخ الانتهاء</label><input id="swal-expiry" class="swal2-input efp-input" type="date"></div>':''}
       <div class="efp-field-group">
         <label class="efp-label">رابط الصورة (اختياري)</label>
         <input id="swal-img" class="swal2-input efp-input" placeholder="https://...">
       </div>`,
     showCancelButton:true,confirmButtonText:'إضافة للمخزون',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
-    preConfirm:()=>({
-      name:document.getElementById('swal-name').value.trim(),
-      category:document.getElementById('swal-warehouse').value.trim(),
-      price:Number(document.getElementById('swal-price').value)||0,
-      discount:Number(document.getElementById('swal-disc').value)||0,
-      stock:document.getElementById('swal-stock')?Number(document.getElementById('swal-stock').value)||0:undefined,
-      expiry:document.getElementById('swal-expiry')?document.getElementById('swal-expiry').value:undefined,
-      image:document.getElementById('swal-img').value.trim()
-    })
+    preConfirm:()=>{
+      const name=document.getElementById('swal-name').value.trim();
+      if(!name){Swal.showValidationMessage('اسم الصنف مطلوب');return false;}
+      const priceRaw=document.getElementById('swal-price').value;
+      if(priceRaw===''){Swal.showValidationMessage('السعر مطلوب — اكتب رقم حقيقي');return false;}
+      const price=Number(priceRaw);
+      if(!(price>0)){Swal.showValidationMessage('السعر لازم يكون أكبر من صفر');return false;}
+      const stockEl=document.getElementById('swal-stock');
+      if(stockEl&&stockEl.value===''){Swal.showValidationMessage('الرصيد الابتدائي مطلوب (اكتب 0 لو فعلاً مفيش رصيد)');return false;}
+      return{
+        name,
+        category:document.getElementById('swal-warehouse').value.trim(),
+        price,
+        discount:Number(document.getElementById('swal-disc').value)||0,
+        stock:stockEl?Number(stockEl.value):undefined,
+        expiry:document.getElementById('swal-expiry')?document.getElementById('swal-expiry').value:undefined,
+        image:document.getElementById('swal-img').value.trim()
+      };
+    }
   });
   if(!fv)return;
-  if(!fv.name){toast('error','اسم الصنف مطلوب');return;}
   // نحوّل نسبة الخصم لسعر "قبل الخصم" وشارة نصية، عشان تتوافق مع أعمدة المتجر (img/oldPrice)
   const oldPrice=fv.discount>0?Math.round(fv.price/(1-Math.min(fv.discount,90)/100)):null;
   const payload={name:fv.name,price:fv.price,is_active:true};

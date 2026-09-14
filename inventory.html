@@ -602,8 +602,13 @@ async function bulkDelete(){
   const r=await confirmDialog('حذف الأصناف المحددة','سيتم حذف '+sel.size+' صنف نهائياً!');
   if(!r)return;
   for(const id of sel){
+    const p=products.find(x=>String(x.id)===String(id));
     const{error}=await _supabase.from('products').delete().eq('id',id);
-    if(!error)sel.delete(id);
+    if(!error){
+      sel.delete(id);
+      const img=p&&(p.img||p.image);
+      if(img&&window.deleteStorageFile)deleteStorageFile(img).catch(()=>{});
+    }
   }
   sel.clear();toast('success','تم الحذف');fetchProducts();
 }
@@ -635,6 +640,8 @@ async function deleteProduct(id){
   if(!r)return;
   const{error}=await _supabase.from('products').delete().eq('id',id);
   if(error){toast('error','فشل الحذف');return;}
+  const img=p&&(p.img||p.image);
+  if(img&&window.deleteStorageFile)deleteStorageFile(img).catch(()=>{});
   sel.delete(id);toast('success','تم التخريد');fetchProducts();
 }
 

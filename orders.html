@@ -773,10 +773,15 @@ async function editOrder(id){
 
 function textToItems(txt){
   return txt.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
-    const parts=line.split('-').map(p=>p.trim());
-    return {name:parts[0]==='هدية'?'هدية':'الهدية:'+parts.join(' '),
-      qty:Number((line.match(/(\d+)/g)||[1])[1])||1,
-      isGift:line.startsWith('هدية')};
+    const isGift=line.startsWith('هدية');
+    const rest=isGift?line.replace(/^هدية\s*-\s*/,''):line;
+    const parts=rest.split('-').map(p=>p.trim()).filter(p=>p!=='');
+    const name=parts[0]||(isGift?'هدية':'منتج');
+    const qty=parts.length>1?(Number(parts[1])||1):1;
+    const price=parts.length>2?(Number(parts[2])||0):0;
+    const item={name,qty,isGift};
+    if(price)item.price=price;
+    return item;
   });
 }
 function itsText(o){

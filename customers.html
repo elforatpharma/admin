@@ -596,6 +596,9 @@ function renderTable(){
             <button class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-container transition-colors" title="تعديل السجل" onclick="event.stopPropagation();editCustomer('${key.replace(/'/g,"\\'")}')">
               <span class="material-symbols-outlined text-[18px]">edit</span>
             </button>
+            <button class="w-8 h-8 rounded-full flex items-center justify-center text-danger hover:bg-danger-surface transition-colors" title="حذف العميل نهائياً" onclick="event.stopPropagation();deleteCustomer('${key.replace(/'/g,"\\'")}')">
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
           </div>
         </td>
       </tr>`;
@@ -770,6 +773,9 @@ function renderDossier(){
       <button class="w-10 h-10 rounded-full flex items-center justify-center bg-canvas-bg hover:bg-surface-container text-text-secondary transition-colors" title="خيارات إضافية" onclick="serveNote('${c.phone.replace(/'/g,"\\'")}')">
         <span class="material-symbols-outlined text-[20px]">more_vert</span>
       </button>
+      <button class="w-10 h-10 rounded-full flex items-center justify-center bg-danger-surface hover:bg-danger/10 text-danger transition-colors" title="حذف العميل نهائياً" onclick="deleteCustomer('${c.phone.replace(/'/g,"\\'")}')">
+        <span class="material-symbols-outlined text-[20px]">delete</span>
+      </button>
     </div>`;
 
   // Delivery Snapshot
@@ -831,6 +837,25 @@ function editCustomer(phone){
     confirmButtonColor:'#4d3ceb',confirmButtonText:'فتح الطلبات',
     showCancelButton:true,cancelButtonText:'إغلاق'
   }).then(r=>{if(r.isConfirmed)window.location.href='orders.html';});
+}
+async function deleteCustomer(phone){
+  const c=customers.find(x=>String(x.phone)===phone);
+  if(!c)return;
+  // مفيش جدول "customers" منفصل — العميل ده مبني من تجميع طلباته، فحذفه معناه
+  // حذف كل طلباته نهائياً من جدول orders. لازم تنبيه واضح قبل التنفيذ.
+  const r=await confirmDialog(
+    'حذف العميل نهائياً',
+    'هيتم حذف "'+c.name+'" وكل طلباته ('+c.ordersCount+' طلب بإجمالي '+money(c.totalSpent)+' ج.م) نهائياً من قاعدة البيانات. الإجراء ده لا يمكن التراجع عنه إطلاقاً!',
+    'نعم، احذف العميل وكل طلباته'
+  );
+  if(!r)return;
+  const ids=c.orders.map(o=>o.id);
+  const{error}=await _supabase.from('orders').delete().in('id',ids);
+  if(error){toast('error','فشل حذف العميل: '+(error.message||''));return;}
+  if(selectedKey===phone)selectedKey=null;
+  sel.delete(phone);
+  toast('success','تم حذف العميل وكل طلباته نهائياً');
+  loadCustomers();
 }
 function serveNote(phone){
   const c=customers.find(x=>String(x.phone)===phone);

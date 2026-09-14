@@ -239,61 +239,9 @@
                 <span id="insight-top-product">أكثر منتج مبيعاً: —</span>
               </div>
             </div>
-            <!-- Vectorized Graphic Presentation (SVG Line Chart with Purple/Indigo Gradient) -->
-            <div class="relative w-full h-64 bg-primary-surface/40 rounded-2xl p-3 overflow-hidden flex flex-col justify-end border border-primary-border/40">
-              <!-- SVG Area & Lines -->
-              <svg class="w-full h-48 overflow-visible" preserveAspectRatio="none" viewBox="0 0 700 200">
-                <defs>
-                  <linearGradient id="primaryGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#4d3ceb" stop-opacity="0.35"></stop>
-                    <stop offset="60%" stop-color="#8536ff" stop-opacity="0.12"></stop>
-                    <stop offset="100%" stop-color="#8536ff" stop-opacity="0.0"></stop>
-                  </linearGradient>
-                  <linearGradient id="lineStrokeGradient" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0%" stop-color="#4d3ceb"></stop>
-                    <stop offset="60%" stop-color="#6a00e1"></stop>
-                    <stop offset="100%" stop-color="#8536ff"></stop>
-                  </linearGradient>
-                  <filter height="140%" id="glow" width="140%" x="-20%" y="-20%">
-                    <feGaussianBlur result="glow" stdDeviation="4"></feGaussianBlur>
-                    <feComposite in="SourceGraphic" in2="glow" operator="over"></feComposite>
-                  </filter>
-                </defs>
-                <!-- Horizontal Grid Lines -->
-                <line stroke="#E2E8F0" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="700" y1="20" y2="20"></line>
-                <line stroke="#E2E8F0" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="700" y1="70" y2="70"></line>
-                <line stroke="#E2E8F0" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="700" y1="120" y2="120"></line>
-                <line stroke="#E2E8F0" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="700" y1="170" y2="170"></line>
-                <!-- Previous Month Comparative Line (Dashed) -->
-                <path d="M 0,150 Q 80,140 150,130 T 300,110 T 450,90 T 600,80 L 700,75" fill="none" stroke="#94A3B8" stroke-dasharray="5 5" stroke-width="2"></path>
-                <!-- Current Month Area Gradient -->
-                <path d="M 0,160 Q 70,140 140,115 T 280,105 T 420,40 T 560,70 L 700,30 L 700,200 L 0,200 Z" fill="url(#primaryGradient)"></path>
-                <!-- Current Month Glow + Solid Indigo/Purple Line -->
-                <path d="M 0,160 Q 70,140 140,115 T 280,105 T 420,40 T 560,70 L 700,30" fill="none" stroke="url(#lineStrokeGradient)" stroke-linecap="round" stroke-width="4" filter="url(#glow)"></path>
-                <!-- Peak Marker: Skincare Week -->
-                <g transform="translate(420, 40)">
-                  <circle class="animate-ping opacity-75" fill="#4d3ceb" r="7"></circle>
-                  <circle fill="#FFFFFF" r="5" stroke="#4d3ceb" stroke-width="3"></circle>
-                </g>
-                <!-- Peak Marker: White Friday -->
-                <g transform="translate(700, 30)">
-                  <circle fill="#8536ff" r="5.5" stroke="#ffffff" stroke-width="2"></circle>
-                </g>
-              </svg>
-              <!-- Peak Point Callout Overlay -->
-              <div class="absolute top-5 left-1/3 transform -translate-x-1/2 bg-on-surface text-on-primary px-3.5 py-1.5 rounded-full shadow-lg font-label-sm text-label-sm pointer-events-none border border-primary-border/30">
-                <div class="font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim inline-block"></span> ذروة المبيعات: 38,400 ج.م</div>
-                <div class="text-[10px] text-primary-fixed-dim">عرض سيروم جوزيل وفيتامينات C</div>
-              </div>
-              <!-- X Axis Labels -->
-              <div class="flex justify-between items-center pt-2 font-data-tabular text-data-tabular text-on-surface-variant">
-                <span>01 نوفمبر</span>
-                <span>06 نوفمبر</span>
-                <span>12 نوفمبر</span>
-                <span>18 نوفمبر</span>
-                <span>24 نوفمبر (العروض)</span>
-                <span>30 نوفمبر</span>
-              </div>
+            <!-- Sales Chart: real data, current vs previous month -->
+            <div class="relative w-full h-64 bg-primary-surface/40 rounded-2xl p-3 overflow-hidden border border-primary-border/40">
+              <canvas id="dashboard-sales-chart"></canvas>
             </div>
             <!-- Quick Summary Pills below chart -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 mt-4 bg-surface-container-lowest">
@@ -500,6 +448,35 @@ function showOrderToast(name){const t=document.createElement('div');t.className=
 
 Chart.defaults.font.family='Tajawal,sans-serif';Chart.defaults.color='#64748b';
 
+let salesChart=null;
+function renderSalesChart(labels,curSeries,prevSeries){
+  const canvas=document.getElementById('dashboard-sales-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const gradient=ctx.createLinearGradient(0,0,0,220);
+  gradient.addColorStop(0,'rgba(77,60,235,.28)');
+  gradient.addColorStop(1,'rgba(77,60,235,0)');
+  if(salesChart)salesChart.destroy();
+  salesChart=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'الشهر الحالي',data:curSeries,borderColor:'#4d3ceb',backgroundColor:gradient,fill:true,tension:.35,pointRadius:0,borderWidth:2.5,spanGaps:false},
+      {label:'الشهر السابق',data:prevSeries,borderColor:'#94a3b8',borderDash:[5,5],backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2,spanGaps:false}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{boxWidth:10,font:{size:10}}},
+        tooltip:{callbacks:{label:c=>(c.dataset.label+': '+Math.round(c.parsed.y||0).toLocaleString('en')+' ج.م')}}
+      },
+      scales:{
+        y:{beginAtZero:true,ticks:{callback:v=>v.toLocaleString('en')},grid:{color:'#f1f5f9'}},
+        x:{grid:{display:false},ticks:{maxTicksLimit:10}}
+      }
+    }
+  });
+}
+
 // روابط إضافية في السايدبار (الصفحة الرئيسية)
 function showGiftsSection(){document.getElementById('gifts-section').scrollIntoView({behavior:'smooth'});fetchGifts();}
 
@@ -575,6 +552,24 @@ async function fetchStats(){
     const prevMonthSales=delivered.filter(o=>{const d=new Date(o.created_at);return d>=prevMonthStart&&d<monthStart;}).reduce((s,o)=>s+(parseFloat(o.total)||0),0);
     document.getElementById('insight-month-sales').textContent='مبيعات الشهر الحالي ('+Math.round(curMonthSales).toLocaleString('en')+' ج.م)';
     document.getElementById('insight-prev-sales').textContent='الشهر السابق ('+Math.round(prevMonthSales).toLocaleString('en')+' ج.م)';
+
+    // Daily buckets (real data) لرسم منحنى المبيعات
+    const curDayMap={},prevDayMap={};
+    delivered.forEach(o=>{
+      const d=new Date(o.created_at);const total=parseFloat(o.total)||0;
+      if(d>=monthStart){const day=d.getDate();curDayMap[day]=(curDayMap[day]||0)+total;}
+      else if(d>=prevMonthStart&&d<monthStart){const day=d.getDate();prevDayMap[day]=(prevDayMap[day]||0)+total;}
+    });
+    const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+    const todayDay=today.getDate();
+    const chartLabels=[],curSeries=[],prevSeries=[];
+    for(let day=1;day<=daysInMonth;day++){
+      chartLabels.push(String(day));
+      curSeries.push(day<=todayDay?(curDayMap[day]||0):null);
+      prevSeries.push(prevDayMap[day]!=null?prevDayMap[day]:null);
+    }
+    renderSalesChart(chartLabels,curSeries,prevSeries);
+
     const productMap=new Map();
     delivered.forEach(o=>(Array.isArray(o.items)?o.items:[]).forEach(it=>{if(!it.isGift&&it.name)productMap.set(it.name,(productMap.get(it.name)||0)+(Number(it.qty)||1));}));
     const topProduct=[...productMap.entries()].sort((a,b)=>b[1]-a[1])[0];
@@ -623,7 +618,12 @@ async function fetchStats(){
         <td class="py-3 px-3"><div class="flex items-center gap-2"><span class="truncate max-w-[160px] text-xs">${items||'—'}</span>${itemsCount?`<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[10px]">${itemsCount} قطعة</span>`:''}</div></td>
         <td class="py-3 px-3 font-bold text-on-surface">${escapeHtml(String(o.total||0))} ج.م</td>
         <td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-sm text-label-sm font-bold ${badgeCls}"><span class="w-1.5 h-1.5 rounded-full bg-current"></span>${escapeHtml(st)}</span></td>
-        <td class="py-3 px-3 text-center"><a href="orders.html" class="p-1.5 rounded-full text-on-surface-variant hover:text-primary hover:bg-primary-surface transition-colors inline-flex"><span class="material-symbols-outlined text-lg">visibility</span></a></td>
+        <td class="py-3 px-3 text-center">
+          <div class="flex items-center justify-center gap-1">
+            <a href="orders.html" class="p-1.5 rounded-full text-on-surface-variant hover:text-primary hover:bg-primary-surface transition-colors inline-flex" title="عرض الطلب"><span class="material-symbols-outlined text-lg">visibility</span></a>
+            <button onclick="deleteCustomerByPhone('${String(o.phone||'').replace(/'/g,"\\'")}','${escapeHtml(o.customerName||'عميل').replace(/'/g,"\\'")}')" class="p-1.5 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors inline-flex" title="حذف العميل نهائياً"><span class="material-symbols-outlined text-lg">delete</span></button>
+          </div>
+        </td>
       </tr>`;
     }).join('');
 
@@ -631,6 +631,26 @@ async function fetchStats(){
     document.getElementById('last-update-time').textContent='تم التحديث: '+new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
 
   }catch(e){console.error('fetchStats error:',e);}
+}
+
+// ====== Delete Customer (home page recent-orders table) ======
+async function deleteCustomerByPhone(phone,name){
+  if(!phone){toast('error','رقم الهاتف غير متاح لهذا الطلب');return;}
+  const{data:ordersForPhone,error:qErr}=await _supabase.from('orders').select('id,total').eq('phone',phone);
+  if(qErr){toast('error','فشل جلب طلبات العميل: '+(qErr.message||''));return;}
+  if(!ordersForPhone||!ordersForPhone.length){toast('error','لا توجد طلبات مرتبطة بهذا الرقم');return;}
+  const totalSpent=ordersForPhone.reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+  const ok=await confirmDialog(
+    'حذف العميل نهائياً',
+    'هيتم حذف "'+(name||'العميل')+'" وكل طلباته ('+ordersForPhone.length+' طلب بإجمالي '+Math.round(totalSpent).toLocaleString('en')+' ج.م) نهائياً من قاعدة البيانات. الإجراء ده لا يمكن التراجع عنه إطلاقاً!',
+    'نعم، احذف العميل وكل طلباته'
+  );
+  if(!ok)return;
+  const ids=ordersForPhone.map(o=>o.id);
+  const{error:delErr}=await _supabase.from('orders').delete().in('id',ids);
+  if(delErr){toast('error','فشل حذف العميل: '+(delErr.message||''));return;}
+  toast('success','تم حذف العميل وكل طلباته نهائياً');
+  fetchStats();
 }
 
 // ====== Gifts (mini list) ======
@@ -664,6 +684,8 @@ document.getElementById('gift-form').onsubmit=async(e)=>{
 window.onload=async function(){
   renderSidebar('admin.html');
   setupImageUploader();
+  const refreshBtn=document.getElementById('refreshBtn');
+  if(refreshBtn)refreshBtn.onclick=()=>fetchStats();
   const ok=await requireAdmin();
   if(ok){fetchStats();fetchGifts();}
 };

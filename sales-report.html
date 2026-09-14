@@ -116,7 +116,7 @@ let mainChart=null, productsChart=null;
 function fmt(n){ return Math.round(Number(n)||0).toLocaleString('en-US'); }
 function pct(a,b){ if(!b) return a>0?100:0; return Math.round(((a-b)/b)*100); }
 
-Chart.defaults.font.family='Tajawal',sans-serif;
+Chart.defaults.font.family='Tajawal, sans-serif';
 Chart.defaults.color='#64748b';
 
 function setPeriod(p){

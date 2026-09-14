@@ -426,6 +426,8 @@
           <input type="number" id="p-price" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all" placeholder="بعد الخصم"/></div>
         <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">السعر القديم</label>
           <input type="number" id="p-oldPrice" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all" placeholder="قبل الخصم"/></div>
+        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">الرصيد الابتدائي</label>
+          <input type="number" id="p-stock" min="0" value="0" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all" placeholder="0"/></div>
         <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">القسم</label>
           <select id="p-cat" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all">
             <option>العناية بالبشرة</option><option>العناية بالشعر</option><option>مستحضرات تجميل</option><option>مجموعات متكاملة</option>
@@ -515,7 +517,7 @@ document.getElementById("add-form").onsubmit=async(e)=>{
   if(window.resizeImage){const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);file=await dataUrlToBlob(dataUrl,'image/jpeg');}
   const fileName=sanitizeFileName(file.name);const{error:imgError}=await _supabase.storage.from('products').upload(`uploads/${fileName}`,file,{contentType:file.type||'image/jpeg'});if(imgError)throw imgError;
   const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
-  const productData={name:document.getElementById("p-name").value,price:Number(document.getElementById("p-price").value),oldPrice:document.getElementById("p-oldPrice").value?Number(document.getElementById("p-oldPrice").value):null,category:document.getElementById("p-cat").value,badge:document.getElementById("p-badge").value,desc:document.getElementById("p-desc").value,ingredients:document.getElementById("p-ingredients").value,img:publicUrl,priority:0,created_at:new Date()};
+  const productData={name:document.getElementById("p-name").value,price:Number(document.getElementById("p-price").value),oldPrice:document.getElementById("p-oldPrice").value?Number(document.getElementById("p-oldPrice").value):null,stock:Number(document.getElementById("p-stock").value)||0,category:document.getElementById("p-cat").value,badge:document.getElementById("p-badge").value,desc:document.getElementById("p-desc").value,ingredients:document.getElementById("p-ingredients").value,img:publicUrl,priority:0,created_at:new Date()};
   const{error:dbError}=await _supabase.from('products').insert([productData]);if(dbError)throw dbError;
   closeModal();toast('success','تم إضافة المنتج بنجاح!');e.target.reset();if(imageUploader)imageUploader.removeImage();fetchStats();
   }catch(error){toast('error','حدث خطأ: '+(error.message||'تأكد من إعدادات سوبابيز'));}

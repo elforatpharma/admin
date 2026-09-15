@@ -525,7 +525,7 @@ function renderOrders(){
             <button onclick="selectOrder('${id}')" class="p-1.5 rounded-full bg-surface-container hover:bg-primary/15 text-primary transition-colors" title="فتح تفاصيل الطلب">
               <span class="material-symbols-outlined text-base">visibility</span>
             </button>
-            <button onclick="printOrder('${id}')" class="p-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" title="طباعة الفاتورة">
+            <button onclick="showPrintModal('${id}')" class="p-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary transition-colors" title="طباعة بوليصة شحن أو فاتورة">
               <span class="material-symbols-outlined text-base">print</span>
             </button>
           </div>
@@ -721,9 +721,21 @@ function renderDetail(){
 
   const actions=`<div class="flex flex-col gap-1 pt-1">
     ${detailPrimaryBtn(o,s)}
-    <div class="grid grid-cols-2 gap-1">
-      <button onclick="printOrder('${o.id}')" class="h-10 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all"><span class="material-symbols-outlined text-base">receipt_long</span><span>طباعة الفاتورة</span></button>
-      <a class="h-10 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all" href="${waLink(o.phone)}" target="_blank"><span class="material-symbols-outlined text-base">local_shipping</span><span>إرسال تفاصيل واتساب</span></a>
+    <div class="grid grid-cols-2 gap-1.5">
+      <button onclick="printWaybill('${o.id}')" class="h-10 rounded-full bg-surface-container hover:bg-surface-container-high text-primary font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all font-bold border border-primary/20 hover:border-primary" title="بوليصة شحن للطرد (طابعة حرارية 80mm أو لاصقة)">
+        <span class="material-symbols-outlined text-base text-primary">local_shipping</span>
+        <span>بوليصة شحن (طرد)</span>
+      </button>
+      <button onclick="printInvoice('${o.id}')" class="h-10 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all font-medium" title="فاتورة مبيعات تفصيلية A4">
+        <span class="material-symbols-outlined text-base">receipt_long</span>
+        <span>فاتورة العميل A4</span>
+      </button>
+    </div>
+    <div class="mt-1">
+      <a class="w-full h-10 rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#075E54] font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all font-semibold" href="${waLink(o.phone)}" target="_blank">
+        <span class="material-symbols-outlined text-base">chat</span>
+        <span>إرسال تفاصيل الطلب عبر واتساب العميل</span>
+      </a>
     </div>
     ${CANCELLED.includes(s)?'':'<button onclick="cancelOrder(\''+o.id+'\')" class="w-full py-2 text-center text-error hover:bg-error-container/30 rounded-full font-label-sm text-label-sm font-semibold transition-all mt-1">إلغاء الطلب وتحديد السبب الطبي أو الإداري</button>'}
   </div>`;
@@ -838,13 +850,448 @@ async function newOrderModal(){
   }catch(e){toast('فشل إنشاء الطلب','error');}
 }
 
-function printOrder(id){
+// ============================================================
+// نظام طباعة بوالص الشحن والفواتير الاحترافي - الفرات فارما
+// ============================================================
+
+async function showPrintModal(id){
   const o=allOrders.find(x=>String(x.id)===String(id));
-  if(!o)return;
+  if(!o){toast('الطلب غير موجود','error');return;}
+
+  const isPaid = paymentStatusOf(o)==='paid' || paymentKind(o)==='card';
+  const codText = isPaid ? 'مدفوع إلكترونياً (0.00 ج.م)' : `مطلوب تحصيل كاش: ${money(o.total)} ج.م`;
+
+  Swal.fire({
+    title: `<div class="efp-modal-title-wrap"><span class="material-symbols-outlined text-primary">print</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">خيارات طباعة الطلب</span><span class="efp-modal-title-sub">#ORD-${escapeHtml(String(o.id))} | ${escapeHtml(o.customerName||'عميل')}</span></div></div>`,
+    width: 520,
+    padding: 0,
+    showCloseButton: true,
+    showConfirmButton: false,
+    customClass: { popup: 'efp-modal-popup', htmlContainer: 'efp-modal-html' },
+    html: `
+      <div class="p-6 flex flex-col gap-4 text-right">
+        <p class="text-sm text-outline leading-relaxed">اختر النموذج المناسب للاستخدام الحالي:</p>
+        
+        <!-- Option 1: Shipping Waybill -->
+        <div onclick="Swal.close(); printWaybill('${o.id}');" class="p-4 rounded-2xl border-2 border-primary/20 hover:border-primary bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer flex items-start gap-3 group">
+          <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-2xl">local_shipping</span>
+          </div>
+          <div class="flex flex-col flex-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-base text-on-surface group-hover:text-primary transition-colors">بوليصة شحن للطرد (طابعة حرارية / لاصقة)</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary">80mm / A6</span>
+            </div>
+            <span class="text-xs text-outline mt-1 leading-relaxed">مصممة خصيصاً للمناديب وشركات الشحن: خط كبير، عنوان واضح، باركود قابل للمسح، ومربع تحصيل النقدية.</span>
+            <span class="text-xs font-bold text-amber-700 mt-2 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 inline-block w-fit">${codText}</span>
+          </div>
+        </div>
+
+        <!-- Option 2: A4 Retail Invoice -->
+        <div onclick="Swal.close(); printInvoice('${o.id}');" class="p-4 rounded-2xl border-2 border-border-subtle hover:border-secondary bg-surface-container-lowest hover:bg-surface-container transition-all cursor-pointer flex items-start gap-3 group">
+          <div class="w-12 h-12 rounded-xl bg-secondary text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined text-2xl">receipt_long</span>
+          </div>
+          <div class="flex flex-col flex-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-base text-on-surface group-hover:text-secondary transition-colors">فاتورة مبيعات رسمية للعميل (A4)</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-secondary-fixed text-secondary">A4 قياسي</span>
+            </div>
+            <span class="text-xs text-outline mt-1 leading-relaxed">فاتورة تجارية مفصلة باسم الفرات فارما: جدول مفصل للأسعار والخصومات، مصاريف الشحن، وشروط الاسترجاع.</span>
+          </div>
+        </div>
+      </div>
+    `
+  });
+}
+
+function printOrder(id){
+  showPrintModal(id);
+}
+
+// 1️⃣ طباعة بوليصة الشحن (Waybill - 80mm / Label Sticker)
+function printWaybill(id){
+  const o=allOrders.find(x=>String(x.id)===String(id));
+  if(!o){toast('الطلب غير موجود','error');return;}
   const its=itemStats(o);
-  const rows=its.items.length?its.items.map(it=>`<tr><td>${escapeHtml(it.name||'-')}</td><td>${Number(it.qty)||1}</td><td>${it.isGift?'مجاني':'<b>'+money(it.price)+' ج.م</b>'}</td></tr>`).join(''):'<tr><td colspan="3">لا توجد أصناف</td></tr>';
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><style>body{font-family:Tajawal,Arial,sans-serif;padding:24px;color:#0f172a}h1{font-size:18px;color:#4d3ceb}b{color:#0f172a}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid #ddd;padding:8px;text-align:right}.muted{color:#64748b;font-size:12px}.total{color:#4d3ceb;font-weight:bold}</style></head><body><h1>الفرات فارما - فاتورة طلب #ORD-${o.id}</h1><p class="muted">التاريخ: ${fmtDate(o.created_at)} | الحالة: ${normStatus(o.status)}</p><p><b>العميل:</b> ${escapeHtml(o.customerName)||'-'} - ${escapeHtml(o.phone)||'-'}</p><table><tr><th>الصنف</th><th>الكمية</th><th>السعر</th></tr>${rows}</table><p style="text-align:left"><b>الإجمالي: <span class="total">${money(o.total)} ج.م</span></b></p><script>window.print()<\/script></body></html>`);
+  const isPaid = paymentStatusOf(o)==='paid' || paymentKind(o)==='card';
+  const barcodeValue = String(o.id).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16) || '1001';
+
+  let itemsRows = '';
+  its.items.forEach((it, idx)=>{
+    itemsRows += `<tr>
+      <td style="padding:4px 2px; text-align:center; border-bottom:1px dashed #ddd; width:20px;">${idx+1}</td>
+      <td style="padding:4px; border-bottom:1px dashed #ddd; font-weight:bold; font-size:12px;">${escapeHtml(it.name||'-')}${it.isGift?' <span style="font-size:10px; color:#666;">(هدية)</span>':''}</td>
+      <td style="padding:4px; text-align:center; border-bottom:1px dashed #ddd; font-weight:bold; font-size:13px; width:35px;">${Number(it.qty)||1}</td>
+    </tr>`;
+  });
+
+  const paymentBox = isPaid
+    ? `<div style="border:2px solid #059669; background:#ecfdf5; padding:8px; border-radius:6px; text-align:center; margin:8px 0;">
+        <div style="font-size:11px; font-weight:bold; color:#065f46;">✅ مدفوع بالكامل إلكترونياً (Paymob)</div>
+        <div style="font-size:15px; font-weight:900; color:#065f46; margin-top:2px;">لا يُحصل أي مبلغ من العميل (0.00 ج.م)</div>
+       </div>`
+    : `<div style="border:2px dashed #000; background:#fff; padding:8px; border-radius:6px; text-align:center; margin:8px 0;">
+        <div style="font-size:11px; font-weight:bold; color:#d97706;">⚠️ مطلوب تحصيل نقدي (الدفع عند الاستلام):</div>
+        <div style="font-size:22px; font-weight:900; color:#000; margin-top:2px;">${money(o.total)} ج.م</div>
+       </div>`;
+
+  const w = window.open('', '_blank', 'width=420,height=750');
+  w.document.write(`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>بوليصة شحن #ORD-${escapeHtml(String(o.id))}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+  <style>
+    @page { size: 80mm auto; margin: 3mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      margin: 0;
+      padding: 6px;
+      color: #000;
+      background: #fff;
+      font-size: 11px;
+      line-height: 1.3;
+      max-width: 80mm;
+      margin: 0 auto;
+    }
+    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 6px; }
+    .brand-title { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
+    .brand-sub { font-size: 10px; color: #333; margin-top: 1px; }
+    .badge-waybill { display: inline-block; background: #000; color: #fff; font-weight: 900; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-top: 4px; }
+    
+    .barcode-box { text-align: center; margin: 4px 0; }
+    .barcode-box svg { max-width: 95%; height: 38px; }
+    
+    .card { border: 1.5px solid #000; border-radius: 6px; padding: 6px; margin-bottom: 6px; background: #fafafa; }
+    .card-title { font-size: 10px; font-weight: 900; text-transform: uppercase; border-bottom: 1px dashed #aaa; padding-bottom: 3px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    
+    .cust-name { font-size: 14px; font-weight: 900; color: #000; }
+    .cust-phone { font-size: 14px; font-weight: 900; font-family: sans-serif; direction: ltr; display: inline-block; }
+    .cust-address { font-size: 12px; font-weight: 700; margin-top: 3px; line-height: 1.35; }
+    
+    table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+    th { border-bottom: 1.5px solid #000; font-size: 10px; font-weight: 900; padding: 3px; text-align: right; }
+    
+    .footer { text-align: center; border-top: 1px dashed #666; padding-top: 6px; font-size: 9px; color: #333; margin-top: 8px; }
+    
+    @media print {
+      .no-print { display: none !important; }
+      body { width: 100%; max-width: 100%; padding: 0; }
+    }
+    .print-btn-bar {
+      position: sticky; top: 0; background: #f1f5f9; padding: 6px; display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; border-bottom: 1px solid #cbd5e1; z-index: 99;
+    }
+    .btn-act { padding: 6px 14px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 12px; }
+    .btn-p { background: #3312d5; color: #fff; }
+    .btn-c { background: #e2e8f0; color: #0f172a; }
+  </style>
+</head>
+<body>
+  <div class="print-btn-bar no-print">
+    <button class="btn-act btn-p" onclick="window.print()">🖨️ طباعة الآن (Print)</button>
+    <button class="btn-act btn-c" onclick="window.close()">إغلاق</button>
+  </div>
+
+  <div class="header">
+    <div class="brand-title">صيدلية الفرات فارما</div>
+    <div class="brand-sub">ELFORAT PHARMA STORE | مستحضرات العناية والتجميل</div>
+    <div class="badge-waybill">بوليصة شحن وتوصيل طرد</div>
+  </div>
+
+  <div class="barcode-box">
+    <svg id="barcode-elem"></svg>
+    <div style="font-size:10px; font-weight:bold;">رقم الطلب: #ORD-${escapeHtml(String(o.id))}</div>
+    <div style="font-size:9px; color:#444;">التاريخ: ${fmtDate(o.created_at)}</div>
+  </div>
+
+  <!-- بيانات المستلم (العميل) -->
+  <div class="card">
+    <div class="card-title">
+      <span>بيانات المستلم (العميل)</span>
+      <span>📦 تسليم سريع</span>
+    </div>
+    <div class="cust-name">${escapeHtml(o.customerName||'عميل الفرات فارما')}</div>
+    <div style="margin-top:2px;">
+      <span style="font-size:10px; color:#555;">الهاتف:</span>
+      <span class="cust-phone">${escapeHtml(o.phone||'-')}</span>
+    </div>
+    <div class="cust-address">
+      <span style="font-size:10px; color:#555; display:block;">العنوان بالتفصيل:</span>
+      ${escapeHtml(o.address||'يرجى التواصل هاتفياً لتحديد العنوان الدقيق')}
+    </div>
+    ${(o.notes||o.note)?`<div style="margin-top:4px; font-size:10px; background:#fff; padding:3px; border-radius:4px; border:1px solid #ddd;"><b>ملاحظة:</b> ${escapeHtml(o.notes||o.note)}</div>`:''}
+  </div>
+
+  <!-- محتويات الشحنة -->
+  <div class="card" style="background:#fff;">
+    <div class="card-title">
+      <span>محتويات الطرد (${its.items.length} صنف)</span>
+      <span>الكمية: ${its.qty + its.gifts}</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الصنف</th>
+          <th style="text-align:center;">الكمية</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsRows || '<tr><td colspan="3" style="text-align:center;">منتجات عناية وتجميل</td></tr>'}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- صندوق التحصيل والدفع -->
+  ${paymentBox}
+
+  <!-- بيانات الراسل -->
+  <div style="font-size:10px; padding:4px; border-top:1px dashed #000; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <b>الراسل:</b> صيدلية الفرات فارما<br>
+      <b>خدمة العملاء:</b> 01146809133
+    </div>
+    <div style="text-align:left; font-size:9px;">
+      القاهرة، مصر<br>
+      توقيع المستلم: _______
+    </div>
+  </div>
+
+  <div class="footer">
+    شكراً لثقتكم بالفرات فارما! للاستفسارات تواصلوا معنا واتساب: 01146809133
+  </div>
+
+  <script>
+    try {
+      JsBarcode("#barcode-elem", "${barcodeValue}", {
+        format: "CODE128",
+        width: 1.4,
+        height: 36,
+        displayValue: false
+      });
+    } catch(e) {
+      console.warn('Barcode gen error:', e);
+    }
+    window.focus();
+  <\/script>
+</body>
+</html>`);
+  w.document.close();
+}
+
+// 2️⃣ طباعة فاتورة المبيعات الرسمية للعميل (A4 Retail / Tax Invoice)
+function printInvoice(id){
+  const o=allOrders.find(x=>String(x.id)===String(id));
+  if(!o){toast('الطلب غير موجود','error');return;}
+  const its=itemStats(o);
+  const isPaid = paymentStatusOf(o)==='paid' || paymentKind(o)==='card';
+  const barcodeValue = String(o.id).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16) || '1001';
+
+  let subtotal = 0;
+  let itemsRows = '';
+  its.items.forEach((it, idx)=>{
+    const price = Number(it.price)||0;
+    const qty = Number(it.qty)||1;
+    if(!it.isGift) subtotal += price * qty;
+    const rowTotal = it.isGift ? 'مجاني (هدية)' : money(price * qty) + ' ج.م';
+
+    itemsRows += `<tr>
+      <td style="text-align:center; width:40px;">${idx+1}</td>
+      <td style="font-weight:bold;">
+        ${escapeHtml(it.name||'-')}
+        ${it.isGift ? '<span style="background:#4d3ceb; color:#fff; font-size:10px; padding:1px 6px; border-radius:10px; margin-right:6px;">هدية مجانية</span>' : ''}
+      </td>
+      <td style="text-align:center; font-weight:bold; font-size:13px; width:60px;">${qty}</td>
+      <td style="text-align:left; font-family:sans-serif; width:90px;">${it.isGift ? '0.00' : money(price)} ج.م</td>
+      <td style="text-align:left; font-family:sans-serif; font-weight:bold; width:100px;">${rowTotal}</td>
+    </tr>`;
+  });
+
+  if(!subtotal) subtotal = Number(o.total)||0;
+  const discountAmount = Number(o.discount_amount)||Math.max(0, subtotal - (Number(o.total)||0));
+  const shipping = o.shipping != null ? Number(o.shipping) : 0;
+
+  const w = window.open('', '_blank', 'width=860,height=950');
+  w.document.write(`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>فاتورة مبيعات #INV-${escapeHtml(String(o.id))}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+  <style>
+    @page { size: A4 portrait; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      margin: 0;
+      padding: 24px;
+      color: #0f172a;
+      background: #fff;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-bottom: 2px solid #3312d5; padding-bottom: 14px; }
+    .brand-name { font-family: 'Cairo', sans-serif; font-size: 24px; font-weight: 900; color: #3312d5; }
+    .brand-en { font-size: 12px; color: #64748b; font-weight: bold; letter-spacing: 1px; }
+    .inv-title { font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 900; color: #0f172a; text-align: left; }
+    
+    .grid-info { display: flex; gap: 16px; margin-bottom: 20px; }
+    .info-card { flex: 1; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; background: #f8fafc; }
+    .info-card-title { font-size: 11px; font-weight: 900; color: #64748b; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
+    
+    table.items { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+    table.items th { background: #3312d5; color: #fff; padding: 10px 8px; font-weight: bold; font-size: 12px; border: 1px solid #3312d5; }
+    table.items td { padding: 9px 8px; border: 1px solid #e2e8f0; font-size: 13px; }
+    table.items tbody tr:nth-child(even) { background: #f8fafc; }
+    
+    .totals-wrap { display: flex; justify-content: flex-end; margin-bottom: 24px; }
+    .totals-table { width: 340px; border-collapse: collapse; }
+    .totals-table td { padding: 6px 10px; font-size: 13px; }
+    .totals-table .t-title { color: #64748b; text-align: right; }
+    .totals-table .t-val { text-align: left; font-family: sans-serif; font-weight: bold; }
+    .totals-table .grand { font-size: 18px; font-weight: 900; color: #3312d5; border-top: 2px solid #3312d5; border-bottom: 2px solid #3312d5; }
+    
+    .terms-box { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background: #faf8ff; font-size: 11px; color: #475569; margin-top: 20px; }
+    
+    @media print {
+      .no-print { display: none !important; }
+      body { padding: 0; }
+    }
+    .print-btn-bar {
+      position: sticky; top: 0; background: #f1f5f9; padding: 8px 16px; display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 20px; border-radius: 8px; border: 1px solid #cbd5e1; z-index: 99;
+    }
+    .btn-act { padding: 8px 20px; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 13px; }
+    .btn-p { background: #3312d5; color: #fff; box-shadow: 0 4px 12px rgba(51,18,213,0.3); }
+    .btn-c { background: #e2e8f0; color: #0f172a; }
+  </style>
+</head>
+<body>
+  <div class="print-btn-bar no-print">
+    <button class="btn-act btn-p" onclick="window.print()">🖨️ طباعة الفاتورة (A4 Print)</button>
+    <button class="btn-act btn-c" onclick="window.close()">إغلاق</button>
+  </div>
+
+  <table class="header-table">
+    <tr>
+      <td style="vertical-align:top;">
+        <div class="brand-name">صيدلية الفرات فارما</div>
+        <div class="brand-en">ELFORAT PHARMA STORE</div>
+        <div style="font-size:12px; color:#475569; margin-top:4px;">مستحضرات التجميل والعناية بالبشرة والشعر | مصر</div>
+        <div style="font-size:12px; color:#475569;">خدمة العملاء: 01146809133 | info@elforatpharma.com</div>
+      </td>
+      <td style="vertical-align:top; text-align:left;">
+        <div class="inv-title">فاتورة مبيعات</div>
+        <div style="font-size:14px; font-weight:bold; color:#3312d5; margin-top:2px;">#INV-${escapeHtml(String(o.id))}</div>
+        <div style="font-size:12px; color:#64748b; margin-top:4px;">تاريخ الإصدار: ${fmtDate(o.created_at)}</div>
+        <div style="margin-top:6px;">
+          <svg id="barcode-inv"></svg>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="grid-info">
+    <div class="info-card">
+      <div class="info-card-title">بيانات العميل والشحن (Bill To)</div>
+      <div style="font-size:15px; font-weight:900; color:#0f172a;">${escapeHtml(o.customerName||'عميل المتجر')}</div>
+      <div style="font-size:13px; font-weight:bold; margin-top:3px; direction:ltr; text-align:right;">${escapeHtml(o.phone||'-')}</div>
+      <div style="font-size:12px; color:#475569; margin-top:4px; line-height:1.4;">
+        <b>العنوان:</b> ${escapeHtml(o.address||'—')}
+      </div>
+      ${(o.notes||o.note)?`<div style="font-size:11px; color:#64748b; margin-top:4px;"><b>ملاحظات:</b> ${escapeHtml(o.notes||o.note)}</div>`:''}
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">تفاصيل الدفع والتسليم</div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+        <span style="color:#64748b;">طريقة الدفع:</span>
+        <b>${payOf(o) || 'الدفع عند الاستلام (COD)'}</b>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+        <span style="color:#64748b;">حالة الدفع:</span>
+        <b>${isPaid ? '<span style="color:#059669;">مدفوع إلكترونياً ✅</span>' : '<span style="color:#d97706;">تحصيل عند الاستلام ⏳</span>'}</b>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+        <span style="color:#64748b;">حالة الطلب:</span>
+        <b>${normStatus(o.status)}</b>
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <span style="color:#64748b;">المستودع المنفذ:</span>
+        <b>مستودع القاهرة المركزي (C-01)</b>
+      </div>
+    </div>
+  </div>
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th>م</th>
+        <th>بيان الصنف / المنتج</th>
+        <th style="text-align:center;">الكمية</th>
+        <th style="text-align:left;">سعر الوحدة</th>
+        <th style="text-align:left;">الإجمالي</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemsRows}
+    </tbody>
+  </table>
+
+  <div class="totals-wrap">
+    <table class="totals-table">
+      <tr>
+        <td class="t-title">المجموع الفرعي:</td>
+        <td class="t-val">${money(subtotal)} ج.م</td>
+      </tr>
+      ${(discountAmount > 0 || o.coupon) ? `
+      <tr>
+        <td class="t-title" style="color:#059669;">خصم الكوبون (${escapeHtml(o.coupon||o.couponCode||'خصم')}):</td>
+        <td class="t-val" style="color:#059669;">-${money(discountAmount)} ج.م</td>
+      </tr>` : ''}
+      ${shipping > 0 ? `
+      <tr>
+        <td class="t-title">مصاريف الشحن والتوصيل:</td>
+        <td class="t-val">${money(shipping)} ج.م</td>
+      </tr>` : ''}
+      <tr>
+        <td class="t-title grand">المبلغ الإجمالي المستحق:</td>
+        <td class="t-val grand">${money(o.total)} ج.م</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:30px;">
+    <div class="terms-box" style="flex:1; margin-left:24px; margin-top:0;">
+      <b>سياسة الاستبدال والاسترجاع:</b><br>
+      • يحق للعميل استبدال أو إرجاع المنتجات غير المستخدمة وبتغليفها الأصلي خلال 14 يوماً من تاريخ الاستلام طبقاً لقانون حماية المستهلك.<br>
+      • لأي استفسار أو متابعة طبية يُرجى التواصل عبر واتساب خدمة العملاء: <b>01146809133</b>.
+    </div>
+    <div style="text-align:center; width:180px;">
+      <div style="font-size:12px; color:#64748b; margin-bottom:45px;">ختم واعتماد الصيدلية</div>
+      <div style="border-top:1px solid #94a3b8; padding-top:4px; font-weight:bold; font-size:12px;">إدارة الفرات فارما</div>
+    </div>
+  </div>
+
+  <script>
+    try {
+      JsBarcode("#barcode-inv", "${barcodeValue}", {
+        format: "CODE128",
+        width: 1.2,
+        height: 30,
+        displayValue: false
+      });
+    } catch(e) {
+      console.warn('Barcode gen error:', e);
+    }
+    window.focus();
+  <\/script>
+</body>
+</html>`);
   w.document.close();
 }
 

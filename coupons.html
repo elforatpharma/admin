@@ -476,7 +476,7 @@
   function computeKPIs(){
     const today=todayStr();
     const cancelled=['ملغي','ملغية','مرجوع','مرفوض'];
-    const valid=orders.filter(o=>!cancelled.includes(String(o.status||'')).trim());
+    const valid=orders.filter(o=>!cancelled.includes(String(o.status||'').trim()));
     const active=coupons.filter(c=>c.is_active!==false&&!isExpired(c));
     const withCoupon=valid.filter(o=>couponCode(o));
 
@@ -734,7 +734,7 @@
       const desc=`${typeLabel} (${value}${type==='percent'?'%':' ج.م'}) · الحد الأدنى ${min} ج.م`+(avoidJabri?' · يستثني الأدوية الجبرية':'')+(pharOnly?' · للصيدليات المعتمدة فقط':'');
       const expires=new Date(Date.now()+30*86400000).toISOString().split('T')[0];
       const discount=Math.min(99,Math.max(1,type==='percent'?Math.round(value):Math.round(value/10)));
-      const{error}=await _supabase.from('coupons').insert([{code,discount_percentage:discount,expiry_date:expires,description:desc,is_active:true}]);
+      const{error}=await _supabase.from('coupons').insert([{code,discount_percentage:discount,expiry_date:expires,description:desc,is_active:true,min_amount:min>0?min:null}]);
       if(error)throw error;
       toast('success','تم نشر وتفعيل العرض '+code+' بنجاح!');
       e.target.reset();

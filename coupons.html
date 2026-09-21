@@ -81,7 +81,7 @@
             <span class="material-symbols-outlined text-[20px] text-success">chat</span>
             <span>حملات واتساب السريعة</span>
           </button>
-          <button onclick="document.getElementById('quick-coupon-drawer').scrollIntoView({behavior:'smooth'})" class="flex items-center gap-space-xs bg-brand-gradient hover:bg-brand-gradient-hover text-on-primary px-6 py-2.5 rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] hover:shadow-[0px_12px_24px_rgba(77,60,235,0.4)] transition-all transform hover:-translate-y-0.5 font-label-lg text-label-lg">
+          <button onclick="document.getElementById('quick-coupon-drawer').scrollIntoView({behavior:'smooth'})" class="flex items-center gap-space-xs btn-brand-gradient text-on-primary px-6 py-2.5 rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] hover:shadow-[0px_12px_24px_rgba(77,60,235,0.4)] transition-all transform hover:-translate-y-0.5 font-label-lg text-label-lg">
             <span class="material-symbols-outlined text-[20px]">add_circle</span>
             <span>إنشاء كود خصم / عرض جديد</span>
           </button>
@@ -259,7 +259,7 @@
               <div>
                 <label class="font-label-md text-label-md text-on-surface block mb-1">رمز الكوبون (Coupon Code)</label>
                 <div class="flex items-center gap-2">
-                  <input id="input-coupon-code" class="w-full h-11 px-4 bg-canvas-bg rounded-xl font-headline-sm text-headline-sm text-primary uppercase focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="مثال: PHARMA10" type="text" value=""/>
+                  <input id="gen-code" oninput="updatePreview();" class="w-full h-11 px-4 bg-canvas-bg rounded-xl font-headline-sm text-headline-sm text-primary uppercase focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="مثال: PHARMA10" type="text" value=""/>
                   <button type="button" class="h-11 px-3 bg-surface-container-high text-primary rounded-xl font-label-md text-label-md hover:bg-primary-surface transition-colors" onclick="randomCode()" title="توليد عشوائي">
                     <span class="material-symbols-outlined text-[20px]">casino</span>
                   </button>
@@ -295,7 +295,7 @@
                   <span>تطبيق على الصيدليات والمراكز المعتمدة فقط</span>
                 </label>
               </div>
-              <button type="submit" class="w-full bg-brand-gradient hover:bg-brand-gradient-hover text-on-primary py-3 rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] transition-all font-label-lg text-label-lg mt-2 flex items-center justify-center gap-2">
+              <button type="submit" class="w-full btn-brand-gradient text-on-primary py-3 rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] transition-all font-label-lg text-label-lg mt-2 flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-[18px]">publish</span>
                 <span>نشر وتفعيل العرض فوراً</span>
               </button>
@@ -596,7 +596,7 @@
           <span class="text-on-surface font-bold font-data-tabular">${usage} / ${cap} كود (${pct}%)</span>
         </div>
         <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-          <div class="h-full bg-brand-gradient rounded-full" style="width:${pct}%"></div>
+          <div class="h-full rounded-full" style="width:${pct}%;background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)"></div>
         </div>
       </div>
     </div>`;

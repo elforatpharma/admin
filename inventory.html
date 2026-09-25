@@ -750,14 +750,15 @@ async function newProductModal(){
   if(fv.expiry)payload.expiry=fv.expiry;
   if(fv.imgUrl)payload.img=fv.imgUrl;
   try{
-    const{data:inserted,error}=await _supabase.from('products').insert(payload).select('id').single();
+    const{data:inserted,error}=await _supabase.from('products').insert(payload).select('id');
     if(error)throw error;
     toast('success','تمت إضافة الصنف للمخزون وسيظهر في المتجر مباشرة');
     fetchProducts();
     // فتح نموذج التعديل لإضافة صور معرض المنتج مباشرةً
-    if(inserted&&inserted.id){
+    const newId = inserted && inserted.length > 0 ? inserted[0].id : null;
+    if(newId){
       setTimeout(()=>{
-        Swal.fire({icon:'question',title:'إضافة صور معرض المنتج',text:'هل تريد إضافة صور إضافية لمعرض هذا المنتج الآن؟',showCancelButton:true,confirmButtonText:'نعم، أضف الآن',cancelButtonText:'لاحقاً',confirmButtonColor:'#4d3ceb'}).then(r=>{if(r.isConfirmed){editProduct(inserted.id);}});
+        Swal.fire({icon:'question',title:'إضافة صور معرض المنتج',text:'هل تريد إضافة صور إضافية لمعرض هذا المنتج الآن؟',showCancelButton:true,confirmButtonText:'نعم، أضف الآن',cancelButtonText:'لاحقاً',confirmButtonColor:'#4d3ceb'}).then(r=>{if(r.isConfirmed){editProduct(newId);}});
       },600);
     }
   }catch(e){toast('error','فشل الإضافة: '+(e.message||''));}
@@ -798,6 +799,8 @@ function setupGalleryHandlers(productId,initialGallery){
       }
       const{error}=await _supabase.from('products').update({gallery:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
       if(error)throw error;
+      const p = products.find(x => String(x.id) === String(window.__egGalleryProductId));
+      if(p) p.gallery = [...window.__egGalleryState];
       window.__egRenderGallery();
       toast('success','تمت إضافة الصور لمعرض المنتج');
     }catch(err){
@@ -815,6 +818,8 @@ function setupGalleryHandlers(productId,initialGallery){
     try{
       const{error}=await _supabase.from('products').update({gallery:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
       if(error)throw error;
+      const p = products.find(x => String(x.id) === String(window.__egGalleryProductId));
+      if(p) p.gallery = [...window.__egGalleryState];
       if(window.deleteStorageFile)deleteStorageFile(removed).catch(()=>{});
       window.__egRenderGallery();
       toast('success','تم حذف الصورة من المعرض');

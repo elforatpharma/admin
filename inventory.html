@@ -335,7 +335,7 @@
 <script src="layout.js"></script>
 <script>
 let products=[],page=1,perPage=10,warehouse='all',statusF='all',hideCols=new Set(),sel=new Set();
-let HAS_STOCK=false,HAS_ACTIVE=false,HAS_BARCODE=false,HAS_EXPIRY=false,HAS_BATCH=false;
+let HAS_STOCK=false,HAS_ACTIVE=false,HAS_BARCODE=false,HAS_EXPIRY=false,HAS_BATCH=false,HAS_GALLERY=false;
 
 function lowThreshold(o){const r=Number(o.reorder_level)||10;return r;}
 function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
@@ -381,6 +381,7 @@ async function detectColumns(){
     HAS_BARCODE=('barcode' in row||'sku' in row);
     HAS_EXPIRY=('expiry' in row||'expiry_date' in row);
     HAS_BATCH=('batch' in row||'batch_no' in row||'lot' in row);
+    HAS_GALLERY=('gallery' in row);
   }catch(e){}
 }
 
@@ -391,7 +392,17 @@ function productSelectColumns(){
   if(HAS_BARCODE)cols.push('barcode','sku');
   if(HAS_EXPIRY)cols.push('expiry','expiry_date');
   if(HAS_BATCH)cols.push('batch','batch_no','lot');
+  if(HAS_GALLERY)cols.push('gallery');
   return [...new Set(cols)].join(',');
+}
+
+function normalizeGallery(g){
+  if(Array.isArray(g))return g.filter(Boolean);
+  if(typeof g==='string'&&g.trim()){
+    try{const parsed=JSON.parse(g);if(Array.isArray(parsed))return parsed.filter(Boolean);}catch(e){}
+    return g.split(',').map(s=>s.trim()).filter(Boolean);
+  }
+  return [];
 }
 
 async function fetchProducts(){
@@ -733,10 +744,74 @@ async function newProductModal(){
   }catch(e){toast('error','فشل الإضافة');}
 }
 
+function setupGalleryHandlers(productId,initialGallery){
+  window.__egGalleryState=Array.isArray(initialGallery)?[...initialGallery]:[];
+  window.__egGalleryProductId=productId;
+  window.__egRenderGallery=function(){
+    const box=document.getElementById('e-gallery-grid');
+    if(!box)return;
+    const list=window.__egGalleryState||[];
+    box.innerHTML=list.length?list.map((url,i)=>`
+      <div style="position:relative;width:64px;height:64px;">
+        <img src="${escapeHtml(url)}" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;background:#f2f3ff;" onerror="this.style.opacity='0.25'">
+        <button type="button" title="حذف من المعرض" onclick="window.__egRemoveGalleryImage(${i})" style="position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:9999px;background:#ef4444;color:#fff;border:2px solid #fff;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
+      </div>`).join(''):'<div style="color:#64748b;font-size:13px;">لا توجد صور إضافية بعد.</div>';
+  };
+  window.__egAddGalleryFiles=async function(fileList){
+    const files=Array.from(fileList||[]);
+    if(!files.length)return;
+    const input=document.getElementById('e-gallery-file');
+    if(input)input.value='';
+    Swal.showLoading();
+    try{
+      for(const file of files){
+        let upFile=file;
+        if(window.resizeImage){
+          const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);
+          upFile=await dataUrlToBlob(dataUrl,'image/jpeg');
+        }
+        const fileName=sanitizeFileName(file.name);
+        const path=`uploads/gallery/${window.__egGalleryProductId}-${Date.now()}-${fileName}`;
+        const{error:upErr}=await _supabase.storage.from('products').upload(path,upFile,{contentType:upFile.type||'image/jpeg'});
+        if(upErr)throw upErr;
+        const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(path);
+        window.__egGalleryState.push(publicUrl);
+      }
+      const{error}=await _supabase.from('products').update({gallery:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
+      if(error)throw error;
+      window.__egRenderGallery();
+      toast('success','تمت إضافة الصور لمعرض المنتج');
+    }catch(err){
+      toast('error','فشل رفع إحدى صور المعرض: '+(err.message||''));
+    }finally{
+      Swal.hideLoading();
+    }
+  };
+  window.__egRemoveGalleryImage=async function(idx){
+    const url=window.__egGalleryState[idx];
+    if(!url)return;
+    const ok=await confirmDialog('حذف هذه الصورة من المعرض؟','لن تظهر هذه الصورة في صفحة عرض المنتج بالمتجر بعد الحذف.');
+    if(!ok)return;
+    const removed=window.__egGalleryState.splice(idx,1)[0];
+    try{
+      const{error}=await _supabase.from('products').update({gallery:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
+      if(error)throw error;
+      if(window.deleteStorageFile)deleteStorageFile(removed).catch(()=>{});
+      window.__egRenderGallery();
+      toast('success','تم حذف الصورة من المعرض');
+    }catch(err){
+      window.__egGalleryState.splice(idx,0,removed);
+      window.__egRenderGallery();
+      toast('error','فشل حذف الصورة: '+(err.message||''));
+    }
+  };
+}
+
 async function editProduct(id){
   const p=products.find(x=>String(x.id)===String(id));
   if(!p)return;
   const currentImg=p.img||p.image||'';
+  if(HAS_GALLERY)setupGalleryHandlers(id,normalizeGallery(p.gallery));
   const{value:fv}=await Swal.fire({
     title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">edit_square</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">تعديل بيانات الصنف</span><span class="efp-modal-title-sub">${escapeHtml(p.name||'')}</span></div></div>`,
     width:600,
@@ -746,6 +821,8 @@ async function editProduct(id){
     customClass:{container:'efp-modal-container',popup:'efp-modal-popup',htmlContainer:'efp-modal-html',closeButton:'efp-modal-close',actions:'efp-modal-actions',confirmButton:'efp-modal-confirm',cancelButton:'efp-modal-cancel'},
     showClass:{popup:'efp-modal-show'},
     hideClass:{popup:'efp-modal-hide'},
+    didOpen:()=>{if(window.__egRenderGallery)window.__egRenderGallery();},
+    didClose:()=>{window.__egRenderGallery=null;window.__egAddGalleryFiles=null;window.__egRemoveGalleryImage=null;},
     html:`<div class="efp-field-group">
         <label class="efp-label">اسم الصنف *</label>
         <input id="e-name" class="swal2-input efp-input" value="${escapeHtml(p.name||'')}">
@@ -783,7 +860,13 @@ async function editProduct(id){
           <img id="e-img-preview" src="${escapeHtml(currentImg)}" onerror="this.style.visibility='hidden'">
           <input id="e-img-file" type="file" accept="image/jpeg,image/png,image/webp">
         </div>
-      </div>`,
+      </div>
+      ${HAS_GALLERY?`<div class="efp-field-group">
+        <label class="efp-label">معرض صور المنتج <span style="font-weight:400;color:#64748b;">(تظهر في صفحة عرض المنتج بالمتجر)</span></label>
+        <div id="e-gallery-grid" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;min-height:0;"></div>
+        <input id="e-gallery-file" type="file" accept="image/jpeg,image/png,image/webp" multiple onchange="window.__egAddGalleryFiles(this.files)">
+        <div style="margin-top:6px;font-size:12px;color:#64748b;">يمكن اختيار أكثر من صورة دفعة واحدة. الحذف فوري ولا يحتاج حفظ.</div>
+      </div>`:''}`,
     showCancelButton:true,confirmButtonText:'حفظ التعديلات',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
     focusConfirm:false,
     preConfirm:async()=>{

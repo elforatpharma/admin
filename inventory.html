@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
@@ -386,13 +386,12 @@ async function detectColumns(){
 }
 
 function productSelectColumns(){
-  const cols=['id','name','category','price','oldPrice','discount','img','image','brand','science_name','desc','ingredients','created_at','reorder_level'];
+  const cols=['id','name','category','price','oldPrice','discount','img','image','brand','science_name','desc','ingredients','created_at','reorder_level','gallery'];
   if(HAS_STOCK)cols.push('stock');
   if(HAS_ACTIVE)cols.push('is_active');
   if(HAS_BARCODE)cols.push('barcode','sku');
   if(HAS_EXPIRY)cols.push('expiry','expiry_date');
   if(HAS_BATCH)cols.push('batch','batch_no','lot');
-  if(HAS_GALLERY)cols.push('gallery');
   return [...new Set(cols)].join(',');
 }
 
@@ -702,11 +701,11 @@ async function newProductModal(){
       ${HAS_STOCK?'<div class="efp-field-group"><label class="efp-label">الرصيد الابتدائي</label><input id="swal-stock" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0"></div>':''}
       ${HAS_EXPIRY?'<div class="efp-field-group"><label class="efp-label">تاريخ الانتهاء</label><input id="swal-expiry" class="swal2-input efp-input" type="date"></div>':''}
       <div class="efp-field-group">
-        <label class="efp-label">رابط الصورة (اختياري)</label>
-        <input id="swal-img" class="swal2-input efp-input" placeholder="https://...">
+        <label class="efp-label">صورة المنتج الرئيسية</label>
+        <input id="swal-img-file" type="file" accept="image/jpeg,image/png,image/webp" class="swal2-input efp-input" style="padding:6px;height:auto;">
       </div>`,
     showCancelButton:true,confirmButtonText:'إضافة للمخزون',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
-    preConfirm:()=>{
+    preConfirm:async()=>{
       const name=document.getElementById('swal-name').value.trim();
       if(!name){Swal.showValidationMessage('اسم الصنف مطلوب');return false;}
       const priceRaw=document.getElementById('swal-price').value;
@@ -715,6 +714,21 @@ async function newProductModal(){
       if(!(price>0)){Swal.showValidationMessage('السعر لازم يكون أكبر من صفر');return false;}
       const stockEl=document.getElementById('swal-stock');
       if(stockEl&&stockEl.value===''){Swal.showValidationMessage('الرصيد الابتدائي مطلوب (اكتب 0 لو فعلاً مفيش رصيد)');return false;}
+      // رفع الصورة الرئيسية إن اختار المستخدم ملفاً
+      let imgUrl='';
+      const imgFileEl=document.getElementById('swal-img-file');
+      if(imgFileEl&&imgFileEl.files[0]){
+        try{
+          Swal.showLoading();
+          let upFile=imgFileEl.files[0];
+          if(window.resizeImage){const dUrl=await resizeImage(await blobToDataUrl(upFile),1200,1200);upFile=await dataUrlToBlob(dUrl,'image/jpeg');}
+          const fn=sanitizeFileName(imgFileEl.files[0].name);
+          const{error:upErr}=await _supabase.storage.from('products').upload(`uploads/${fn}`,upFile,{contentType:upFile.type||'image/jpeg'});
+          if(upErr)throw upErr;
+          const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fn}`);
+          imgUrl=publicUrl;
+        }catch(err){Swal.showValidationMessage('فشل رفع الصورة: '+(err.message||''));return false;}
+      }
       return{
         name,
         category:document.getElementById('swal-warehouse').value.trim(),
@@ -722,26 +736,31 @@ async function newProductModal(){
         discount:Number(document.getElementById('swal-disc').value)||0,
         stock:stockEl?Number(stockEl.value):undefined,
         expiry:document.getElementById('swal-expiry')?document.getElementById('swal-expiry').value:undefined,
-        image:document.getElementById('swal-img').value.trim()
+        imgUrl
       };
     }
   });
   if(!fv)return;
-  // نحوّل نسبة الخصم لسعر "قبل الخصم" وشارة نصية، عشان تتوافق مع أعمدة المتجر (img/oldPrice)
   const oldPrice=fv.discount>0?Math.round(fv.price/(1-Math.min(fv.discount,90)/100)):null;
-  const payload={name:fv.name,price:fv.price,is_active:true};
+  const payload={name:fv.name,price:fv.price,is_active:true,gallery:[]};
   if(fv.category)payload.category=fv.category;
   if(oldPrice)payload.oldPrice=oldPrice;
   if(fv.discount>0)payload.badge='خصم '+fv.discount+'%';
   if(fv.stock!==undefined)payload.stock=fv.stock;
   if(fv.expiry)payload.expiry=fv.expiry;
-  if(fv.image)payload.img=fv.image;
+  if(fv.imgUrl)payload.img=fv.imgUrl;
   try{
-    const{error}=await _supabase.from('products').insert(payload);
+    const{data:inserted,error}=await _supabase.from('products').insert(payload).select('id').single();
     if(error)throw error;
     toast('success','تمت إضافة الصنف للمخزون وسيظهر في المتجر مباشرة');
     fetchProducts();
-  }catch(e){toast('error','فشل الإضافة');}
+    // فتح نموذج التعديل لإضافة صور معرض المنتج مباشرةً
+    if(inserted&&inserted.id){
+      setTimeout(()=>{
+        Swal.fire({icon:'question',title:'إضافة صور معرض المنتج',text:'هل تريد إضافة صور إضافية لمعرض هذا المنتج الآن؟',showCancelButton:true,confirmButtonText:'نعم، أضف الآن',cancelButtonText:'لاحقاً',confirmButtonColor:'#4d3ceb'}).then(r=>{if(r.isConfirmed){editProduct(inserted.id);}});
+      },600);
+    }
+  }catch(e){toast('error','فشل الإضافة: '+(e.message||''));}
 }
 
 function setupGalleryHandlers(productId,initialGallery){
@@ -811,7 +830,7 @@ async function editProduct(id){
   const p=products.find(x=>String(x.id)===String(id));
   if(!p)return;
   const currentImg=p.img||p.image||'';
-  if(HAS_GALLERY)setupGalleryHandlers(id,normalizeGallery(p.gallery));
+  setupGalleryHandlers(id,normalizeGallery(p.gallery));
   const{value:fv}=await Swal.fire({
     title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">edit_square</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">تعديل بيانات الصنف</span><span class="efp-modal-title-sub">${escapeHtml(p.name||'')}</span></div></div>`,
     width:600,
@@ -861,12 +880,12 @@ async function editProduct(id){
           <input id="e-img-file" type="file" accept="image/jpeg,image/png,image/webp">
         </div>
       </div>
-      ${HAS_GALLERY?`<div class="efp-field-group">
+      <div class="efp-field-group">
         <label class="efp-label">معرض صور المنتج <span style="font-weight:400;color:#64748b;">(تظهر في صفحة عرض المنتج بالمتجر)</span></label>
         <div id="e-gallery-grid" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;min-height:0;"></div>
         <input id="e-gallery-file" type="file" accept="image/jpeg,image/png,image/webp" multiple onchange="window.__egAddGalleryFiles(this.files)">
         <div style="margin-top:6px;font-size:12px;color:#64748b;">يمكن اختيار أكثر من صورة دفعة واحدة. الحذف فوري ولا يحتاج حفظ.</div>
-      </div>`:''}`,
+      </div>`,
     showCancelButton:true,confirmButtonText:'حفظ التعديلات',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
     focusConfirm:false,
     preConfirm:async()=>{

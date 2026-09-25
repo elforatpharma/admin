@@ -386,6 +386,19 @@
           </div>
           <input type="file" id="p-img" accept="image/jpeg,image/png,image/webp" class="hidden"/>
         </div></div>
+      <!-- معرض صور المنتج -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">
+          معرض الصور <span class="text-gray-300 font-normal normal-case">(تظهر في صفحة المنتج بالمتجر)</span>
+        </label>
+        <div id="admin-gallery-grid" class="flex flex-wrap gap-2 mb-1 min-h-0"></div>
+        <label class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 hover:border-primary/30 hover:bg-primary/5 cursor-pointer transition-all">
+          <span class="material-symbols-outlined text-lg text-gray-300">add_photo_alternate</span>
+          <span class="text-xs text-gray-400 font-bold">إضافة صور للمعرض (يمكن تحديد أكثر من صورة)</span>
+          <input type="file" id="admin-gallery-input" accept="image/jpeg,image/png,image/webp" multiple class="hidden" onchange="addAdminGalleryFiles(this.files)">
+        </label>
+        <p class="text-[10px] text-gray-300">صور إضافية تظهر في معرض صفحة عرض المنتج بالمتجر.</p>
+      </div>
       <div class="flex gap-3 pt-2">
         <button type="submit" class="flex-1 btn-brand-gradient py-3.5 font-black text-sm transition-transform hover:scale-[1.01]">حفظ المنتج في المتجر</button>
         <button type="button" onclick="closeModal()" class="px-6 bg-gray-100 text-gray-600 py-3.5 rounded-full font-bold text-sm hover:bg-gray-200 transition-all">إلغاء</button>
@@ -592,16 +605,76 @@ function closeModal(){modal.classList.add("hidden");modal.classList.remove("flex
 function openGiftModal(){const m=document.getElementById('gift-modal');m.classList.remove('hidden');m.classList.add('flex');}
 function closeGiftModal(){const m=document.getElementById('gift-modal');m.classList.add('hidden');m.classList.remove('flex');document.getElementById('gift-form').reset();}
 
+// Gallery state for add-product modal
+let adminGalleryFiles=[];
+
+function addAdminGalleryFiles(fileList){
+  Array.from(fileList||[]).forEach(f=>{
+    if(!['image/jpeg','image/png','image/webp'].includes(f.type))return;
+    adminGalleryFiles.push({file:f,previewUrl:URL.createObjectURL(f)});
+  });
+  const inp=document.getElementById('admin-gallery-input');if(inp)inp.value='';
+  renderAdminGalleryPreview();
+}
+
+function removeAdminGalleryItem(idx){
+  URL.revokeObjectURL(adminGalleryFiles[idx].previewUrl);
+  adminGalleryFiles.splice(idx,1);
+  renderAdminGalleryPreview();
+}
+
+function renderAdminGalleryPreview(){
+  const box=document.getElementById('admin-gallery-grid');
+  if(!box)return;
+  box.innerHTML=adminGalleryFiles.length?adminGalleryFiles.map((item,i)=>`
+    <div style="position:relative;width:72px;height:72px;">
+      <img src="${item.previewUrl}" style="width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;background:#f2f3ff;" onerror="this.style.opacity='0.3'">
+      <button type="button" title="حذف" onclick="removeAdminGalleryItem(${i})" style="position:absolute;top:-7px;left:-7px;width:22px;height:22px;border-radius:9999px;background:#ef4444;color:#fff;border:2px solid #fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
+    </div>`).join(''):'';
+}
+
 // Product Form
 document.getElementById("add-form").onsubmit=async(e)=>{
-  e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');btn.innerHTML='<span class="material-symbols-outlined animate-spin text-sm">refresh</span> جاري الحفظ...';btn.disabled=true;
-  try{let file=document.getElementById("p-img").files[0];if(!file)throw new Error("يرجى اختيار صورة للمنتج");
-  if(window.resizeImage){const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);file=await dataUrlToBlob(dataUrl,'image/jpeg');}
-  const fileName=sanitizeFileName(file.name);const{error:imgError}=await _supabase.storage.from('products').upload(`uploads/${fileName}`,file,{contentType:file.type||'image/jpeg'});if(imgError)throw imgError;
-  const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
-  const productData={name:document.getElementById("p-name").value,price:Number(document.getElementById("p-price").value),oldPrice:document.getElementById("p-oldPrice").value?Number(document.getElementById("p-oldPrice").value):null,stock:Number(document.getElementById("p-stock").value)||0,category:document.getElementById("p-cat").value,badge:document.getElementById("p-badge").value,desc:document.getElementById("p-desc").value,ingredients:document.getElementById("p-ingredients").value,img:publicUrl,priority:0,created_at:new Date()};
-  const{error:dbError}=await _supabase.from('products').insert([productData]);if(dbError)throw dbError;
-  closeModal();toast('success','تم إضافة المنتج بنجاح!');e.target.reset();if(imageUploader)imageUploader.removeImage();fetchStats();
+  e.preventDefault();
+  const btn=e.target.querySelector('button[type="submit"]');
+  btn.innerHTML='<span class="material-symbols-outlined animate-spin text-sm">refresh</span> جاري الحفظ...';
+  btn.disabled=true;
+  try{
+    // رفع الصورة الرئيسية
+    let file=document.getElementById("p-img").files[0];
+    if(!file)throw new Error("يرجى اختيار صورة للمنتج");
+    if(window.resizeImage){const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);file=await dataUrlToBlob(dataUrl,'image/jpeg');}
+    const fileName=sanitizeFileName(file.name);
+    const{error:imgError}=await _supabase.storage.from('products').upload(`uploads/${fileName}`,file,{contentType:file.type||'image/jpeg'});
+    if(imgError)throw imgError;
+    const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
+
+    // رفع صور المعرض (إن وُجدت)
+    const galleryUrls=[];
+    for(let i=0;i<adminGalleryFiles.length;i++){
+      try{
+        let gFile=adminGalleryFiles[i].file;
+        if(window.resizeImage){const gDataUrl=await resizeImage(await blobToDataUrl(gFile),1200,1200);gFile=await dataUrlToBlob(gDataUrl,'image/jpeg');}
+        const gName=`gallery-${Date.now()}-${i}-${sanitizeFileName(adminGalleryFiles[i].file.name)}`;
+        const{error:gErr}=await _supabase.storage.from('products').upload(`uploads/gallery/${gName}`,gFile,{contentType:gFile.type||'image/jpeg'});
+        if(!gErr){const{data:{publicUrl:gUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/gallery/${gName}`);galleryUrls.push(gUrl);}
+      }catch(ge){console.warn('gallery img warn:',ge);}
+    }
+
+    // حفظ المنتج مع المعرض
+    const productData={name:document.getElementById("p-name").value,price:Number(document.getElementById("p-price").value),oldPrice:document.getElementById("p-oldPrice").value?Number(document.getElementById("p-oldPrice").value):null,stock:Number(document.getElementById("p-stock").value)||0,category:document.getElementById("p-cat").value,badge:document.getElementById("p-badge").value,desc:document.getElementById("p-desc").value,ingredients:document.getElementById("p-ingredients").value,img:publicUrl,gallery:galleryUrls,priority:0,created_at:new Date()};
+    const{error:dbError}=await _supabase.from('products').insert([productData]);
+    if(dbError)throw dbError;
+
+    // تنظيف وإغلاق
+    closeModal();
+    toast('success',`تم إضافة المنتج بنجاح!${galleryUrls.length?' ('+galleryUrls.length+' صور معرض)':''}`);
+    e.target.reset();
+    if(imageUploader)imageUploader.removeImage();
+    adminGalleryFiles.forEach(item=>URL.revokeObjectURL(item.previewUrl));
+    adminGalleryFiles=[];
+    renderAdminGalleryPreview();
+    fetchStats();
   }catch(error){toast('error','حدث خطأ: '+(error.message||'تأكد من إعدادات سوبابيز'));}
   finally{btn.innerHTML="حفظ المنتج في المتجر";btn.disabled=false;}
 };

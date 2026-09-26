@@ -1,4 +1,4 @@
-﻿// ===== layout.js =====
+// ===== layout.js =====
 // مكونات واجهة مشتركة (Sidebar + Auth) لجميع صفحات لوحة التحكم
 
 // ---- التحقق من الجلسة وأن المستخدم هو الآدمن المسموح ----
@@ -45,11 +45,12 @@ function injectLayoutStyles() {
       #app-sidebar.open{transform:translateX(0);}
       #sidebar-overlay{display:block;opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s;}
       #sidebar-overlay.open{opacity:1;visibility:visible;}
-      main{width:100%;}
+      main{width:100%;padding-bottom:80px;}
     }
     @media (min-width:1024px){
       #sidebar-overlay{display:none;}
       #mobile-menu-btn{display:none;}
+      main{padding-bottom:0;}
     }
   `;
   document.head.appendChild(style);

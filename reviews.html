@@ -1,0 +1,313 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>تقييمات وآراء العملاء - الفرات فارما</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{primary:"#3312d5",secondary:"#6a00e1"},fontFamily:{display:["Cairo","sans-serif"]}}}};</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
+    ::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
+    .nav-active{background:linear-gradient(135deg,rgba(77,60,235,.08),rgba(77,60,235,.04));color:#4d3ceb;border-right:3px solid #4d3ceb;}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+    .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
+    .font-display{font-family:'Cairo',sans-serif;}
+  </style>
+</head>
+<body class="text-gray-900 antialiased">
+<div class="flex h-screen overflow-hidden">
+
+  <div id="sidebar-placeholder"></div>
+
+  <main class="flex-1 lg:mr-64 overflow-y-auto">
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-8 py-4 flex items-center justify-between">
+      <div>
+        <h2 class="font-display text-xl font-black text-gray-900 tracking-tight">تقييمات وآراء العملاء</h2>
+        <p class="text-xs text-gray-400 font-medium mt-0.5">إدارة مراجعات المنتجات المنشورة في المتجر وتعزيز الثقة</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openAddReviewModal()" class="flex items-center gap-2 btn-brand-gradient px-4 py-2.5 rounded-xl text-sm font-bold transition-all">
+          <span class="material-symbols-outlined text-[18px]">add_circle</span>إضافة تقييم يدوي
+        </button>
+        <button onclick="loadReviews()" class="flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-700 transition-all">
+          <span class="material-symbols-outlined text-[18px]">refresh</span>تحديث
+        </button>
+      </div>
+    </header>
+
+    <div class="p-8 space-y-6 max-w-[1400px] mx-auto">
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider mb-1">إجمالي التقييمات</p>
+          <h3 id="stat-total" class="text-3xl font-black text-gray-900">0</h3>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider mb-1">متوسط التقييم العام</p>
+          <div class="flex items-center gap-2">
+            <h3 id="stat-avg" class="text-3xl font-black text-amber-500">5.0</h3>
+            <span class="text-amber-400 text-xl">★</span>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider mb-1">تقييمات 5 نجوم (ممتاز)</p>
+          <h3 id="stat-5stars" class="text-3xl font-black text-emerald-500">0</h3>
+        </div>
+      </div>
+
+      <!-- Filters & Table -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="flex border-b border-gray-100 px-6 gap-6 overflow-x-auto">
+          <button id="tab-all" onclick="setFilter('all')" class="py-4 text-xs font-black border-b-2 border-primary text-primary transition-all">الكل</button>
+          <button id="tab-approved" onclick="setFilter('approved')" class="py-4 text-xs font-black border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">معتمدة بالمتجر</button>
+          <button id="tab-pending" onclick="setFilter('pending')" class="py-4 text-xs font-black border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-all">بانتظار المراجعة</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-sm">
+            <thead class="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100">
+              <tr>
+                <th class="px-6 py-4">العميل</th>
+                <th class="px-6 py-4">المنتج</th>
+                <th class="px-6 py-4">التقييم</th>
+                <th class="px-6 py-4">نص التجربة / التعليق</th>
+                <th class="px-6 py-4">التاريخ</th>
+                <th class="px-6 py-4 text-center">الحالة</th>
+                <th class="px-6 py-4 text-center">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="reviews-body" class="divide-y divide-gray-50 font-medium">
+              <tr><td colspan="7" class="text-center py-16 text-gray-300">جاري تحميل التقييمات...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="layout.js"></script>
+<script>
+let allReviews = [];
+let allProducts = [];
+let currentFilter = 'all';
+
+async function loadProductsList(){
+  try{
+    const { data } = await _supabase.from('products').select('id, name').order('name');
+    if(data) allProducts = data;
+  }catch(e){ console.warn(e); }
+}
+
+async function loadReviews(){
+  try{
+    const { data, error } = await _supabase
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if(error){
+      console.warn('Reviews error:', error);
+      document.getElementById('reviews-body').innerHTML = `<tr><td colspan="7" class="text-center py-12 text-rose-400 font-bold">تأكد من إنشاء جدول reviews في Supabase أولاً</td></tr>`;
+      return;
+    }
+
+    allReviews = data || [];
+    render();
+    updateStats();
+  }catch(err){
+    console.error('loadReviews error:', err);
+  }
+}
+
+function updateStats(){
+  const total = allReviews.length;
+  const fiveStars = allReviews.filter(r => Number(r.rating) === 5).length;
+  let avg = 5.0;
+  if(total > 0){
+    const sum = allReviews.reduce((s, r) => s + Number(r.rating || 5), 0);
+    avg = (sum / total).toFixed(1);
+  }
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-avg').textContent = avg;
+  document.getElementById('stat-5stars').textContent = fiveStars;
+}
+
+function setFilter(f){
+  currentFilter = f;
+  document.querySelectorAll('[id^="tab-"]').forEach(b => {
+    b.classList.remove('border-primary', 'text-primary');
+    b.classList.add('border-transparent', 'text-gray-400');
+  });
+  const activeTab = document.getElementById('tab-' + f);
+  if(activeTab){
+    activeTab.classList.remove('border-transparent', 'text-gray-400');
+    activeTab.classList.add('border-primary', 'text-primary');
+  }
+  render();
+}
+
+function render(){
+  const tbody = document.getElementById('reviews-body');
+  const filtered = allReviews.filter(r => {
+    if(currentFilter === 'approved') return r.is_approved === true;
+    if(currentFilter === 'pending') return r.is_approved === false;
+    return true;
+  });
+
+  if(filtered.length === 0){
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-16 text-gray-300">لا توجد تقييمات مطابقة حالياً</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const p = allProducts.find(x => String(x.id) === String(r.product_id));
+    const prodName = p ? escapeHtml(p.name) : (r.product_id ? `منتج #${escapeHtml(String(r.product_id))}` : 'تقييم عام للمتجر');
+    const stars = Number(r.rating) || 5;
+    const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+    const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ar-EG', { day:'numeric', month:'short', year:'numeric' }) : '—';
+    const isAppr = r.is_approved !== false;
+
+    return `
+    <tr class="hover:bg-gray-50/50 transition-colors">
+      <td class="px-6 py-4">
+        <div class="flex items-center gap-3">
+          <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black shrink-0">
+            ${escapeHtml((r.customer_name || 'ع').charAt(0))}
+          </div>
+          <span class="font-bold text-gray-900">${escapeHtml(r.customer_name || 'عميل')}</span>
+        </div>
+      </td>
+      <td class="px-6 py-4 text-xs font-bold text-gray-700">${prodName}</td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex text-amber-400 text-sm font-bold tracking-tight">${starStr} <span class="text-gray-400 text-xs mr-1">(${stars}/5)</span></div>
+      </td>
+      <td class="px-6 py-4 max-w-[320px]">
+        <p class="text-xs text-gray-600 leading-relaxed line-clamp-2">${escapeHtml(r.comment || '—')}</p>
+      </td>
+      <td class="px-6 py-4 text-xs text-gray-400 whitespace-nowrap">${date}</td>
+      <td class="px-6 py-4 text-center">
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isAppr ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+          ${isAppr ? 'معتمد ومنشور' : 'قيد المراجعة'}
+        </span>
+      </td>
+      <td class="px-6 py-4 text-center">
+        <div class="flex items-center justify-center gap-2">
+          <button onclick="toggleApproval('${r.id}', ${!isAppr})" class="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition-all" title="${isAppr ? 'إلغاء النشر' : 'اعتماد ونشر بالمتجر'}">
+            <span class="material-symbols-outlined text-[18px]">${isAppr ? 'visibility_off' : 'visibility'}</span>
+          </button>
+          <button onclick="deleteReview('${r.id}')" class="p-1.5 rounded-lg border border-red-100 hover:bg-red-50 text-red-500 transition-all" title="حذف التقييم نهائياً">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function toggleApproval(id, newStatus){
+  const { error } = await _supabase.from('reviews').update({ is_approved: newStatus }).eq('id', id);
+  if(error){ toast('فشل تحديث الحالة: ' + error.message, 'error'); return; }
+  toast(newStatus ? 'تم اعتماد التقييم ونشره بالمتجر' : 'تم إخفاء التقييم من المتجر', 'success');
+  loadReviews();
+}
+
+async function deleteReview(id){
+  const ok = await confirmDialog('حذف التقييم', 'هل أنت متأكد من رغبتك في حذف هذا التقييم نهائياً؟', 'warning');
+  if(!ok) return;
+  const { error } = await _supabase.from('reviews').delete().eq('id', id);
+  if(error){ toast('فشل الحذف: ' + error.message, 'error'); return; }
+  toast('تم حذف التقييم بنجاح', 'success');
+  loadReviews();
+}
+
+async function openAddReviewModal(){
+  const prodOptions = allProducts.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  const { value: formValues } = await Swal.fire({
+    title: 'إضافة تقييم جديد للمتجر',
+    html: `
+      <div class="space-y-4 text-right" dir="rtl">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">المنتج المشترط</label>
+          <select id="swal-prod" class="swal2-input !w-full !m-0 !text-sm !h-11">
+            <option value="">تقييم عام للمتجر</option>
+            ${prodOptions}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">اسم العميل *</label>
+          <input id="swal-name" class="swal2-input !w-full !m-0 !text-sm !h-11" placeholder="مثال: منى أحمد">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">التقييم (النجوم) *</label>
+          <select id="swal-rating" class="swal2-input !w-full !m-0 !text-sm !h-11 font-bold">
+            <option value="5" selected>★★★★★ (5 نجوم - ممتاز)</option>
+            <option value="4">★★★★☆ (4 نجوم - جيد جداً)</option>
+            <option value="3">★★★☆☆ (3 نجوم - جيد)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">نص التقييم / التجربة *</label>
+          <textarea id="swal-comment" class="swal2-textarea !w-full !m-0 !text-sm" rows="3" placeholder="اكتب تجربة العميل مع المنتج..."></textarea>
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'حفظ ونشر التقييم',
+    cancelButtonText: 'إلغاء',
+    focusConfirm: false,
+    preConfirm: () => {
+      const name = document.getElementById('swal-name').value.trim();
+      const rating = document.getElementById('swal-rating').value;
+      const comment = document.getElementById('swal-comment').value.trim();
+      const product_id = document.getElementById('swal-prod').value || null;
+      if (!name || !comment) {
+        Swal.showValidationMessage('يرجى إدخال اسم العميل وتفاصيل التقييم');
+        return false;
+      }
+      return { customer_name: name, rating: Number(rating), comment, product_id, is_approved: true };
+    }
+  });
+
+  if(formValues){
+    const { error } = await _supabase.from('reviews').insert([formValues]);
+    if(error){ toast('فشل حفظ التقييم: ' + error.message, 'error'); return; }
+    toast('تمت إضافة التقييم بنجاح وسيظهر في المتجر!', 'success');
+    loadReviews();
+  }
+}
+
+function toast(msg, icon){
+  Swal.fire({ toast: true, position: 'top-end', icon, title: msg, showConfirmButton: false, timer: 2000, timerProgressBar: true });
+}
+
+window.onload = async function(){
+  renderSidebar('reviews.html');
+  const ok = await requireAdmin();
+  if(ok){
+    await loadProductsList();
+    loadReviews();
+
+    // Realtime live subscription
+    try {
+      _supabase
+        .channel('reviews-live-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => {
+          loadReviews();
+        })
+        .subscribe();
+    } catch(e) { console.warn(e); }
+  }
+};
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-// ===== layout.js =====
+﻿// ===== layout.js =====
 // مكونات واجهة مشتركة (Sidebar + Auth) لجميع صفحات لوحة التحكم
 
 // ---- التحقق من الجلسة وأن المستخدم هو الآدمن المسموح ----
@@ -182,6 +182,7 @@ function renderSidebar(activePage) {
     { href: 'sales-report.html', icon: 'monitoring',   label: 'تقرير المبيعات' },
     { href: 'visitor-analytics.html', icon: 'query_stats', label: 'تحليلات الزيارات' },
     { href: 'messages.html',    icon: 'chat',         label: 'رسائل العملاء' },
+    { href: 'reviews.html',     icon: 'rate_review',  label: 'آراء وتقييمات العملاء' },
     { href: 'settings.html',    icon: 'settings',     label: 'إعدادات المتجر' },
     { href: 'system-check.html', icon: 'health_and_safety', label: 'فحص الربط' },
   ];

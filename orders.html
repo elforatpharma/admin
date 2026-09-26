@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
@@ -495,7 +495,10 @@ function renderOrders(){
         <td class="px-4 py-2">
           <div class="flex flex-col">
             <span class="font-semibold text-on-surface">${escapeHtml(o.customerName)||'عميل'}</span>
-            <span class="text-outline font-data-tabular text-label-sm" dir="ltr">${escapeHtml(o.phone)||'—'}</span>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span class="text-outline font-data-tabular text-label-sm" dir="ltr">${escapeHtml(o.phone)||'—'}</span>
+              ${o.phone ? `<button onclick="event.stopPropagation(); openWhatsApp('${id}')" class="p-1 rounded-full bg-[#25D366]/15 hover:bg-[#25D366]/30 text-[#075E54] transition-all flex items-center justify-center shrink-0" title="مراسلة العميل واتساب فوراً"><span class="material-symbols-outlined text-[14px]">chat</span></button>` : ''}
+            </div>
           </div>
         </td>
         <td class="px-4 py-2">
@@ -521,6 +524,9 @@ function renderOrders(){
         </td>
         <td class="px-4 py-2 text-left" onclick="event.stopPropagation()">
           <div class="flex items-center justify-end gap-1">
+            <button onclick="openWhatsApp('${id}')" class="p-1.5 rounded-full bg-[#25D366]/15 hover:bg-[#25D366]/30 text-[#075E54] transition-colors" title="واتساب العميل بضغطة واحدة">
+              <span class="material-symbols-outlined text-base">chat</span>
+            </button>
             <button onclick="selectOrder('${id}')" class="p-1.5 rounded-full bg-surface-container hover:bg-primary/15 text-primary transition-colors" title="فتح تفاصيل الطلب">
               <span class="material-symbols-outlined text-base">visibility</span>
             </button>
@@ -598,6 +604,29 @@ function waLink(phone){
   let p=String(phone||'').replace(/\D/g,'');
   if(p.startsWith('0'))p='20'+p.slice(1);
   return p?'https://wa.me/'+p:'#';
+}
+
+function openWhatsApp(id){
+  const o=allOrders.find(x=>String(x.id)===String(id));
+  if(!o||!o.phone){toast('رقم الهاتف غير متاح لهذا الطلب','error');return;}
+  let p=String(o.phone).replace(/\D/g,'');
+  if(p.startsWith('0')) p='20'+p.slice(1);
+  const name=o.customerName?o.customerName.trim():'يا فندم';
+  const s=normStatus(o.status);
+  const its=itemStats(o);
+  
+  let msg=`أهلاً بك أستاذ/ة ${name} 🌸\nبخصوص طلبك رقم #ORD-${o.id} من صيدلية الفرات فارما:\n\n`;
+  if(s==='تم التوصيل'){
+    msg+=`نتمنى أن تكون المنتجات قد نالت إعجابك! نسعد دائماً بخدمتك ونتمنى لك دوام الصحة والعافية 🌿`;
+  }else if(s==='تم الشحن'||s==='قيد التجهيز'){
+    msg+=`تم تجهيز طلبك وجاري التوصيل لحضرتك في أقرب وقت 🚚\nمحتويات الشحنة: ${its.names||'مستحضرات الفرات'}\nإجمالي المبلغ المطلوب تحصيله: ${money(o.total)} ج.م.\nشكراً لثقتك بنا!`;
+  }else if(s==='ملغي'){
+    msg+=`نود إعلامك بأنه تم إلغاء الطلب. إذا كان هناك أي استفسار أو رغبت في إعادة تفعيله يسعدنا تواصلك معنا في أي وقت.`;
+  }else{
+    msg+=`نؤكد لحضرتك استلام الطلب بنجاح، وجاري مراجعته وتجهيزه للشحن 📦\nالمنتجات المطلوبة: ${its.names||'مستحضرات الفرات'}\nالإجمالي: ${money(o.total)} ج.م\nالعنوان المسجل لدينا: ${o.address||'حسب المحادثة'}\n\nيرجى تأكيد العنوان وموعد الاستلام المناسب لحضرتك. شكراً لك!`;
+  }
+  const url=`https://wa.me/${p}?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
 }
 
 function detailPrimaryBtn(o,s){
@@ -731,10 +760,10 @@ function renderDetail(){
       </button>
     </div>
     <div class="mt-1">
-      <a class="w-full h-10 rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#075E54] font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all font-semibold" href="${waLink(o.phone)}" target="_blank">
+      <button onclick="openWhatsApp('${o.id}')" class="w-full h-10 rounded-full bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#075E54] font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all font-semibold">
         <span class="material-symbols-outlined text-base">chat</span>
-        <span>إرسال تفاصيل الطلب عبر واتساب العميل</span>
-      </a>
+        <span>إرسال تفاصيل وحالة الطلب عبر واتساب العميل فوراً</span>
+      </button>
     </div>
     ${CANCELLED.includes(s)?'':'<button onclick="cancelOrder(\''+o.id+'\')" class="w-full py-2 text-center text-error hover:bg-error-container/30 rounded-full font-label-sm text-label-sm font-semibold transition-all mt-1">إلغاء الطلب وتحديد السبب الطبي أو الإداري</button>'}
   </div>`;
@@ -1306,16 +1335,32 @@ function printOrders(){
 function exportCSV(){
   const filtered=getFiltered();
   if(!filtered.length){toast('لا توجد طلبات للتصدير','error');return;}
-  const head=['كود الطلب','العميل','الهاتف','الإجمالي','الحالة','التاريخ'];
-  const lines=filtered.map(o=>[o.id,`"${(o.customerName||'').replace(/"/g,'""')}"`,o.phone,o.total,normStatus(o.status),o.created_at||'']);
+  const head=['كود الطلب','اسم العميل','رقم الهاتف','العنوان بالتفصيل','محتويات الطلب والكميات','المبلغ الإجمالي (ج.م)','طريقة الدفع','حالة الدفع','حالة الطلب','الكوبون المطبق','قيمة الخصم','تاريخ الطلب'];
+  const lines=filtered.map(o=>{
+    const its=itemStats(o);
+    const itsDetail=its.items.map(i=>`${i.name} (x${i.qty||1})`).join(' + ');
+    const code=`#ORD-${o.id}`;
+    const name=`"${(o.customerName||'').replace(/"/g,'""')}"`;
+    const phone=`'${o.phone||''}`;
+    const address=`"${(o.address||'').replace(/"/g,'""')}"`;
+    const items=`"${itsDetail.replace(/"/g,'""')}"`;
+    const total=o.total||0;
+    const payMethod=`"${(payOf(o)||'الدفع عند الاستلام').replace(/"/g,'""')}"`;
+    const payStatus=paymentStatusOf(o)==='paid'?'مدفوع':paymentStatusOf(o)==='pending'?'بانتظار الدفع':paymentStatusOf(o)==='failed'?'فشل الدفع':'غير محدد';
+    const status=normStatus(o.status);
+    const coupon=`"${(o.coupon||o.couponCode||o.coupon_code||'').replace(/"/g,'""')}"`;
+    const discount=o.discount_amount||0;
+    const date=`"${(o.created_at?new Date(o.created_at).toLocaleString('ar-EG'):(o.date||'')).replace(/"/g,'""')}"`;
+    return [code,name,phone,address,items,total,payMethod,payStatus,status,coupon,discount,date];
+  });
   const csv='\ufeff'+[head.join(','),...lines.map(r=>r.join(','))].join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='orders-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download='orders-elforat-'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('تم تصدير '+filtered.length+' طلب','success');
+  toast('تم تصدير '+filtered.length+' طلب لإكسيل بنجاح','success');
 }
 
 function toast(msg,icon){

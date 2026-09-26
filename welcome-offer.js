@@ -1,5 +1,5 @@
 /**
- * WelcomeOffer - كوبون WELCOME20 لأول زيارة فقط
+ * WelcomeOffer - كوبون WELCOME10 لأول زيارة فقط
  * الفرات فارما (يوضع في المتجر، مش في لوحة التحكم)
  *
  * المنطق:
@@ -11,13 +11,13 @@
  *   <script src="welcome-offer.js"></script>          // قبل analysis.min.js
  *
  *   WelcomeOffer.isEligible()      // true لو لسه في زيارته الأولى
- *   WelcomeOffer.guard(code)       // {ok:false,message} لو الكود WELCOME20 والزائر مش مؤهل
+ *   WelcomeOffer.guard(code)       // {ok:false,message} لو الكود WELCOME10 والزائر مش مؤهل
  *   WelcomeOffer.markUsed()        // نادِها بعد نجاح الطلب
  */
 (function () {
   'use strict';
 
-  var CODE = 'WELCOME20';
+  var CODE = 'WELCOME10';
   var KEY = 'elforat_welcome_offer_v1';      // localStorage: حالة العرض للزائر
   var SKEY = 'elforat_welcome_session_v1';   // sessionStorage: علامة الزيارة الحالية
 
@@ -103,7 +103,7 @@
 
     var text = document.createElement('div');
     text.style.cssText = 'flex:1;font-size:14px;line-height:1.6;';
-    text.appendChild(document.createTextNode('🎁 أهلاً بك! خصم 20% على زيارتك الأولى بكود '));
+    text.appendChild(document.createTextNode('🎁 أهلاً بك! خصم 10% على زيارتك الأولى بكود '));
     var b = document.createElement('b');
     b.setAttribute('dir', 'ltr');
     b.textContent = CODE;

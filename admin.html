@@ -452,7 +452,7 @@ Chart.defaults.font.family='Tajawal,sans-serif';Chart.defaults.color='#64748b';
 function payOf(o){return o.paymentMethod||o.payment||o.payment_method||'';}
 function paymentKind(o){
   const p=String(payOf(o)).toLowerCase();
-  if(p.includes('paymob')||p.includes('card')||p.includes('visa')||p.includes('master')||p.includes('فيزا')||p.includes('بطاقة'))return 'card';
+  if(p.includes('card')||p.includes('visa')||p.includes('master')||p.includes('فيزا')||p.includes('بطاقة'))return 'card';
   if(p.includes('wallet')||p.includes('vodafone')||p.includes('فودافون')||p.includes('محفظة'))return 'wallet';
   if(p.includes('cod')||p.includes('cash')||p.includes('كاش')||p.includes('الاستلام'))return 'cod';
   return 'other';

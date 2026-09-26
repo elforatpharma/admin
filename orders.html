@@ -304,7 +304,7 @@
 <script src="layout.js"></script>
 <script>
 let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20;
-const ORDER_COLUMNS='id,customerName,phone,address,total,status,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,paymob_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
+const ORDER_COLUMNS='id,customerName,phone,address,total,status,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
 const PENDING=new Set(['جديد','قيد التنفيذ']);
 const PROCESSING=['قيد التجهيز'],DELIVERED=['تم التوصيل'],CANCELLED=['ملغي'];
 
@@ -313,7 +313,7 @@ function paymentStatusOf(o){return String(o.payment_status||'').toLowerCase();}
 function normStatus(s){return (s||'قيد التنفيذ').trim();}
 function paymentKind(o){
   const p=String(payOf(o)).toLowerCase();
-  if(p.includes('paymob')||p.includes('card')||p.includes('visa')||p.includes('master')||p.includes('فيزا')||p.includes('بطاقة'))return 'card';
+  if(p.includes('card')||p.includes('visa')||p.includes('master')||p.includes('فيزا')||p.includes('بطاقة'))return 'card';
   if(p.includes('wallet')||p.includes('vodafone')||p.includes('فودافون')||p.includes('محفظة'))return 'wallet';
   if(p.includes('cod')||p.includes('cash')||p.includes('كاش')||p.includes('الاستلام'))return 'cod';
   return p;
@@ -453,10 +453,9 @@ function getFiltered(){
 function payBadge(o){
   const p=String(payOf(o)).toLowerCase();
   const ps=paymentStatusOf(o);
-  if(ps==='paid')return{html:'<span class="material-symbols-outlined text-xs">verified</span> <span>مدفوع Paymob</span>',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200'};
+  if(ps==='paid')return{html:'<span class="material-symbols-outlined text-xs">verified</span> <span>مدفوع إلكترونياً</span>',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200'};
   if(ps==='pending')return{html:'<span class="material-symbols-outlined text-xs">schedule</span> <span>بانتظار الدفع</span>',cls:'bg-amber-50 text-amber-800 border border-amber-200'};
   if(ps==='failed')return{html:'<span class="material-symbols-outlined text-xs">error</span> <span>فشل الدفع</span>',cls:'bg-red-50 text-red-700 border border-red-200'};
-  if(p.includes('paymob'))return{html:'<span class="material-symbols-outlined text-xs">credit_card</span> <span>Paymob</span>',cls:'bg-blue-50 text-blue-700 border border-blue-200'};
   if(p==='cod'||p==='كاش'||p==='الدفع عند الاستلام')return{html:'<span class="material-symbols-outlined text-xs">payments</span> <span>كاش COD</span>',cls:'bg-amber-100 text-amber-800 border border-amber-200'};
   if(p==='card'||p==='بطاقة'||p==='فيزا')return{html:'<span class="material-symbols-outlined text-xs">credit_card</span> <span>فيزا مدفوعة</span>',cls:'bg-blue-50 text-blue-700 border border-blue-200'};
   if(p==='wallet'||p==='محفظة'||p==='فودافون كاش')return{html:'<span class="material-symbols-outlined text-xs">account_balance_wallet</span> <span>فودافون كاش</span>',cls:'bg-purple-50 text-purple-700 border border-purple-200'};
@@ -710,7 +709,7 @@ function renderDetail(){
     <div class="flex items-center justify-between font-body-sm text-body-sm text-outline pt-1"><span>المجموع الفرعي للمنتجات:</span><span class="font-data-tabular font-medium text-on-surface">${money(subtotal)} ج.م</span></div>`;
   if(hasCoupon||discountAmount>0)fin+=`<div class="flex items-center justify-between font-body-sm text-body-sm text-emerald-700"><span class="flex items-center gap-1"><span>كوبون التخفيض المطبق:</span><span class="px-2 py-0.5 rounded-full bg-emerald-100 font-data-tabular text-emerald-800 font-bold text-[11px]">${escapeHtml(hasCoupon||'خصم')}</span></span><span class="font-data-tabular font-bold">-${money(discountAmount)} ج.م</span></div>`;
   if(hasShip)fin+=`<div class="flex items-center justify-between font-body-sm text-body-sm text-outline"><span>مصاريف الشحن والتوصيل:</span><span class="font-data-tabular font-medium text-on-surface">${money(o.shipping)} ج.م</span></div>`;
-  if(o.merchant_order_id||o.paymob_order_id||o.payment_status){
+  if(o.merchant_order_id||o.payment_status){
     const ps=paymentStatusOf(o);
     const label=ps==='paid'?'مدفوع':ps==='pending'?'بانتظار الدفع':ps==='failed'?'فشل الدفع':'غير محدد';
     fin+=`<div class="flex items-center justify-between font-body-sm text-body-sm text-outline"><span>حالة الدفع الإلكتروني:</span><span class="font-data-tabular font-bold text-on-surface">${escapeHtml(label)}</span></div>`;
@@ -928,7 +927,7 @@ function printWaybill(id){
 
   const paymentBox = isPaid
     ? `<div style="border:2px solid #059669; background:#ecfdf5; padding:8px; border-radius:6px; text-align:center; margin:8px 0;">
-        <div style="font-size:11px; font-weight:bold; color:#065f46;">✅ مدفوع بالكامل إلكترونياً (Paymob)</div>
+        <div style="font-size:11px; font-weight:bold; color:#065f46;">✅ مدفوع بالكامل إلكترونياً</div>
         <div style="font-size:15px; font-weight:900; color:#065f46; margin-top:2px;">لا يُحصل أي مبلغ من العميل (0.00 ج.م)</div>
        </div>`
     : `<div style="border:2px dashed #000; background:#fff; padding:8px; border-radius:6px; text-align:center; margin:8px 0;">

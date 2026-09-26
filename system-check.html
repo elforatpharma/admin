@@ -56,7 +56,7 @@ const checks=[
     return withStock;
   }},
   {id:'orders',label:'قراءة الطلبات في الداشبورد',run:()=>_supabase.from('orders').select('id,total,status,created_at').order('created_at',{ascending:false}).limit(1)},
-  {id:'paymob-columns',label:'أعمدة Paymob والكوبونات في الطلبات',run:()=>_supabase.from('orders').select('payment_method,payment_status,merchant_order_id,paymob_order_id,coupon_code,discount_amount').limit(1)},
+  {id:'payment-columns',label:'أعمدة الدفع الإلكتروني والكوبونات في الطلبات',run:()=>_supabase.from('orders').select('payment_method,payment_status,merchant_order_id,coupon_code,discount_amount').limit(1)},
   {id:'coupons',label:'قراءة الكوبونات النشطة للمتجر',run:()=>_supabase.from('coupons').select('id,code,discount_percentage,is_active,expiry_date').limit(1)},
   {id:'messages',label:'جدول رسائل العملاء متصل',run:()=>_supabase.from('messages').select('id,name,phone,message,status,created_at').limit(1)},
   {id:'settings',label:'إعدادات المتجر والهوية',run:()=>_supabase.from('settings').select('id,data,updated_at').limit(1)},

@@ -280,21 +280,6 @@
                   <input id="gen-value" oninput="updatePreview();" class="w-full h-11 px-4 bg-canvas-bg rounded-xl font-body-sm text-body-sm text-on-surface focus:outline-none" type="number" value="20" min="1"/>
                 </div>
               </div>
-              <div>
-                <label class="font-label-md text-label-md text-on-surface block mb-1">الحد الأدنى للطلبية (ج.م)</label>
-                <input id="gen-min" class="w-full h-11 px-4 bg-canvas-bg rounded-xl font-body-sm text-body-sm text-on-surface focus:outline-none" type="number" value="1500" min="0" step="50"/>
-              </div>
-              <div class="bg-surface-container-low p-space-sm rounded-xl flex flex-col gap-2">
-                <span class="font-label-sm text-label-sm font-bold text-on-surface">قيود التطبيق:</span>
-                <label class="flex items-center gap-2 font-label-md text-label-md text-text-secondary cursor-pointer">
-                  <input id="gen-avoid-jabri" checked="" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
-                  <span>استثناء الأدوية المسعرة جبرياً (إلزامي نظامياً)</span>
-                </label>
-                <label class="flex items-center gap-2 font-label-md text-label-md text-text-secondary cursor-pointer">
-                  <input id="gen-phar-only" class="w-4 h-4 rounded text-primary focus:ring-0" type="checkbox"/>
-                  <span>تطبيق على الصيدليات والمراكز المعتمدة فقط</span>
-                </label>
-              </div>
               <button type="submit" class="w-full btn-brand-gradient text-on-primary py-3 rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] transition-all font-label-lg text-label-lg mt-2 flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-[18px]">publish</span>
                 <span>نشر وتفعيل العرض فوراً</span>
@@ -576,11 +561,7 @@
           </label>
         </div>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm pt-space-xs font-label-md text-label-md text-text-secondary">
-        <div class="flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[18px] text-primary">rule</span>
-          <span>الحد الأدنى: <strong class="text-on-surface font-data-tabular">${desc.includes('الحد الأدنى')?desc.match(/\d[\d,]*\.?\d*/)?.[0]??'—':'—'} ج.م</strong></span>
-        </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm pt-space-xs font-label-md text-label-md text-text-secondary">
         <div class="flex items-center gap-1.5">
           <span class="material-symbols-outlined text-[18px] text-tertiary">verified_user</span>
           <span>التطبيق: <strong class="text-on-surface">استخدامات متعددة</strong></span>
@@ -726,15 +707,12 @@
       if(!code)throw new Error('أدخل رمز الكوبون');
       const type=document.getElementById('gen-type').value;
       const value=Number(document.getElementById('gen-value').value)||0;
-      const min=Number(document.getElementById('gen-min').value)||0;
       if(!value)throw new Error('أدخل قيمة الخصم');
-      const avoidJabri=document.getElementById('gen-avoid-jabri').checked;
-      const pharOnly=document.getElementById('gen-phar-only').checked;
       const typeLabel={percent:'نسبة مئوية',amount:'مبلغ ثابت',ship:'شحن مجاني',gift:'هدية مجانية'}[type];
-      const desc=`${typeLabel} (${value}${type==='percent'?'%':' ج.م'}) · الحد الأدنى ${min} ج.م`+(avoidJabri?' · يستثني الأدوية الجبرية':'')+(pharOnly?' · للصيدليات المعتمدة فقط':'');
+      const desc=`${typeLabel} (${value}${type==='percent'?'%':' ج.م'})`;
       const expires=new Date(Date.now()+30*86400000).toISOString().split('T')[0];
       const discount=Math.min(99,Math.max(1,type==='percent'?Math.round(value):Math.round(value/10)));
-      const{error}=await _supabase.from('coupons').insert([{code,discount_percentage:discount,expiry_date:expires,description:desc,is_active:true,min_amount:min>0?min:null}]);
+      const{error}=await _supabase.from('coupons').insert([{code,discount_percentage:discount,expiry_date:expires,description:desc,is_active:true}]);
       if(error)throw error;
       toast('success','تم نشر وتفعيل العرض '+code+' بنجاح!');
       e.target.reset();

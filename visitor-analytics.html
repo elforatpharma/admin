@@ -81,7 +81,7 @@ async function loadAnalytics(){
     kpi('مبيعات مكتملة',Math.round(revenue).toLocaleString('en')+' ج.م','payments')
   ].join('');
   const counts=Object.fromEntries(groupBy(events,x=>x.event_name));
-  const funnel=[['زيارة',sessions],['مشاهدة منتج',counts.product_view||0],['إضافة للسلة',counts.add_to_cart||0],['بدء الدفع',counts.checkout_started||0],['بدء Paymob',counts.payment_started||0],['طلب مكتمل',orders.length]];
+  const funnel=[['زيارة',sessions],['مشاهدة منتج',counts.product_view||0],['إضافة للسلة',counts.add_to_cart||0],['بدء الدفع',counts.checkout_started||0],['بدء الدفع الإلكتروني',counts.payment_started||0],['طلب مكتمل',orders.length]];
   const max=Math.max(...funnel.map(x=>x[1]),1);
   document.getElementById('funnel').innerHTML=funnel.map(x=>bar(x[0],x[1],max)).join('');
   const sourceRows=groupBy([...(visits.length?visits:events),...orders],x=>x.source||x.traffic_source).slice(0,8);

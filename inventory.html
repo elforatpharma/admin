@@ -381,12 +381,12 @@ async function detectColumns(){
     HAS_BARCODE=('barcode' in row||'sku' in row);
     HAS_EXPIRY=('expiry' in row||'expiry_date' in row);
     HAS_BATCH=('batch' in row||'batch_no' in row||'lot' in row);
-    HAS_GALLERY=('gallery' in row);
+    HAS_GALLERY=('images' in row);
   }catch(e){}
 }
 
 function productSelectColumns(){
-  const cols=['id','name','category','price','oldPrice','discount','img','image','brand','science_name','desc','ingredients','created_at','reorder_level','gallery'];
+  const cols=['id','name','category','price','oldPrice','discount','img','image','brand','science_name','desc','ingredients','created_at','reorder_level','images'];
   if(HAS_STOCK)cols.push('stock');
   if(HAS_ACTIVE)cols.push('is_active');
   if(HAS_BARCODE)cols.push('barcode','sku');
@@ -742,7 +742,7 @@ async function newProductModal(){
   });
   if(!fv)return;
   const oldPrice=fv.discount>0?Math.round(fv.price/(1-Math.min(fv.discount,90)/100)):null;
-  const payload={name:fv.name,price:fv.price,is_active:true,gallery:[]};
+  const payload={name:fv.name,price:fv.price,is_active:true,images:[]};
   if(fv.category)payload.category=fv.category;
   if(oldPrice)payload.oldPrice=oldPrice;
   if(fv.discount>0)payload.badge='خصم '+fv.discount+'%';
@@ -797,10 +797,10 @@ function setupGalleryHandlers(productId,initialGallery){
         const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(path);
         window.__egGalleryState.push(publicUrl);
       }
-      const{error}=await _supabase.from('products').update({gallery:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
+      const{error}=await _supabase.from('products').update({images:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
       if(error)throw error;
       const p = products.find(x => String(x.id) === String(window.__egGalleryProductId));
-      if(p) p.gallery = [...window.__egGalleryState];
+      if(p) p.images = [...window.__egGalleryState];
       window.__egRenderGallery();
       toast('success','تمت إضافة الصور لمعرض المنتج');
     }catch(err){
@@ -816,10 +816,10 @@ function setupGalleryHandlers(productId,initialGallery){
     if(!ok)return;
     const removed=window.__egGalleryState.splice(idx,1)[0];
     try{
-      const{error}=await _supabase.from('products').update({gallery:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
+      const{error}=await _supabase.from('products').update({images:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
       if(error)throw error;
       const p = products.find(x => String(x.id) === String(window.__egGalleryProductId));
-      if(p) p.gallery = [...window.__egGalleryState];
+      if(p) p.images = [...window.__egGalleryState];
       if(window.deleteStorageFile)deleteStorageFile(removed).catch(()=>{});
       window.__egRenderGallery();
       toast('success','تم حذف الصورة من المعرض');
@@ -835,7 +835,7 @@ async function editProduct(id){
   const p=products.find(x=>String(x.id)===String(id));
   if(!p)return;
   const currentImg=p.img||p.image||'';
-  setupGalleryHandlers(id,normalizeGallery(p.gallery));
+  setupGalleryHandlers(id,normalizeGallery(p.images));
   const{value:fv}=await Swal.fire({
     title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">edit_square</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">تعديل بيانات الصنف</span><span class="efp-modal-title-sub">${escapeHtml(p.name||'')}</span></div></div>`,
     width:600,

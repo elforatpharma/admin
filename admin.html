@@ -662,7 +662,7 @@ document.getElementById("add-form").onsubmit=async(e)=>{
     }
 
     // حفظ المنتج مع المعرض
-    const productData={name:document.getElementById("p-name").value,price:Number(document.getElementById("p-price").value),oldPrice:document.getElementById("p-oldPrice").value?Number(document.getElementById("p-oldPrice").value):null,stock:Number(document.getElementById("p-stock").value)||0,category:document.getElementById("p-cat").value,badge:document.getElementById("p-badge").value,desc:document.getElementById("p-desc").value,ingredients:document.getElementById("p-ingredients").value,img:publicUrl,gallery:galleryUrls,priority:0,created_at:new Date()};
+    const productData={name:document.getElementById("p-name").value,price:Number(document.getElementById("p-price").value),oldPrice:document.getElementById("p-oldPrice").value?Number(document.getElementById("p-oldPrice").value):null,stock:Number(document.getElementById("p-stock").value)||0,category:document.getElementById("p-cat").value,badge:document.getElementById("p-badge").value,desc:document.getElementById("p-desc").value,ingredients:document.getElementById("p-ingredients").value,img:publicUrl,images:galleryUrls,priority:0,created_at:new Date()};
     const{error:dbError}=await _supabase.from('products').insert([productData]);
     if(dbError)throw dbError;
 

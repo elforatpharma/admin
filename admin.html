@@ -887,7 +887,7 @@ window.onload=async function(){
           fetchStats();
         })
         .subscribe((status) => {
-          console.log('Realtime subscription status (admin.html):', status);
+          console.warn('Realtime subscription status (admin.html):', status);
         });
     } catch(e) {
       console.warn('Realtime error on admin.html:', e);

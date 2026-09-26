@@ -1383,7 +1383,7 @@ window.onload=async function(){
           fetchOrders();
         })
         .subscribe((status) => {
-          console.log('Orders page realtime status:', status);
+          console.warn('Orders page realtime status:', status);
         });
     }catch(e){
       console.warn('Realtime error on orders.html:', e);

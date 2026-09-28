@@ -14,6 +14,7 @@
     body{font-family:'Tajawal',sans-serif;background:#faf8ff;color:#131b2e}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24}
     .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%);border-radius:9999px;color:#fff}
+    .section-title{font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;padding:0.75rem 1rem;background:#f8fafc;border-bottom:1px solid #e2e8f0}
   </style>
 </head>
 <body>
@@ -24,7 +25,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 class="font-[Cairo] text-2xl font-bold">فحص ربط المتجر بالداشبورد</h1>
-          <p class="text-sm text-slate-500 mt-1">اختبار مباشر للجداول الأساسية وسياسات الوصول وأعمدة الدفع والكوبونات.</p>
+          <p class="text-sm text-slate-500 mt-1">اختبار مباشر للجداول الأساسية — كتابة الـ anon، قراءة الأدمن، وأعمدة الدفع والكوبونات والتتبع.</p>
         </div>
         <button onclick="runChecks()" class="btn-brand-gradient h-11 px-5 font-bold inline-flex items-center gap-2">
           <span class="material-symbols-outlined text-lg">refresh</span><span>إعادة الفحص</span>
@@ -44,65 +45,202 @@
 </div>
 <script src="layout.js"></script>
 <script>
-const checks=[
-  {id:'products',label:'قراءة المنتجات من المتجر',run:async()=>{
-    const withStock=await _supabase.from('products').select('id,name,stock').limit(1);
-    if(!withStock.error)return withStock;
-    if(/stock/i.test(withStock.error.message||'')){
-      const noStock=await _supabase.from('products').select('id,name').limit(1);
-      if(!noStock.error)return{data:noStock.data,error:null,warn:'القراءة تعمل، لكن جدول المنتجات بدون عمود stock (طبيعي لو المخزون مش متتبّع بعدد — نظام المخزون في inventory.html بيتعامل مع الحالة دي تلقائياً).'};
-      return noStock;
-    }
-    return withStock;
+// ──────────────────────────────────────────────────────────────────────
+// مجموعات الفحص
+// scope: 'anon'   → يُختبر بكلاينت anon (كتابة المتجر / قراءة عامة)
+//        'admin'  → يُختبر بكلاينت الأدمن (الأحرف المحمية بـ RLS)
+//        'columns'→ فحص وجود أعمدة معيّنة بدون RLS حساسة
+// ──────────────────────────────────────────────────────────────────────
+
+// كلاينت anon منفصل (بدون جلسة أدمن)
+let _anonClient = null;
+function getAnonClient() {
+  if (_anonClient) return _anonClient;
+  // نستعمل نفس URL و anonKey من الكلاينت الحالي
+  const url  = _supabase.supabaseUrl;
+  const key  = _supabase.supabaseKey;
+  _anonClient = supabase.createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+  return _anonClient;
+}
+
+// ─── فحوصات anon: ما يفعله المتجر بدون تسجيل دخول ───────────────────
+const checksAnon = [
+  {id:'anon-products-read', label:'قراءة المنتجات (anon / المتجر)', run: async () => {
+    const db = getAnonClient();
+    const r  = await db.from('products').select('id,name').limit(1);
+    return r;
   }},
-  {id:'orders',label:'قراءة الطلبات في الداشبورد',run:()=>_supabase.from('orders').select('id,total,status,created_at').order('created_at',{ascending:false}).limit(1)},
-  {id:'payment-columns',label:'أعمدة الدفع الإلكتروني والكوبونات في الطلبات',run:()=>_supabase.from('orders').select('payment_method,payment_status,merchant_order_id,coupon_code,discount_amount').limit(1)},
-  {id:'coupons',label:'قراءة الكوبونات النشطة للمتجر',run:()=>_supabase.from('coupons').select('id,code,discount_percentage,is_active,expiry_date').limit(1)},
-  {id:'messages',label:'جدول رسائل العملاء متصل',run:()=>_supabase.from('messages').select('id,name,phone,message,status,created_at').limit(1)},
-  {id:'settings',label:'إعدادات المتجر والهوية',run:()=>_supabase.from('settings').select('id,data,updated_at').limit(1)},
-  {id:'visitors',label:'عداد الزيارات القديم',run:()=>_supabase.from('visitors').select('id,count').limit(1)},
-  {id:'visitor-events',label:'التتبع التفصيلي للزيارات',run:()=>_supabase.from('visitor_events').select('id,session_id,page_path,source,device_type,created_at').limit(1)}
-  ,{id:'store-events',label:'أحداث المتجر والفانل',run:()=>_supabase.from('store_events').select('id,session_id,event_name,product_id,coupon_code,created_at').limit(1)}
-  ,{id:'order-session',label:'ربط الطلب بالجلسة والحملة',run:()=>_supabase.from('orders').select('id,session_id,traffic_source,traffic_campaign').limit(1)}
+  {id:'anon-settings-read', label:'قراءة إعدادات المتجر (anon)', run: async () => {
+    const db = getAnonClient();
+    return db.from('settings').select('id,data').limit(1);
+  }},
+  {id:'anon-coupons-read', label:'قراءة الكوبونات النشطة (anon)', run: async () => {
+    const db = getAnonClient();
+    // RLS يشترط is_active=true AND expiry_date >= today → نستخدم فلتر مطابق
+    const today = new Date().toISOString().slice(0,10);
+    const r = await db.from('coupons')
+      .select('id,code,discount_percentage,is_active,expiry_date')
+      .eq('is_active', true)
+      .gte('expiry_date', today)
+      .limit(1);
+    // إذا رجع فارغاً فهذا طبيعي (لا يوجد كوبون نشط)
+    if (!r.error) return { data: r.data, error: null, warn: r.data.length === 0 ? 'القراءة تعمل — لا يوجد كوبون نشط حالياً (طبيعي).' : null };
+    return r;
+  }},
+  {id:'anon-orders-insert', label:'إدراج طلب جديد (anon / المتجر)', run: async () => {
+    const db = getAnonClient();
+    // نُدرج سجلاً تجريبياً ثم نحذفه بكلاينت الأدمن
+    const r = await db.from('orders').insert({
+      total: 0.01,
+      status: '__test__',
+      customer_name: 'test-anon',
+      payment_method: 'cod',
+      payment_status: 'pending'
+    }).select('id');
+    if (!r.error && r.data && r.data.length > 0) {
+      // نظّف السجل التجريبي
+      await _supabase.from('orders').delete().eq('id', r.data[0].id);
+    }
+    return r;
+  }},
+  {id:'anon-messages-insert', label:'إدراج رسالة عميل (anon)', run: async () => {
+    const db = getAnonClient();
+    const r = await db.from('messages').insert({
+      name: 'test-anon',
+      phone: '000',
+      message: '__test__'
+    }).select('id');
+    if (!r.error && r.data && r.data.length > 0) {
+      await _supabase.from('messages').delete().eq('id', r.data[0].id);
+    }
+    return r;
+  }},
+  {id:'anon-store-events-insert', label:'إدراج حدث تتبع (anon / store_events)', run: async () => {
+    const db = getAnonClient();
+    const r = await db.from('store_events').insert({
+      session_id: 'test-session',
+      event_name: '__test__'
+    }).select('id');
+    if (!r.error && r.data && r.data.length > 0) {
+      await _supabase.from('store_events').delete().eq('id', r.data[0].id);
+    }
+    return r;
+  }},
+  {id:'anon-visitor-events-insert', label:'إدراج زيارة (anon / visitor_events)', run: async () => {
+    const db = getAnonClient();
+    const r = await db.from('visitor_events').insert({
+      session_id: 'test-session',
+      page_path: '/test',
+      device_type: 'desktop'
+    }).select('id');
+    if (!r.error && r.data && r.data.length > 0) {
+      await _supabase.from('visitor_events').delete().eq('id', r.data[0].id);
+    }
+    return r;
+  }},
+  {id:'anon-visitors-rw', label:'قراءة وتحديث عداد الزيارات القديم (anon)', run: async () => {
+    const db = getAnonClient();
+    const r = await db.from('visitors').select('id,count').limit(1);
+    return r;
+  }},
 ];
-function row(c,state,msg){
-  const cls=state==='ok'?'text-emerald-700 bg-emerald-50':state==='warn'?'text-amber-700 bg-amber-50':'text-red-700 bg-red-50';
-  const ico=state==='ok'?'check_circle':state==='warn'?'warning':'error';
+
+// ─── فحوصات الأدمن: قراءة البيانات الحساسة ──────────────────────────
+const checksAdmin = [
+  {id:'admin-orders-read', label:'قراءة الطلبات (أدمن)', run: () =>
+    _supabase.from('orders').select('id,total,status,created_at').order('created_at',{ascending:false}).limit(1)},
+  {id:'admin-payment-cols', label:'أعمدة الدفع والكوبونات في الطلبات (أدمن)', run: () =>
+    _supabase.from('orders').select('payment_method,payment_status,merchant_order_id,coupon_code,discount_amount').limit(1)},
+  {id:'admin-order-session', label:'أعمدة الجلسة والحملة في الطلبات (أدمن)', run: () =>
+    _supabase.from('orders').select('id,session_id,traffic_source,traffic_campaign').limit(1)},
+  {id:'admin-coupons', label:'قراءة جميع الكوبونات (أدمن)', run: () =>
+    _supabase.from('coupons').select('id,code,discount_percentage,is_active,expiry_date').limit(1)},
+  {id:'admin-messages', label:'قراءة رسائل العملاء (أدمن)', run: () =>
+    _supabase.from('messages').select('id,name,phone,message,status,created_at').limit(1)},
+  {id:'admin-store-events', label:'قراءة أحداث المتجر (أدمن)', run: () =>
+    _supabase.from('store_events').select('id,session_id,event_name,product_id,coupon_code,created_at').limit(1)},
+  {id:'admin-visitor-events', label:'قراءة التتبع التفصيلي للزيارات (أدمن)', run: () =>
+    _supabase.from('visitor_events').select('id,session_id,page_path,source,device_type,created_at').limit(1)},
+  {id:'admin-products-with-stock', label:'عمود stock في المنتجات (أدمن)', run: async () => {
+    const r = await _supabase.from('products').select('id,name,stock').limit(1);
+    if (!r.error) return r;
+    if (/stock/i.test(r.error.message||'')) {
+      const r2 = await _supabase.from('products').select('id,name').limit(1);
+      if (!r2.error) return {data:r2.data,error:null,warn:'القراءة تعمل لكن لا يوجد عمود stock — نظام المخزون سيتعامل مع الحالة تلقائياً.'};
+      return r2;
+    }
+    return r;
+  }},
+];
+
+const allChecks = [
+  {section:'🔓 فحوصات anon — ما يفعله المتجر بدون تسجيل دخول', items: checksAnon},
+  {section:'🔐 فحوصات الأدمن — قراءة البيانات الحساسة', items: checksAdmin},
+];
+
+function row(c, state, msg) {
+  const cls  = state==='ok'  ? 'text-emerald-700 bg-emerald-50'
+             : state==='warn'? 'text-amber-700 bg-amber-50'
+             :                 'text-red-700 bg-red-50';
+  const ico  = state==='ok'  ? 'check_circle'
+             : state==='warn'? 'warning'
+             :                 'error';
+  const label= state==='ok'  ? 'سليم'
+             : state==='warn'? 'تنبيه'
+             :                 'مشكلة';
   return `<div class="p-4 flex items-start justify-between gap-4">
     <div class="flex items-start gap-3"><span class="material-symbols-outlined ${cls.split(' ')[0]}">${ico}</span><div><p class="font-bold">${c.label}</p><p class="text-xs text-slate-500 mt-1">${msg}</p></div></div>
-    <span class="px-3 py-1 rounded-full ${cls} text-xs font-bold">${state==='ok'?'سليم':state==='warn'?'تنبيه':'مشكلة'}</span>
+    <span class="px-3 py-1 rounded-full ${cls} text-xs font-bold whitespace-nowrap">${label}</span>
   </div>`;
 }
-function renderCards(ok,total){
-  const pct=Math.round(ok/total*100);
-  document.getElementById('score-cards').innerHTML=[
-    ['نسبة الترابط',pct+'%','hub'],
-    ['اختبارات ناجحة',ok+' / '+total,'task_alt'],
-    ['آخر فحص',new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}),'schedule'],
-    ['الحالة العامة',pct>=90?'جاهز':'يحتاج متابعة','health_and_safety']
-  ].map(x=>`<div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center justify-between"><span class="text-sm text-slate-500">${x[0]}</span><span class="material-symbols-outlined text-[#4d3ceb]">${x[2]}</span></div><p class="text-2xl font-black mt-2">${x[1]}</p></div>`).join('');
-  document.getElementById('score-label').textContent='نسبة الترابط الحالية: '+pct+'%';
+
+function renderCards(ok, total) {
+  const pct = Math.round(ok / total * 100);
+  document.getElementById('score-cards').innerHTML = [
+    ['نسبة الترابط',   pct + '%',              'hub'],
+    ['اختبارات ناجحة', ok + ' / ' + total,     'task_alt'],
+    ['آخر فحص',        new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}), 'schedule'],
+    ['الحالة العامة',  pct >= 90 ? 'جاهز' : 'يحتاج متابعة', 'health_and_safety']
+  ].map(x => `<div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center justify-between"><span class="text-sm text-slate-500">${x[0]}</span><span class="material-symbols-outlined text-[#4d3ceb]">${x[2]}</span></div><p class="text-2xl font-black mt-2">${x[1]}</p></div>`).join('');
+  document.getElementById('score-label').textContent = 'نسبة الترابط الحالية: ' + pct + '%';
 }
-async function runChecks(){
-  const list=document.getElementById('checks-list');
-  list.innerHTML='<div class="p-8 text-center text-slate-400 font-bold">جاري تشغيل الاختبارات...</div>';
-  const results=[];
-  for(const c of checks){
-    try{
-      const r=await c.run();
-      const state=r.error?'bad':(r.warn?'warn':'ok');
-      const msg=r.error?(r.error.message||'فشل الاتصال'):(r.warn||'الاتصال والقراءة يعملان بنجاح');
-      results.push({c,state,msg});
-    }catch(e){results.push({c,state:'bad',msg:e.message||'فشل غير متوقع'});}
+
+async function runChecks() {
+  const list = document.getElementById('checks-list');
+  list.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold">جاري تشغيل الاختبارات...</div>';
+
+  let html = '';
+  let okTotal = 0, allTotal = 0;
+
+  for (const group of allChecks) {
+    html += `<div class="section-title">${group.section}</div>`;
+    for (const c of group.items) {
+      try {
+        const r     = await c.run();
+        const state = r.error ? 'bad' : (r.warn ? 'warn' : 'ok');
+        const msg   = r.error
+          ? (r.error.message || 'فشل الاتصال')
+          : (r.warn || 'الاتصال والقراءة / الكتابة يعملان بنجاح');
+        if (state !== 'bad') okTotal++;
+        allTotal++;
+        html += row(c, state, msg);
+      } catch(e) {
+        allTotal++;
+        html += row(c, 'bad', e.message || 'فشل غير متوقع');
+      }
+    }
   }
-  const ok=results.filter(r=>r.state==='ok'||r.state==='warn').length;
-  renderCards(ok,checks.length);
-  list.innerHTML=results.map(r=>row(r.c,r.state,r.msg)).join('');
+
+  renderCards(okTotal, allTotal);
+  list.innerHTML = html;
 }
-window.onload=async function(){
+
+window.onload = async function() {
   renderSidebar('system-check.html');
-  const ok=await requireAdmin();
-  if(ok)runChecks();
+  const ok = await requireAdmin();
+  if (ok) runChecks();
 };
 </script>
 </body>

@@ -27,7 +27,7 @@
         </div>
         <button onclick="loadAnalytics()" class="h-10 px-4 rounded-full bg-[#4d3ceb] text-white font-bold inline-flex items-center gap-2"><span class="material-symbols-outlined text-lg">refresh</span>تحديث</button>
       </div>
-      <div id="kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+      <div id="kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3"></div>
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <section class="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <h2 class="font-[Cairo] font-bold mb-4">مسار التحويل</h2>
@@ -58,30 +58,53 @@
 function esc(s){return s==null?'':String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 function n(v){return Number(v)||0}
 function groupBy(list,key){const m=new Map();list.forEach(x=>{const k=key(x)||'direct';m.set(k,(m.get(k)||0)+1)});return [...m.entries()].sort((a,b)=>b[1]-a[1]);}
+// حالات الطلب: المصدر status_code، والنص العربي شبكة أمان للطلبات القديمة بس
+const STATUS_CODES=['pending','paid','processing','shipped','delivered','cancelled'];
+function deriveStatusCode(text){
+  const s=String(text||'').toLowerCase();
+  if(!s)return'pending';
+  if(/ملغي|ملغى|إلغاء|الغاء|مرتجع|returned|refund|رفض/.test(s))return'cancelled';
+  if(/تم التوصيل|تم التسليم|تسليم|توصيل|deliver/.test(s))return'delivered';
+  if(/مع المندوب|المندوب|تم الشحن|shipped|خرج للشحن/.test(s))return'shipped';
+  if(/مدفوع|تم الدفع|دفع تم|تم السداد|paid/.test(s))return'paid';
+  if(/بانتظار|انتظار|جديد|قيد التنفيذ|قيد المتابعة|في الانتظار|pending/.test(s))return'pending';
+  if(/قيد التجهيز|التجهيز|تجهيز|processing/.test(s))return'processing';
+  return'pending';
+}
+function statusCodeOf(o){
+  const c=String((o&&o.status_code)||'').trim();
+  return STATUS_CODES.includes(c)?c:deriveStatusCode(o&&o.status);
+}
 function unique(list,key){return new Set(list.map(key).filter(Boolean)).size;}
 function kpi(label,value,icon){return `<div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center justify-between text-slate-500 text-sm"><span>${label}</span><span class="material-symbols-outlined text-[#4d3ceb]">${icon}</span></div><p class="text-2xl font-black mt-2">${value}</p></div>`;}
 function bar(label,value,max){const pct=max?Math.round(value/max*100):0;return `<div><div class="flex justify-between text-sm mb-1"><span class="font-bold">${esc(label)}</span><span class="text-slate-500">${value}</span></div><div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-[#4d3ceb]" style="width:${pct}%"></div></div></div>`;}
 async function loadAnalytics(){
   const since=new Date();since.setDate(since.getDate()-30);
-  const [eventsRes,visitsRes,ordersRes]=await Promise.all([
+  const [eventsRes,visitsRes,ordersRes,loadsRes]=await Promise.all([
     _supabase.from('store_events').select('event_name,session_id,product_id,product_name,coupon_code,source,campaign,device_type,created_at').gte('created_at',since.toISOString()).limit(10000),
     _supabase.from('visitor_events').select('session_id,source,device_type,created_at').gte('created_at',since.toISOString()).limit(10000),
-    _supabase.from('orders').select('id,total,status,session_id,traffic_source,traffic_campaign,address,created_at').gte('created_at',since.toISOString()).limit(5000)
+    _supabase.from('orders').select('id,total,status,status_code,session_id,traffic_source,traffic_campaign,address,created_at').gte('created_at',since.toISOString()).limit(5000),
+    _supabase.from('visitors').select('count')
   ]);
   const events=eventsRes.data||[], visits=visitsRes.data||[], orders=ordersRes.data||[];
   const sessions=unique(visits.length?visits:events,x=>x.session_id);
-  const orderSessions=unique(orders,x=>x.session_id);
-  const revenue=orders.filter(o=>o.status==='تم التوصيل').reduce((s,o)=>s+n(o.total),0);
+  // الطلبات الملغية مش بتتحسب في التحويل ولا مسار "طلب مكتمل"
+  const validOrders=orders.filter(o=>statusCodeOf(o)!=='cancelled');
+  const orderSessions=unique(validOrders,x=>x.session_id);
+  // تحميلات الصفحات: إجمالي عداد visitors.count (مختلف عن الجلسات الفريدة)
+  const pageLoads=(!loadsRes.error&&Array.isArray(loadsRes.data))?loadsRes.data.reduce((s,r)=>s+n(r.count),0):null;
+  const revenue=orders.filter(o=>statusCodeOf(o)==='delivered').reduce((s,o)=>s+n(o.total),0);
   const conversion=sessions?Math.round(orderSessions/sessions*1000)/10:0;
   document.getElementById('kpis').innerHTML=[
-    kpi('جلسات 30 يوم',sessions,'groups'),
+    kpi('زوار (جلسات 30 يوم)',sessions.toLocaleString('en'),'groups'),
+    kpi('تحميلات الصفحات (إجمالي)',pageLoads==null?'—':pageLoads.toLocaleString('en'),'visibility'),
     kpi('أحداث المتجر',events.length,'ads_click'),
     kpi('طلبات مربوطة',orderSessions,'shopping_bag'),
     kpi('معدل التحويل',conversion+'%','conversion_path'),
     kpi('مبيعات مكتملة',Math.round(revenue).toLocaleString('en')+' ج.م','payments')
   ].join('');
   const counts=Object.fromEntries(groupBy(events,x=>x.event_name));
-  const funnel=[['زيارة',sessions],['مشاهدة منتج',counts.product_view||0],['إضافة للسلة',counts.add_to_cart||0],['بدء الدفع',counts.checkout_started||0],['بدء الدفع الإلكتروني',counts.payment_started||0],['طلب مكتمل',orders.length]];
+  const funnel=[['زيارة',sessions],['مشاهدة منتج',counts.product_view||0],['إضافة للسلة',counts.add_to_cart||0],['بدء الدفع',counts.checkout_started||0],['بدء الدفع الإلكتروني',counts.payment_started||0],['طلب مكتمل',validOrders.length]];
   const max=Math.max(...funnel.map(x=>x[1]),1);
   document.getElementById('funnel').innerHTML=funnel.map(x=>bar(x[0],x[1],max)).join('');
   const sourceRows=groupBy([...(visits.length?visits:events),...orders],x=>x.source||x.traffic_source).slice(0,8);

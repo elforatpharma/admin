@@ -304,9 +304,46 @@
 <script src="layout.js"></script>
 <script>
 let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20;
-const ORDER_COLUMNS='id,customerName,phone,address,total,status,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
-const PENDING=new Set(['جديد','قيد التنفيذ']);
-const PROCESSING=['قيد التجهيز'],DELIVERED=['تم التوصيل'],CANCELLED=['ملغي'];
+const ORDER_COLUMNS='id,customerName,phone,address,total,status,status_code,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
+// ════════════════════════════════════════════════════════════════════
+// حالات الطلب — المصدر: status_code، مش النص العربي
+// ════════════════════════════════════════════════════════════════════
+// ليه؟ النص العربي بيتكتب من 3 أماكن، وكل واحد بيستخدم صياغة مختلفة:
+//   "تم التوصيل" (الداشبورد) | "تم التوصيل بنجاح ✅" (بوت التليجرام)
+//   | "طلب ملغي ❌" (البوت) | "مع المندوب للشحن 🚚" (البوت)
+// فالمطابقة التامة (trim) كانت بتضيّع 4 من 6 حالات: الفلترة والألوان
+// والعدادات وبطاقة الطلب كانت كلها بتوقف. دلوقتي status_code بقى
+// مضمون صح في الداتابيز بفضل trigger في migration.sql، فبنستخدمه هو
+// ونسيب النص العربي مجرد عرض — مش منطق.
+// الكود ده نسخة مطابقة لـ public.derive_order_status_code في
+// migration.sql (نفس الترتيب: الأدق → الأعم) وبتوافق مع order-status.js.
+const STATUS_CODES=['pending','paid','processing','shipped','delivered','cancelled'];
+function deriveStatusCode(text){
+  const s=String(text||'').toLowerCase();
+  if(!s)return'pending';
+  if(/ملغي|ملغى|إلغاء|الغاء|مرتجع|returned|refund|رفض/.test(s))return'cancelled';
+  if(/تم التوصيل|تم التسليم|تسليم|توصيل|deliver/.test(s))return'delivered';
+  if(/مع المندوب|المندوب|تم الشحن|shipped|خرج للشحن/.test(s))return'shipped';
+  if(/مدفوع|تم الدفع|دفع تم|تم السداد|paid/.test(s))return'paid';
+  if(/بانتظار|انتظار|جديد|قيد التنفيذ|قيد المتابعة|في الانتظار|pending/.test(s))return'pending';
+  if(/قيد التجهيز|التجهيز|تجهيز|processing/.test(s))return'processing';
+  return'pending';
+}
+// العمود المضمون أول، والنص شبكة أمان للطلبات القديمة اللي لسه مالهاش status_code.
+function statusCodeOf(o){
+  const c=String((o&&o.status_code)||'').trim();
+  return STATUS_CODES.includes(c)?c:deriveStatusCode(o&&o.status);
+}
+
+const PENDING=new Set(['pending']);
+const PAID=['paid'],PROCESSING=['processing'],SHIPPED=['shipped'],
+      DELIVERED=['delivered'],CANCELLED=['cancelled'];
+
+// وسوم أزرار الفلترة في الـ HTML لسه عربية — بنترجمها هنا مرة واحدة
+const TAG_TO_CODE={'جديد':'pending','قيد التنفيذ':'pending','قيد التجهيز':'processing',
+                   'تم الشحن':'shipped','تم التوصيل':'delivered','ملغي':'cancelled'};
+
+function statusTextToCode(s){return deriveStatusCode(s);}
 
 function payOf(o){return o.paymentMethod||o.payment||o.payment_method||'';}
 function paymentStatusOf(o){return String(o.payment_status||'').toLowerCase();}
@@ -320,11 +357,13 @@ function paymentKind(o){
 }
 
 function statusInfo(s){
-  s=normStatus(s);
+  s=STATUS_CODES.includes(s)?s:deriveStatusCode(s);
   if(DELIVERED.includes(s))return{label:'تم التسليم',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200',ico:'check_circle'};
   if(CANCELLED.includes(s))return{label:'ملغية',cls:'bg-red-50 text-red-600 border border-red-200',ico:'cancel'};
+  if(SHIPPED.includes(s))return{label:'تم الشحن',cls:'bg-sky-50 text-sky-800 border border-sky-200',ico:'local_shipping'};
   if(PROCESSING.includes(s))return{label:'قيد التجهيز',cls:'bg-amber-50 text-amber-800 border border-amber-200',ico:'sync'};
-  if(s==='قيد التنفيذ')return{label:'بانتظار التأكيد',cls:'bg-violet-50 text-violet-700 border border-violet-200',ico:'schedule'};
+  if(PAID.includes(s))return{label:'مدفوع',cls:'bg-teal-50 text-teal-800 border border-teal-200',ico:'paid'};
+  if(PENDING.has(s))return{label:'بانتظار التأكيد',cls:'bg-violet-50 text-violet-700 border border-violet-200',ico:'schedule'};
   return{label:'جديدة',cls:'bg-primary-surface text-primary border border-primary-border',ico:'fiber_new'};
 }
 
@@ -382,8 +421,8 @@ async function fetchOrders(){
 function renderKPIs(){
   const d=DELIVERED,c=CANCELLED,p=PROCESSING,pend=PENDING;
   const n=allOrders.length;
-  const st=o=>normStatus(o.status);
-  const cNew=allOrders.filter(o=>o.status==='جديد').length;
+  const st=o=>statusCodeOf(o);
+  const cNew=allOrders.filter(o=>String(o.status||'').trim()==='جديد').length;
   const cPending=allOrders.filter(o=>PENDING.has(st(o))).length;
   const cP=allOrders.filter(o=>PROCESSING.includes(st(o))).length;
   const cDel=allOrders.filter(o=>DELIVERED.includes(st(o))).length;
@@ -423,10 +462,9 @@ function getFiltered(){
   const now=new Date();
   return allOrders.filter(o=>{
     if(quickTag!=='all'){
-      const s=normStatus(o.status);
-      if(quickTag==='new'){if(!(o.status==='جديد'||PENDING.has(s)))return false;}
-      else if(PENDING.has(quickTag)){if(!PENDING.has(s))return false;}
-      else if(s!==quickTag)return false;
+      const s=statusCodeOf(o);
+      const tag=quickTag==='new'?'pending':(TAG_TO_CODE[quickTag]||quickTag);
+      if(s!==tag)return false;
     }
     if(q){
       const hay=String(o.id||'')+' '+String(o.customerName||'')+' '+String(o.phone||'');
@@ -477,7 +515,7 @@ function renderOrders(){
   }else{
     tbody.innerHTML=slice.map(o=>{
       const id=escapeHtml(String(o.id));
-      const st=statusInfo(o.status);
+      const st=statusInfo(statusCodeOf(o));
       const pb=payBadge(o);
       const its=itemStats(o);
       const itemsTxt=its.qty>0?(its.qty+' منتج'+(its.gifts?' + '+its.gifts+' هدية':'')):'—';
@@ -515,11 +553,11 @@ function renderOrders(){
         </td>
         <td class="px-4 py-2">
           <select class="h-8 px-2 rounded-full font-label-sm text-label-sm font-semibold bg-transparent focus:outline-none border ${st.cls}" onclick="event.stopPropagation()" onchange="updateStatus('${id}',this.value)">
-            <option value="جديد" ${normStatus(o.status)==='جديد'?'selected':''}>جديد</option>
-            <option value="قيد التنفيذ" ${normStatus(o.status)==='قيد التنفيذ'?'selected':''}>قيد التنفيذ</option>
-            <option value="قيد التجهيز" ${normStatus(o.status)==='قيد التجهيز'?'selected':''}>قيد التجهيز</option>
-            <option value="تم التوصيل" ${normStatus(o.status)==='تم التوصيل'?'selected':''}>تم التوصيل</option>
-            <option value="ملغي" ${normStatus(o.status)==='ملغي'?'selected':''}>ملغي</option>
+            <option value="جديد" ${statusCodeOf(o)==='pending'?'selected':''}>بانتظار التأكيد</option>
+            <option value="قيد التجهيز" ${statusCodeOf(o)==='processing'?'selected':''}>قيد التجهيز</option>
+            <option value="تم الشحن" ${statusCodeOf(o)==='shipped'?'selected':''}>تم الشحن</option>
+            <option value="تم التوصيل" ${statusCodeOf(o)==='delivered'?'selected':''}>تم التوصيل</option>
+            <option value="ملغي" ${statusCodeOf(o)==='cancelled'?'selected':''}>ملغي</option>
           </select>
         </td>
         <td class="px-4 py-2 text-left" onclick="event.stopPropagation()">
@@ -568,7 +606,7 @@ async function updateStatus(id,newStatus){
   if(!id)return;
   try{
     const o=allOrders.find(x=>String(x.id)===String(id));
-    const patch={status:newStatus};
+    const patch={status:newStatus,status_code:statusTextToCode(newStatus)};
     if(newStatus==='تم التوصيل'){
       if(o&&paymentStatusOf(o)==='paid')patch.payment_status='paid';
       patch.delivered_at=new Date().toISOString();
@@ -612,21 +650,58 @@ function openWhatsApp(id){
   let p=String(o.phone).replace(/\D/g,'');
   if(p.startsWith('0')) p='20'+p.slice(1);
   const name=o.customerName?o.customerName.trim():'يا فندم';
-  const s=normStatus(o.status);
+  const s=statusCodeOf(o);
   const its=itemStats(o);
   
   let msg=`أهلاً بك أستاذ/ة ${name} 🌸\nبخصوص طلبك رقم #ORD-${o.id} من صيدلية الفرات فارما:\n\n`;
-  if(s==='تم التوصيل'){
+  if(s==='delivered'){
     msg+=`نتمنى أن تكون المنتجات قد نالت إعجابك! نسعد دائماً بخدمتك ونتمنى لك دوام الصحة والعافية 🌿`;
-  }else if(s==='تم الشحن'||s==='قيد التجهيز'){
+  }else if(s==='shipped'||s==='processing'){
     msg+=`تم تجهيز طلبك وجاري التوصيل لحضرتك في أقرب وقت 🚚\nمحتويات الشحنة: ${its.names||'مستحضرات الفرات'}\nإجمالي المبلغ المطلوب تحصيله: ${money(o.total)} ج.م.\nشكراً لثقتك بنا!`;
-  }else if(s==='ملغي'){
+  }else if(s==='cancelled'){
     msg+=`نود إعلامك بأنه تم إلغاء الطلب. إذا كان هناك أي استفسار أو رغبت في إعادة تفعيله يسعدنا تواصلك معنا في أي وقت.`;
   }else{
     msg+=`نؤكد لحضرتك استلام الطلب بنجاح، وجاري مراجعته وتجهيزه للشحن 📦\nالمنتجات المطلوبة: ${its.names||'مستحضرات الفرات'}\nالإجمالي: ${money(o.total)} ج.م\nالعنوان المسجل لدينا: ${o.address||'حسب المحادثة'}\n\nيرجى تأكيد العنوان وموعد الاستلام المناسب لحضرتك. شكراً لك!`;
   }
   const url=`https://wa.me/${p}?text=${encodeURIComponent(msg)}`;
   window.open(url,'_blank');
+}
+
+// ── تأكيد الدفع اليدوي (InstaPay / فودافون كاش): الأدمن يراجع التحويل ويأكده يدوياً ──
+function isManualPay(o){
+  const p=String(payOf(o)).toLowerCase();
+  return /instapay|insta pay|إنستا|انستا|vodafone|فودافون/.test(p);
+}
+function payConfirmBtn(o,s){
+  if(CANCELLED.includes(s)||paymentStatusOf(o)==='paid')return '';
+  const manual=isManualPay(o);
+  const label=manual?('تأكيد استلام الدفع — '+escapeHtml(String(payOf(o)))):'تأكيد الدفع';
+  const cls=manual?'btn-brand-gradient':'bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200';
+  return `<button id="confirm-pay-btn" onclick="confirmPayment('${o.id}')" class="w-full h-11 ${cls} font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 transition-all mb-1"><span class="material-symbols-outlined text-lg">paid</span><span>${label}</span></button>`;
+}
+async function confirmPayment(id){
+  const o=allOrders.find(x=>String(x.id)===String(id));
+  if(!o||paymentStatusOf(o)==='paid')return;
+  const r=await confirmDialog('تأكيد استلام الدفع',`تأكدي إن مبلغ ${money(o.total)} ج.م وصل فعلاً (${payOf(o)||'—'}) قبل التأكيد. سيتم تحديث حالة الدفع إلى "مدفوع".`,'warning');
+  if(!r)return;
+  const btn=document.getElementById('confirm-pay-btn');
+  if(btn){btn.disabled=true;btn.classList.add('opacity-60');}
+  try{
+    const patch={payment_status:'paid'};
+    // لو الطلب لسه في مرحلة الانتظار: ننقله لـ "تم الدفع". لو اتجهز/اتشحن/اتسلم بالفعل منلمسش حالته.
+    if(statusCodeOf(o)==='pending'){patch.status='تم الدفع';patch.status_code='paid';}
+    const{error}=await _supabase.from('orders').update(patch).eq('id',id);
+    if(error)throw error;
+    const i=allOrders.findIndex(x=>String(x.id)===String(id));
+    if(i!==-1)Object.assign(allOrders[i],patch);
+    renderKPIs();renderOrders();
+    if(String(selectedId)===String(id))renderDetail();
+    toast('تم تأكيد الدفع','success');
+  }catch(e){
+    console.error(e);
+    if(btn){btn.disabled=false;btn.classList.remove('opacity-60');}
+    toast('فشل تأكيد الدفع','error');
+  }
 }
 
 function detailPrimaryBtn(o,s){
@@ -639,7 +714,7 @@ function detailPrimaryBtn(o,s){
 async function completeOrder(id){
   const o=allOrders.find(x=>String(x.id)===String(id));
   if(!o)return;
-  const s=normStatus(o.status);
+  const s=statusCodeOf(o);
   const next=PROCESSING.includes(s)?'تم التوصيل':'قيد التجهيز';
   const r=await confirmDialog(next==='تم التوصيل'?'تأكيد تسليم الطلب':`اعتماد الطلب #ORD-${id}`,'سيتم تحديث حالة الطلب إلى: '+next,'warning');
   if(r)updateStatus(id,next);
@@ -657,18 +732,19 @@ function renderDetail(){
     box.innerHTML=`<div class="text-center py-10 text-outline"><span class="material-symbols-outlined text-4xl block mx-auto mb-2 opacity-40">receipt_long</span><span class="font-body-sm text-body-sm">اختر طلباً لعرض مراحل التنفيذ والعميل والفاتورة</span></div>`;
     return;
   }
-  const s=normStatus(o.status);
-  const info=statusInfo(o.status);
+  const s=statusCodeOf(o);
+  const info=statusInfo(s);
   title.textContent='طلب #ORD-'+o.id;
   badge.textContent=info.label;
   badge.className='px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-bold '+info.cls;
   ddate.textContent='تاريخ الإنشاء: '+fmtDate(o.created_at)+' ('+relTime(o.created_at)+')';
 
   // timeline
+  const isPendingStage=PENDING.has(s);
   const steps=[{t:'استلام الطلب بنجاح',d:'تم تسجيل الطلب عبر المتجر.',done:true},
-               {t:'تأكيد ومراجعة الصيدلي',d:(s==='قيد التنفيذ'||o.status==='جديد')?'في انتظار مراجعة الصيدلي لتأكيد التوفر والموافقة.':'تم تأكيد الطلب ومراجعته.',done:CANCELLED.includes(s)||PROCESSING.includes(s)||DELIVERED.includes(s),active:s==='قيد التنفيذ'||o.status==='جديد',current:s==='قيد التنفيذ'||o.status==='جديد'},
-               {t:'قيد التجهيز والتعبئة الطبية',d:'تغليف معقم وفق معايير وزارة الصحة وحفظ درجات الحرارة.',done:DELIVERED.includes(s),active:PROCESSING.includes(s),current:PROCESSING.includes(s)},
-               {t:'تسليم شركة الشحن',d:'إصدار بوليصة الشحن الإلكترونية وتوجيه المندوب.',done:DELIVERED.includes(s),active:false,current:false},
+               {t:'تأكيد ومراجعة الصيدلي',d:isPendingStage?'في انتظار مراجعة الصيدلي لتأكيد التوفر والموافقة.':'تم تأكيد الطلب ومراجعته.',done:CANCELLED.includes(s)||PROCESSING.includes(s)||SHIPPED.includes(s)||DELIVERED.includes(s),active:isPendingStage,current:isPendingStage},
+               {t:'قيد التجهيز والتعبئة الطبية',d:'تغليف معقم وفق معايير وزارة الصحة وحفظ درجات الحرارة.',done:SHIPPED.includes(s)||DELIVERED.includes(s),active:PROCESSING.includes(s),current:PROCESSING.includes(s)},
+               {t:'تسليم شركة الشحن',d:'إصدار بوليصة الشحن الإلكترونية وتوجيه المندوب.',done:DELIVERED.includes(s),active:SHIPPED.includes(s),current:SHIPPED.includes(s)},
                {t:'تم التوصيل واستلام القيمة',d:'تأكيد استلام العميل وتوريد النقدية.',done:DELIVERED.includes(s),active:DELIVERED.includes(s),current:DELIVERED.includes(s)}];
   let timeline='<div class="flex flex-col gap-2"><span class="font-label-lg text-label-lg text-on-surface font-semibold">مراحل تنفيذ الطلب والشحن</span><div class="relative flex flex-col gap-2 pr-4 mt-2">';
   timeline+='<div class="absolute top-2 bottom-2 right-1.5 w-0.5 bg-surface-container-high"></div>';
@@ -679,7 +755,7 @@ function renderDetail(){
       break;
     }
     if(st.current){
-      timeline+=`<div class="flex items-start gap-2 relative"><span class="w-3.5 h-3.5 rounded-full bg-[#8536ff] text-white flex items-center justify-center ring-4 ring-surface-container-lowest z-10 animate-pulse shadow-[0_0_10px_rgba(77,60,235,0.5)]"></span><div class="flex flex-col p-3 rounded-xl bg-gradient-to-l from-primary/5 to-[#8536ff]/10 border border-primary/20 w-full"><div class="flex items-center justify-between gap-2"><span class="font-label-md text-label-md text-primary font-bold">${st.t}</span><span class="font-label-sm text-label-sm text-[#8536ff] font-semibold whitespace-nowrap">الخطوة الحالية</span></div><span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">${st.d}</span>${(s==='قيد التنفيذ'||o.status==='جديد')?`<div class="flex items-center gap-2 mt-2 flex-wrap"><button onclick="completeOrder('${o.id}')" class="px-4 py-1.5 btn-brand-gradient font-label-sm text-label-sm font-semibold transition-all">تأكيد الطلب وبدء التعبئة</button><button onclick="editOrder('${o.id}')" class="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm">تعديل محتويات</button></div>`:(PROCESSING.includes(s)?`<div class="flex items-center gap-2 mt-2"><button onclick="completeOrder('${o.id}')" class="px-4 py-1.5 btn-brand-gradient font-label-sm text-label-sm font-semibold transition-all">تأكيد تسليم الطلب</button></div>`:'')}</div></div>`;
+      timeline+=`<div class="flex items-start gap-2 relative"><span class="w-3.5 h-3.5 rounded-full bg-[#8536ff] text-white flex items-center justify-center ring-4 ring-surface-container-lowest z-10 animate-pulse shadow-[0_0_10px_rgba(77,60,235,0.5)]"></span><div class="flex flex-col p-3 rounded-xl bg-gradient-to-l from-primary/5 to-[#8536ff]/10 border border-primary/20 w-full"><div class="flex items-center justify-between gap-2"><span class="font-label-md text-label-md text-primary font-bold">${st.t}</span><span class="font-label-sm text-label-sm text-[#8536ff] font-semibold whitespace-nowrap">الخطوة الحالية</span></div><span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">${st.d}</span>${(PENDING.has(s)?`<div class="flex items-center gap-2 mt-2 flex-wrap"><button onclick="completeOrder('${o.id}')" class="px-4 py-1.5 btn-brand-gradient font-label-sm text-label-sm font-semibold transition-all">تأكيد الطلب وبدء التعبئة</button><button onclick="editOrder('${o.id}')" class="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm">تعديل محتويات</button></div>`:(PROCESSING.includes(s)?`<div class="flex items-center gap-2 mt-2"><button onclick="completeOrder('${o.id}')" class="px-4 py-1.5 btn-brand-gradient font-label-sm text-label-sm font-semibold transition-all">تأكيد تسليم الطلب</button></div>`:''))}</div></div>`;
     }else{
       timeline+=`<div class="flex items-start gap-2 relative ${st.done?'':'opacity-60'}"><span class="w-3.5 h-3.5 rounded-full ${st.done?'bg-success text-white':'bg-surface-container-highest'} ring-4 ring-surface-container-lowest z-10 flex items-center justify-center"><span class="material-symbols-outlined text-[10px] font-bold">${st.done?'check':''}</span></span><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface font-semibold">${st.t}</span><span class="font-body-sm text-body-sm text-outline">${st.d}</span></div></div>`;
     }
@@ -748,6 +824,7 @@ function renderDetail(){
     <span class="font-data-tabular text-headline-xl font-bold text-brand-gradient">${money(o.total)} ج.م</span></div></div>`;
 
   const actions=`<div class="flex flex-col gap-1 pt-1">
+    ${payConfirmBtn(o,s)}
     ${detailPrimaryBtn(o,s)}
     <div class="grid grid-cols-2 gap-1.5">
       <button onclick="printWaybill('${o.id}')" class="h-10 rounded-full bg-surface-container hover:bg-surface-container-high text-primary font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all font-bold border border-primary/20 hover:border-primary" title="بوليصة شحن للطرد (طابعة حرارية 80mm أو لاصقة)">
@@ -871,7 +948,7 @@ async function newOrderModal(){
   });
   if(!fv)return;
   try{
-    const{error}=await _supabase.from('orders').insert({customerName:fv.customerName,phone:fv.phone,total:fv.total,items:fv.items,status:'جديد'});
+    const{error}=await _supabase.from('orders').insert({customerName:fv.customerName,phone:fv.phone,total:fv.total,items:fv.items,status:'جديد',status_code:'pending'});
     if(error)throw error;
     toast('تم إنشاء الطلب','success');
     fetchOrders();

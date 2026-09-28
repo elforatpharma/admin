@@ -416,7 +416,7 @@
 <script>
   // ===================== State & Helpers =====================
   let coupons=[], orders=[], query='', filter='all', tab='coupons';
-  const COUPON_COLUMNS='id,code,discount_percentage,expiry_date,description,is_active,created_at';
+  const COUPON_COLUMNS='id,code,discount_percentage,expiry_date,description,is_active,created_at,min_amount,max_uses,used_count';
   const COUPON_ORDER_COLUMNS='id,status,total,items,phone,coupon,couponCode,coupon_code,discount_amount,created_at';
 
   function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -430,6 +430,10 @@
   function isExpired(c){return String(c.expiry_date||'').slice(0,10)<todayStr();}
   function couponCode(o){return o.coupon||o.couponCode||o.coupon_code;}
   function usageCount(c){
+    // نفضّل القيمة المحفوظة مباشرة في قاعدة البيانات (used_count) لو متاحة —
+    // دي بتشمل الاستخدامات اللي جاية من البوت وأي طلبات قديمة.
+    // في حالة مش موجودة (صف قديم ما اتعدّلش) بنرجع للحساب اليدوي من الـ orders.
+    if(c.used_count!=null && Number(c.used_count)>0) return Number(c.used_count);
     const code=String(c.code||'').toUpperCase();
     if(!code)return 0;
     return orders.filter(o=>{

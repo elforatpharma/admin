@@ -65,6 +65,28 @@ function getAnonClient() {
   return _anonClient;
 }
 
+// ─── إدراج تجريبي عبر anon ثم تحقّق + تنظيف عبر كلاينت الأدمن ────
+// ملاحظة: لا نستخدم .select('id') بعد الإدراج لأن إرجاع الصفوف
+// يتطلّب سياسة SELECT للـ anon، والمتجر غير مسموح له بقراءة
+// الطلبات/الرسائل. التحقّق يتم بكلاينت الأدمن.
+// optional: مفاتيح قد لا تكون موجودة بعد (أعمدة الدفع مثلاً) — نُسقطها عند الخطأ.
+async function anonInsertCheck(table, payload, find, optional) {
+  const db = getAnonClient();
+  let r = await db.from(table).insert(payload);
+  if (r.error && optional && optional.length && /column .* does not exist|schema cache/i.test(r.error.message || '')) {
+    for (const k of optional) delete payload[k];
+    r = await db.from(table).insert(payload);
+  }
+  if (r.error) return r;
+  const chk = await _supabase.from(table).select('id').match(find).order('created_at',{ascending:false}).limit(1);
+  if (chk.error) return chk;
+  if (!chk.data || chk.data.length === 0) {
+    return { data: null, error: { message: 'الإدراج لم يُرجع خطأ لكن السجل غير ظاهر للأدمن — راجع سياسات RLS.' } };
+  }
+  await _supabase.from(table).delete().eq('id', chk.data[0].id);
+  return { data: chk.data, error: null };
+}
+
 // ─── فحوصات anon: ما يفعله المتجر بدون تسجيل دخول ───────────────────
 const checksAnon = [
   {id:'anon-products-read', label:'قراءة المنتجات (anon / المتجر)', run: async () => {
@@ -90,55 +112,33 @@ const checksAnon = [
     return r;
   }},
   {id:'anon-orders-insert', label:'إدراج طلب جديد (anon / المتجر)', run: async () => {
-    const db = getAnonClient();
-    // نُدرج سجلاً تجريبياً ثم نحذفه بكلاينت الأدمن
-    const r = await db.from('orders').insert({
+    return anonInsertCheck('orders', {
       total: 0.01,
       status: '__test__',
       customer_name: 'test-anon',
       payment_method: 'cod',
       payment_status: 'pending'
-    }).select('id');
-    if (!r.error && r.data && r.data.length > 0) {
-      // نظّف السجل التجريبي
-      await _supabase.from('orders').delete().eq('id', r.data[0].id);
-    }
-    return r;
+    }, { status: '__test__', customer_name: 'test-anon' }, ['payment_method','payment_status']);
   }},
   {id:'anon-messages-insert', label:'إدراج رسالة عميل (anon)', run: async () => {
-    const db = getAnonClient();
-    const r = await db.from('messages').insert({
+    return anonInsertCheck('messages', {
       name: 'test-anon',
       phone: '000',
       message: '__test__'
-    }).select('id');
-    if (!r.error && r.data && r.data.length > 0) {
-      await _supabase.from('messages').delete().eq('id', r.data[0].id);
-    }
-    return r;
+    }, { message: '__test__', name: 'test-anon' });
   }},
   {id:'anon-store-events-insert', label:'إدراج حدث تتبع (anon / store_events)', run: async () => {
-    const db = getAnonClient();
-    const r = await db.from('store_events').insert({
+    return anonInsertCheck('store_events', {
       session_id: 'test-session',
       event_name: '__test__'
-    }).select('id');
-    if (!r.error && r.data && r.data.length > 0) {
-      await _supabase.from('store_events').delete().eq('id', r.data[0].id);
-    }
-    return r;
+    }, { event_name: '__test__', session_id: 'test-session' });
   }},
   {id:'anon-visitor-events-insert', label:'إدراج زيارة (anon / visitor_events)', run: async () => {
-    const db = getAnonClient();
-    const r = await db.from('visitor_events').insert({
+    return anonInsertCheck('visitor_events', {
       session_id: 'test-session',
       page_path: '/test',
       device_type: 'desktop'
-    }).select('id');
-    if (!r.error && r.data && r.data.length > 0) {
-      await _supabase.from('visitor_events').delete().eq('id', r.data[0].id);
-    }
-    return r;
+    }, { session_id: 'test-session', page_path: '/test' });
   }},
   {id:'anon-visitors-rw', label:'قراءة وتحديث عداد الزيارات القديم (anon)', run: async () => {
     const db = getAnonClient();

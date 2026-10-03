@@ -304,7 +304,7 @@
 <script src="layout.js"></script>
 <script>
 let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20;
-const ORDER_COLUMNS='id,customerName,phone,address,total,status,status_code,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
+const ORDER_COLUMNS='id,customerName,phone,address,total,status,status_code,items,payment_method,payment_status,merchant_order_id,notes,coupon_code,discount_amount,created_at';
 // ════════════════════════════════════════════════════════════════════
 // حالات الطلب — المصدر: status_code، مش النص العربي
 // ════════════════════════════════════════════════════════════════════
@@ -653,7 +653,7 @@ function openWhatsApp(id){
   const s=statusCodeOf(o);
   const its=itemStats(o);
   
-  let msg=`أهلاً بك أستاذ/ة ${name} 🌸\nبخصوص طلبك رقم #ORD-${o.id} من صيدلية الفرات فارما:\n\n`;
+  let msg=`أهلاً بك أستاذ/ة ${name} 🌸\nبخصوص طلبك رقم #ORD-${o.id} من شركة الفرات فارما:\n\n`;
   if(s==='delivered'){
     msg+=`نتمنى أن تكون المنتجات قد نالت إعجابك! نسعد دائماً بخدمتك ونتمنى لك دوام الصحة والعافية 🌿`;
   }else if(s==='shipped'||s==='processing'){
@@ -1102,7 +1102,7 @@ function printWaybill(id){
   </div>
 
   <div class="header">
-    <div class="brand-title">صيدلية الفرات فارما</div>
+    <div class="brand-title">شركة الفرات فارما</div>
     <div class="brand-sub">ELFORAT PHARMA STORE | مستحضرات العناية والتجميل</div>
     <div class="badge-waybill">بوليصة شحن وتوصيل طرد</div>
   </div>
@@ -1157,7 +1157,7 @@ function printWaybill(id){
   <!-- بيانات الراسل -->
   <div style="font-size:10px; padding:4px; border-top:1px dashed #000; display:flex; justify-content:space-between; align-items:center;">
     <div>
-      <b>الراسل:</b> صيدلية الفرات فارما<br>
+      <b>الراسل:</b> شركة الفرات فارما<br>
       <b>خدمة العملاء:</b> 01146809133
     </div>
     <div style="text-align:left; font-size:9px;">
@@ -1284,7 +1284,7 @@ function printInvoice(id){
   <table class="header-table">
     <tr>
       <td style="vertical-align:top;">
-        <div class="brand-name">صيدلية الفرات فارما</div>
+        <div class="brand-name">شركة الفرات فارما</div>
         <div class="brand-en">ELFORAT PHARMA STORE</div>
         <div style="font-size:12px; color:#475569; margin-top:4px;">مستحضرات التجميل والعناية بالبشرة والشعر | مصر</div>
         <div style="font-size:12px; color:#475569;">خدمة العملاء: 01146809133 | info@elforatpharma.com</div>
@@ -1355,7 +1355,7 @@ function printInvoice(id){
       </tr>
       ${(discountAmount > 0 || o.coupon) ? `
       <tr>
-        <td class="t-title" style="color:#059669;">خصم الكوبون (${escapeHtml(o.coupon||o.couponCode||'خصم')}):</td>
+        <td class="t-title" style="color:#059669;">خصم الكوبون (${escapeHtml(o.coupon_code||o.coupon||o.couponCode||'خصم')}):</td>
         <td class="t-val" style="color:#059669;">-${money(discountAmount)} ج.م</td>
       </tr>` : ''}
       ${shipping > 0 ? `

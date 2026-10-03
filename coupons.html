@@ -239,7 +239,7 @@
           <div id="empty-state" class="hidden flex-col items-center justify-center text-center gap-3 py-16 bg-surface-card rounded-2xl shadow-sm">
             <span class="material-symbols-outlined text-[48px] text-outline">loyalty</span>
             <p class="font-headline-lg text-headline-lg text-on-surface" id="empty-title">لا توجد كوبونات بعد</p>
-            <p class="font-body-sm text-body-sm text-text-secondary" id="empty-desc">استخدم "إنشاء كود خصم" لإطلاق أول حملة ترويجية لصيدلية الفرات فارما.</p>
+            <p class="font-body-sm text-body-sm text-text-secondary" id="empty-desc">استخدم "إنشاء كود خصم" لإطلاق أول حملة ترويجية لشركة الفرات فارما.</p>
           </div>
           <div id="coupons-list" class="flex flex-col gap-4"></div>
         </div>
@@ -417,7 +417,7 @@
   // ===================== State & Helpers =====================
   let coupons=[], orders=[], query='', filter='all', tab='coupons';
   const COUPON_COLUMNS='id,code,discount_percentage,expiry_date,description,is_active,created_at,min_amount,max_uses,used_count';
-  const COUPON_ORDER_COLUMNS='id,status,total,items,phone,coupon,couponCode,coupon_code,discount_amount,created_at';
+  const COUPON_ORDER_COLUMNS='id,status,total,items,phone,coupon_code,discount_amount,created_at';
 
   function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -678,7 +678,7 @@
     const active=coupons.filter(c=>c.is_active!==false&&!isExpired(c));
     if(!active.length){toast('error','لا توجد عروض نشطة لإرسالها');return;}
     const codes=active.slice(0,5).map(c=>c.code).join(' - ');
-    const msg=encodeURIComponent('🎉 عروض مميزة من صيدلية الفرات فارما:\nكوبونات الخصم النشطة الآن: '+codes+'\nاستخدم الكود عند إتمام الطلب.');
+    const msg=encodeURIComponent('🎉 عروض مميزة من شركة الفرات فارما:\nكوبونات الخصم النشطة الآن: '+codes+'\nاستخدم الكود عند إتمام الطلب.');
     const phones=[...new Set(orders.filter(o=>o.phone).map(o=>String(o.phone).replace(/\D/g,'')))].slice(0,1);
     const link=phones.length?('https://wa.me/2'+phones[0]+'?text='+msg):('https://wa.me/?text='+msg);
     window.open(link,'_blank');

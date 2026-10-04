@@ -608,18 +608,23 @@ function toggleAll(on){
 
 async function bulkDelete(){
   if(!sel.size)return toast('error','حدد أصنافاً أولاً');
-  const r=await confirmDialog('حذف الأصناف المحددة','سيتم حذف '+sel.size+' صنف نهائياً!');
+  const ids=[...sel];
+  const r=await confirmDialog('حذف الأصناف المحددة','سيتم حذف '+ids.length+' صنف نهائياً!');
   if(!r)return;
-  for(const id of sel){
-    const p=products.find(x=>String(x.id)===String(id));
-    const{error}=await _supabase.from('products').delete().eq('id',id);
-    if(!error){
-      sel.delete(id);
-      const img=p&&(p.img||p.image);
-      if(img&&window.deleteStorageFile)deleteStorageFile(img).catch(()=>{});
-    }
-  }
-  sel.clear();toast('success','تم الحذف');fetchProducts();
+  const selectedProducts=products.filter(p=>ids.includes(String(p.id)));
+  const storageUrls=[];
+  selectedProducts.forEach(p=>{
+    if(p.img||p.image)storageUrls.push(p.img||p.image);
+    normalizeGallery(p.images).forEach(url=>storageUrls.push(url));
+  });
+  const{error}=await _supabase.from('products').delete().in('id',ids);
+  if(error){toast('error','فشل حذف الأصناف: '+(error.message||''));return;}
+  let cleanupOk=true;
+  if(window.deleteStorageFiles&&storageUrls.length)cleanupOk=(await deleteStorageFiles(storageUrls)).ok;
+  sel.clear();
+  await fetchProducts();
+  if(cleanupOk)toast('success','تم حذف '+ids.length+' صنف وتنظيف صورهم من التخزين');
+  else toast('warning','تم حذف '+ids.length+' صنف، لكن تعذر حذف بعض الصور من Storage');
 }
 
 async function editStock(id){
@@ -647,11 +652,17 @@ async function deleteProduct(id){
   const p=products.find(x=>String(x.id)===String(id));
   const r=await confirmDialog('تخريد الصنف','سيتم حذف " '+(p?p.name:'')+' " نهائياً!');
   if(!r)return;
+  const storageUrls=[];
+  if(p&&(p.img||p.image))storageUrls.push(p.img||p.image);
+  normalizeGallery(p?.images).forEach(url=>storageUrls.push(url));
   const{error}=await _supabase.from('products').delete().eq('id',id);
   if(error){toast('error','فشل الحذف');return;}
-  const img=p&&(p.img||p.image);
-  if(img&&window.deleteStorageFile)deleteStorageFile(img).catch(()=>{});
-  sel.delete(id);toast('success','تم التخريد');fetchProducts();
+  let cleanupOk=true;
+  if(window.deleteStorageFiles&&storageUrls.length)cleanupOk=(await deleteStorageFiles(storageUrls)).ok;
+  sel.delete(id);
+  await fetchProducts();
+  if(cleanupOk)toast('success','تم التخريد وتنظيف صور المنتج من Storage');
+  else toast('warning','تم التخريد، لكن تعذر حذف بعض الصور من Storage');
 }
 
 function supplyFor(id){
@@ -843,9 +854,9 @@ function setupGalleryHandlers(productId,initialGallery){
       if(error)throw error;
       const p = products.find(x => String(x.id) === String(window.__egGalleryProductId));
       if(p) p.images = [...window.__egGalleryState];
-      if(window.deleteStorageFile)deleteStorageFile(removed).catch(()=>{});
+      const storageResult=window.deleteStorageFiles?await deleteStorageFiles([removed]):{ok:false};
       window.__egRenderGallery();
-      toast('success','تم حذف الصورة من المعرض');
+      toast(storageResult?.ok?'success':'warning',storageResult?.ok?'تم حذف الصورة من المعرض':'تم حذف الصورة من المعرض، لكن تعذر تنظيف ملفها من Storage');
     }catch(err){
       window.__egGalleryState.splice(idx,0,removed);
       window.__egRenderGallery();
@@ -959,8 +970,9 @@ async function editProduct(id){
     const{error}=await _supabase.from('products').update(payload).eq('id',id);
     if(error)throw error;
     // حذف الصورة القديمة من التخزين لو اتبدلت بصورة جديدة (تنظيف تلقائي)
-    if(fv.imageChanged&&currentImg&&window.deleteStorageFile){
-      deleteStorageFile(currentImg).catch(()=>{});
+    if(fv.imageChanged&&currentImg&&window.deleteStorageFiles){
+      const cleanup=await deleteStorageFiles([currentImg]);
+      if(!cleanup.ok)toast('warning','تم تحديث صورة المنتج، لكن تعذر حذف الصورة القديمة من Storage');
     }
     Object.assign(p,payload);
     toast('success','تم حفظ تعديلات الصنف بنجاح');

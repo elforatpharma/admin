@@ -3,14 +3,26 @@
 
 // ---- التحقق من الجلسة وأن المستخدم هو الآدمن المسموح ----
 async function requireAdmin() {
-  const { data: { session } } = await _supabase.auth.getSession();
+  let { data: { session } } = await _supabase.auth.getSession();
   if (!session) { window.location.href = 'index.html'; return false; }
+
+  // app_metadata موجود داخل الـ JWT الذي تستخدمه RLS.
+  // لو الجلسة القديمة لا تحتوي role=admin، نعمل refresh مرة واحدة
+  // حتى لا يظل الأدمن مسجلاً في الواجهة بينما قاعدة البيانات تراه بدون صلاحية.
+  const emailOk = getUserEmail(session.user) === normalizeEmail(ADMIN_EMAIL);
+  if (emailOk && String(session.user?.app_metadata?.role || '').toLowerCase() !== 'admin') {
+    const refreshed = await _supabase.auth.refreshSession();
+    if (!refreshed.error && refreshed.data?.session) {
+      session = refreshed.data.session;
+    }
+  }
+
   if (!isAdminUser(session.user)) {
-    // مستخدم آخر ليس الآدمن المصرح له - نسجّل خروجه ونعيده لتسجيل الدخول
     await _supabase.auth.signOut();
     window.location.href = 'index.html';
     return false;
   }
+
   return true;
 }
 

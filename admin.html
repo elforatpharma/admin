@@ -210,35 +210,6 @@
   </div>
 </div>
 
-<!-- Gift Modal -->
-<div id="gift-modal" class="fixed inset-0 efp-native-overlay z-50 hidden items-center justify-center p-4">
-  <div class="bg-white efp-native-card w-full max-w-lg overflow-hidden modal-enter">
-    <div class="efp-native-header">
-      <div class="efp-native-title-wrap"><span class="material-symbols-outlined efp-native-icon">card_giftcard</span><div><h3>إضافة هدية جديدة</h3><p>تُمنح تلقائياً عند شراء المنتج المشترط</p></div></div>
-      <button onclick="closeGiftModal()" class="efp-native-close p-1 rounded-lg"><span class="material-symbols-outlined">close</span></button>
-    </div>
-    <form id="gift-form" class="p-6 space-y-5">
-      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">اسم الهدية <span class="text-red-400">*</span></label>
-        <input type="text" id="g-name" required placeholder="مثال: Body Scrub مجاناً" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">المنتج المشترط <span class="text-red-400">*</span></label>
-          <input type="text" id="g-trigger-product" required placeholder="مثال: Guzel Gold" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
-        <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">الكمية <span class="text-red-400">*</span></label>
-          <input type="number" id="g-trigger-qty" required min="1" value="2" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none bg-gray-50 focus:bg-white transition-all"/></div>
-      </div>
-      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-400 uppercase tracking-wider">صورة الهدية</label>
-        <input type="file" id="g-img" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-bold file:text-primary cursor-pointer border border-gray-200 rounded-xl p-2 bg-gray-50"/></div>
-      <div class="p-4 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700 font-medium">
-        <span class="font-black">ملاحظة:</span> لو كتبت "Guzel Gold Serum" والكمية "2"، أي عميل يضيف 2 قطعة من المنتج ده للسلة هتتضاف الهدية تلقائياً.
-      </div>
-      <div class="flex gap-3 pt-2">
-        <button type="submit" class="flex-1 btn-brand-gradient py-3.5 font-black text-sm transition-transform hover:scale-[1.01]">حفظ الهدية</button>
-        <button type="button" onclick="closeGiftModal()" class="px-6 bg-gray-100 text-gray-600 py-3.5 rounded-full font-bold text-sm hover:bg-gray-200 transition-all">إلغاء</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script src="imageUploader.js"></script>
 
 <nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-white/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,.05)] lg:hidden"><div class="flex justify-around items-center h-16 px-1"><a href="admin.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-primary font-bold"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="stitch-label">الرئيسية</span></a><a href="sales-report.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-on-surface-variant"><span class="material-symbols-outlined text-[22px]">query_stats</span><span class="stitch-label">تقرير المبيعات</span></a><a href="coupons.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-on-surface-variant"><span class="material-symbols-outlined text-[22px]">loyalty</span><span class="stitch-label">إدارة الكوبونات</span></a><a href="messages.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-on-surface-variant"><span class="material-symbols-outlined text-[22px]">chat_bubble</span><span class="stitch-label">رسائل العملاء</span></a><a href="settings.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-on-surface-variant"><span class="material-symbols-outlined text-[22px]">store</span><span class="stitch-label">إعدادات المتجر</span></a></div></nav>

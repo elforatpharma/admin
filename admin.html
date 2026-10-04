@@ -17,7 +17,7 @@
 <style>
 *{box-sizing:border-box}html,body{width:100%;margin:0}body{font-family:'IBM Plex Sans',sans-serif;background:#f8f9ff;color:#0b1c30;overscroll-behavior:none}.material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24}::-webkit-scrollbar{display:none}
 .stitch-card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(11,28,48,.045)}.stitch-soft{background:#eff4ff}.stitch-primary{background:#003820;color:#fff}.stitch-gold{background:#fece57;color:#251a00}.stitch-muted{color:#404942}.stitch-label{font-size:11px;line-height:16px;font-weight:500}.stitch-body{font-size:12px;line-height:18px}.stitch-head{font-size:18px;line-height:26px;font-weight:600}.stitch-title{font-size:22px;line-height:32px;font-weight:700}
-@media(min-width:1024px){.mobile-shell{max-width:720px;margin:0 auto}.desktop-wide{max-width:1500px;margin:auto}}
+@media(min-width:1024px){.mobile-shell{width:100%;max-width:none;margin:0}.desktop-wide{width:100%;max-width:none;margin:0}}
 @media(max-width:1023px){#sidebar-placeholder{display:none!important}}
 </style>
 </head><body class="min-h-screen bg-surface">
@@ -41,8 +41,8 @@
 
 <div class="flex min-h-screen pt-20">
   <div id="sidebar-placeholder"></div>
-  <main class="w-full px-4 pb-24 pt-0 desktop-wide">
-    <div class="mobile-shell flex flex-col gap-4">
+  <main class="w-full px-4 pt-20 pb-24 bg-surface min-h-screen">
+    <div class="w-full flex flex-col gap-4">
 
       <section class="stitch-card p-4 relative overflow-hidden">
         <div class="absolute -top-10 -left-10 w-28 h-28 bg-secondary-fixed/20 rounded-full blur-2xl pointer-events-none"></div>
@@ -84,7 +84,7 @@
           <button class="chart-interval-btn flex-1 py-1 rounded bg-primary text-white font-semibold stitch-label" data-interval="monthly" onclick="setChartInterval('monthly')">شهرياً</button>
         </div>
         <div class="flex items-center justify-between stitch-label"><span><i class="inline-block w-2.5 h-2.5 rounded-full bg-primary"></i> مبيعات الشهر الحالي (<b id="insight-month-sales">0 ج.م</b>)</span><span class="stitch-muted"><i class="inline-block w-2.5 h-2.5 rounded-full bg-secondary"></i> الشهر السابق (<b id="insight-prev-sales">0 ج.م</b>)</span></div>
-        <div class="relative w-full h-32 bg-surface rounded-lg p-2 overflow-hidden"><canvas id="dashboard-sales-chart" class="w-full h-full"></canvas></div>
+        <div class="relative w-full h-40 bg-surface rounded-lg p-2 overflow-hidden border border-surface-container"><canvas id="dashboard-sales-chart" class="w-full h-full"></canvas></div>
         <div class="grid grid-cols-2 gap-1.5">
           <div class="col-span-2 flex items-center gap-1 p-2 bg-secondary-fixed/20 rounded-lg text-secondary stitch-label"><span class="material-symbols-outlined text-[16px]">stars</span><span id="insight-top-product">أكثر منتج مبيعاً: —</span></div>
           <div class="p-2 stitch-soft rounded-lg"><span class="stitch-label stitch-muted block">الطلبات المباشرة</span><b id="kpi-direct-orders" class="stitch-label text-primary">0 طلب</b></div>
@@ -105,6 +105,45 @@
         <a href="coupons.html" class="flex items-center gap-2 p-3 stitch-card"><div class="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">confirmation_number</span></div><span class="stitch-label font-semibold">إدارة الكوبونات</span></a>
         <a href="messages.html" class="flex items-center gap-2 p-3 stitch-card"><div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">chat</span></div><span class="stitch-label font-semibold">رسائل العملاء</span></a>
         <a href="settings.html" class="flex items-center gap-2 p-3 stitch-card"><div class="w-8 h-8 rounded-lg bg-surface-container text-on-surface-variant flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">settings</span></div><span class="stitch-label font-semibold">إعدادات المتجر</span></a>
+      </section>
+
+      <section class="stitch-card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center">
+            <span class="material-symbols-outlined text-[18px]">card_giftcard</span>
+          </div>
+          <div>
+            <h3 class="stitch-head text-primary">إضافة هدية جديدة</h3>
+            <p class="stitch-body stitch-muted">تُمنح تلقائياً عند شراء المنتج المشترط</p>
+          </div>
+        </div>
+        <form id="gift-form" class="space-y-3">
+          <div class="space-y-1">
+            <label class="stitch-label stitch-muted">اسم الهدية <span class="text-error">*</span></label>
+            <input type="text" id="g-name" required placeholder="مثال: Body Scrub مجاناً" class="w-full bg-surface border border-outline/30 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary"/>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="space-y-1">
+              <label class="stitch-label stitch-muted">المنتج المشترط <span class="text-error">*</span></label>
+              <input type="text" id="g-trigger-product" required placeholder="مثال: Guzel Gold" class="w-full bg-surface border border-outline/30 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary"/>
+            </div>
+            <div class="space-y-1">
+              <label class="stitch-label stitch-muted">الكمية <span class="text-error">*</span></label>
+              <input type="number" id="g-trigger-qty" required min="1" value="2" class="w-full bg-surface border border-outline/30 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary"/>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <label class="stitch-label stitch-muted">صورة الهدية</label>
+            <input type="file" id="g-img" accept="image/*" class="w-full text-xs text-on-surface-variant file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:font-semibold file:bg-primary file:text-white cursor-pointer border border-outline/30 rounded-lg p-2 bg-surface"/>
+          </div>
+          <div class="p-3 bg-secondary-fixed/20 border border-secondary-fixed rounded-lg stitch-label text-secondary">
+            <span class="font-bold">ملاحظة:</span> لو كتبت "Guzel Gold Serum" والكمية "2"، أي عميل يضيف 2 قطعة من المنتج ده للسلة هتتضاف الهدية تلقائياً.
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button type="submit" class="flex-1 h-10 bg-primary text-white rounded-lg stitch-label font-semibold hover:opacity-95">حفظ الهدية</button>
+            <button type="reset" class="px-5 h-10 bg-surface-container text-on-surface-variant rounded-lg stitch-label font-semibold">إلغاء</button>
+          </div>
+        </form>
       </section>
 
       <div id="sidebar-sections" class="hidden"></div>
@@ -257,24 +296,25 @@ function renderSalesChart(labels,curSeries,prevSeries,curLabel='الفترة ا�
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
   const gradient=ctx.createLinearGradient(0,0,0,220);
-  gradient.addColorStop(0,'rgba(8,127,91,.24)');
-  gradient.addColorStop(1,'rgba(8,127,91,0)');
+  gradient.addColorStop(0,'rgba(0,56,32,.18)');
+  gradient.addColorStop(1,'rgba(0,56,32,0)');
   if(salesChart)salesChart.destroy();
   salesChart=new Chart(ctx,{
     type:'line',
     data:{labels,datasets:[
-      {label:curLabel,data:curSeries,borderColor:'#087f5b',backgroundColor:gradient,fill:true,tension:.35,pointRadius:0,borderWidth:2.5,spanGaps:false},
-      {label:prevLabel,data:prevSeries,borderColor:'#94a3b8',borderDash:[5,5],backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2,spanGaps:false}
+      {label:curLabel,data:curSeries,borderColor:'#003820',backgroundColor:gradient,fill:true,tension:.35,pointRadius:0,borderWidth:2.5,spanGaps:false},
+      {label:prevLabel,data:prevSeries,borderColor:'#775a00',borderDash:[5,5],backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2,spanGaps:false}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{display:true,position:'bottom',labels:{boxWidth:10,font:{size:10}}},
-        tooltip:{callbacks:{label:c=>(c.dataset.label+': '+Math.round(c.parsed.y||0).toLocaleString('en')+' ج.م')}}
+        legend:{display:false},
+        tooltip:{backgroundColor:'#0b1c30',titleFont:{family:'IBM Plex Sans'},bodyFont:{family:'IBM Plex Sans'},callbacks:{label:c=>(c.dataset.label+': '+Math.round(c.parsed.y||0).toLocaleString('en')+' ج.م')}}
       },
       scales:{
-        y:{beginAtZero:true,ticks:{callback:v=>v.toLocaleString('en')},grid:{color:'#f1f5f9'}},
-        x:{grid:{display:false},ticks:{maxTicksLimit:10}}
+        y:{beginAtZero:true,display:false,grid:{display:false}},
+        x:{grid:{display:false},border:{display:false},ticks:{display:false}}
       }
     }
   });
@@ -716,6 +756,7 @@ async function fetchGifts(){
 }
 
 // Gift Form
+document.getElementById('gift-form').onreset=()=>{document.getElementById('g-trigger-qty').value=2;};
 document.getElementById('gift-form').onsubmit=async(e)=>{
   e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;btn.innerHTML='جاري الحفظ...';
   try{let imgUrl='';const file=document.getElementById('g-img').files[0];

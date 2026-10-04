@@ -387,7 +387,7 @@ function initialsColors(name){
 }
 
 /* ---------- data loading ---------- */
-const CUSTOMER_ORDER_COLUMNS='id,customerName,phone,address,total,status,items,created_at';
+const CUSTOMER_ORDER_COLUMNS='id,customerName,customername,customer_name,phone,customer_phone,address,total,status,status_code,items,created_at';
 async function loadCustomers(){
   try{
     let{data,error}=await _supabase.from('orders').select(CUSTOMER_ORDER_COLUMNS).order('created_at',{ascending:false}).limit(3000);
@@ -396,7 +396,7 @@ async function loadCustomers(){
       ({data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false}).limit(3000));
     }
     if(error)throw error;
-    allOrders=data||[];
+    allOrders=(data||[]).map(o=>({...o,customerName:o.customerName||o.customername||o.customer_name||'',phone:o.phone||o.customer_phone||''}));
     aggregate();
     renderKPIs();
     renderTable();

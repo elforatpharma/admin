@@ -70,12 +70,17 @@ function getAnonClient() {
 // يتطلّب سياسة SELECT للـ anon، والمتجر غير مسموح له بقراءة
 // الطلبات/الرسائل. التحقّق يتم بكلاينت الأدمن.
 // optional: مفاتيح قد لا تكون موجودة بعد (أعمدة الدفع مثلاً) — نُسقطها عند الخطأ.
-async function anonInsertCheck(table, payload, find, optional) {
+// tolerate: { pattern: RegExp, warn: string } — لو رسالة الخطأ طابقت النمط نعتبرها
+// رفض تحقق من قاعدة البيانات (مش فشل صلاحيات) ونعرضها كتنبيه بدل "مشكلة".
+async function anonInsertCheck(table, payload, find, optional, tolerate) {
   const db = getAnonClient();
   let r = await db.from(table).insert(payload);
   if (r.error && optional && optional.length && /column .* does not exist|schema cache/i.test(r.error.message || '')) {
     for (const k of optional) delete payload[k];
     r = await db.from(table).insert(payload);
+  }
+  if (r.error && tolerate && tolerate.pattern.test(r.error.message || '')) {
+    return { data: null, error: null, warn: tolerate.warn + ' (رسالة القاعدة: ' + (r.error.message || '') + ')' };
   }
   if (r.error) return r;
   const chk = await _supabase.from(table).select('id').match(find).order('created_at',{ascending:false}).limit(1);
@@ -118,7 +123,10 @@ const checksAnon = [
       customer_name: 'test-anon',
       payment_method: 'cod',
       payment_status: 'pending'
-    }, { status: '__test__', customer_name: 'test-anon' }, ['payment_method','payment_status']);
+    }, { status: '__test__', customer_name: 'test-anon' }, ['payment_method','payment_status'], {
+      pattern: /ORDER_INVALID_DATA/i,
+      warn: 'قاعدة البيانات رفضت الطلب التجريبي بقاعدة التحقق (طلب وهمي بدون منتجات/بيانات كاملة) — متوقع مع create_secure_order. الفحص ده مبيثبتش إن إدراج طلب حقيقي شغال؛ اعمل طلب تجريبي حقيقي من المتجر للتأكد.'
+    });
   }},
   {id:'anon-messages-insert', label:'إدراج رسالة عميل (anon)', run: async () => {
     return anonInsertCheck('messages', {

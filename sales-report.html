@@ -161,14 +161,27 @@ async function loadReport(p){
   const subtitles={day:'مبيعات مكتملة كل ساعة',week:'مبيعات مكتملة يومياً لآخر 7 أيام',month:'مبيعات مكتملة يومياً للشهر الحالي',days30:'مبيعات مكتملة يومياً لآخر 30 يوم'};
   document.getElementById('chart-subtitle').textContent=subtitles[p];
 
-  const{data:orders,error}=await _supabase.from('orders')
-    .select('status,status_code,total,created_at,items')
-    .gte('created_at',def.prevStart.toISOString())
-    .order('created_at',{ascending:true});
   const bars=document.getElementById('sales-chart');
-  if(error){ toast('error','فشل جلب بيانات المبيعات: '+(error.message||'')); return; }
-
-  const all=orders||[];
+  let all=[];
+  try{
+    const PAGE_SIZE=1000;
+    for(let pageIndex=0;;pageIndex++){
+      const from=pageIndex*PAGE_SIZE;
+      const to=from+PAGE_SIZE-1;
+      const{data,error}=await _supabase.from('orders')
+        .select('status,status_code,total,created_at,items')
+        .gte('created_at',def.prevStart.toISOString())
+        .order('created_at',{ascending:true})
+        .range(from,to);
+      if(error)throw error;
+      const batch=data||[];
+      all.push(...batch);
+      if(batch.length<PAGE_SIZE)break;
+    }
+  }catch(error){
+    toast('error','فشل جلب بيانات المبيعات: '+(error.message||''));
+    return;
+  }
   let curRevenue=0, prevRevenue=0, curDelivered=0, curOrders=0;
   const productAgg={};
   const isHour=p==='day';

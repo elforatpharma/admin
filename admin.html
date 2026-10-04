@@ -59,7 +59,7 @@
   <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto">
     <header class="sticky top-0 z-30 h-16 bg-white/90 backdrop-blur-xl border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-6 shadow-[0_1px_10px_rgba(20,32,28,.04)]">
       <div class="flex items-center gap-3 min-w-0">
-        <div class="hidden md:flex items-center gap-2"><img src="logo.png" alt="الفرات فارما" class="h-9 w-auto object-contain"><span class="font-black text-sm">الفرات فارما</span></div>
+        <div class="hidden md:flex items-center gap-2"><div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><span class="material-symbols-outlined">local_pharmacy</span></div><span class="font-black text-sm">الفرات فارما</span></div>
         <div class="hidden lg:block h-6 w-px bg-slate-200"></div>
         <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-xs font-bold text-emerald-800">المتجر متصل</span></div>
       </div>
@@ -136,7 +136,7 @@
         </section>
 
         <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <a href="products.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">add_box</span></span><span class="text-sm font-bold">إضافة منتج</span></a>
+          <button type="button" onclick="openModal()" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition text-right"><span class="ef-kpi-icon"><span class="material-symbols-outlined">add_box</span></span><span class="text-sm font-bold">إضافة منتج</span></button>
           <a href="orders.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">shopping_bag</span></span><span class="text-sm font-bold">إدارة الطلبات</span></a>
           <a href="coupons.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">confirmation_number</span></span><span class="text-sm font-bold">الكوبونات</span></a>
           <a href="sales-report.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">monitoring</span></span><span class="text-sm font-bold">تقرير المبيعات</span></a>

@@ -50,113 +50,136 @@
     @media(min-width:1024px){.ef-content{max-width:1500px;}}
     @media(max-width:640px){.ef-kpi{padding:15px}.ef-title{font-size:22px}.ef-table-wrap{margin-inline:-12px}.ef-card{border-radius:20px}}
   </style>
-</head>
-<body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
-<div class="flex h-screen overflow-hidden">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/><style>body{font-family:"IBM Plex Sans",sans-serif!important}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px)}</style></head>
+<body class="bg-[#f8f9ff] text-[#0b1c30] min-h-screen">
+<div id="sidebar-placeholder" class="hidden"></div>
 
-  <div id="sidebar-placeholder"></div>
-
-  <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto">
-    <header class="sticky top-0 z-30 h-16 bg-white/90 backdrop-blur-xl border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-6 shadow-[0_1px_10px_rgba(20,32,28,.04)]">
-      <div class="flex items-center gap-3 min-w-0">
-        <div class="hidden md:flex items-center gap-2"><div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><span class="material-symbols-outlined">local_pharmacy</span></div><span class="font-black text-sm">الفرات فارما</span></div>
-        <div class="hidden lg:block h-6 w-px bg-slate-200"></div>
-        <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-xs font-bold text-emerald-800">المتجر متصل</span></div>
+<header class="fixed top-0 inset-x-0 z-50 bg-[#f8f9ff]/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,.04)]">
+  <div class="h-20 px-4 flex items-center justify-between gap-2 max-w-5xl mx-auto">
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-9 h-9 rounded-lg bg-[#003820] text-white flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[21px]">local_pharmacy</span></div>
+      <div class="flex flex-col min-w-0">
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-sm text-[#003820]">الفرات فارما</span>
+          <span class="text-[10px] font-medium text-[#775a00]">لوحة التحكم</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="relative flex h-2 w-2"><span class="absolute inline-flex h-full w-full rounded-full bg-[#95d4ac] opacity-75 animate-ping"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-[#0f5132]"></span></span>
+          <span class="text-[10px] text-[#404942]">المتجر متصل وقيد العمل</span>
+        </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button onclick="openModal()" class="ef-btn flex items-center gap-1.5 px-3 sm:px-4 h-10 font-bold text-xs"><span class="material-symbols-outlined text-lg">add</span><span class="hidden sm:inline">منتج جديد</span></button>
-        <button class="relative w-10 h-10 rounded-xl hover:bg-slate-50 text-slate-600 flex items-center justify-center" title="الإشعارات"><span class="material-symbols-outlined">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span></button>
-        <div class="hidden md:flex items-center gap-2 pr-2 border-r border-slate-200"><div class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-black">أ</div></div>
-      </div>
-    </header>
-    <main class="w-full px-4 sm:px-6 py-6 min-h-screen">
-      <div class="ef-content w-full mx-auto space-y-6">
-        <section class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div class="flex items-center gap-2 mb-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span class="text-xs font-bold text-emerald-700">المتجر يعمل بشكل طبيعي</span></div>
-            <h1 id="greeting-text" class="ef-title text-2xl md:text-3xl">مرحباً بك</h1>
-            <p class="text-sm ef-muted mt-1">ملخص سريع لأداء الفرات فارما اليوم.</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="ef-pill rounded-full px-3 py-2 text-xs font-bold"><span id="last-update-time">جاري التحديث...</span></div>
-            <button id="refreshBtn" class="ef-outline w-10 h-10 flex items-center justify-center" title="تحديث"><span class="material-symbols-outlined text-lg">refresh</span></button>
-          </div>
-        </section>
-
-        <section id="low-stock-banner" class="ef-card ef-alert hidden p-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center"><span class="material-symbols-outlined">warning</span></div>
-              <div><div class="font-bold text-amber-900">تنبيه المخزون</div><p id="low-stock-text" class="text-xs text-amber-700 mt-0.5"></p></div>
-            </div>
-            <a href="inventory.html" class="ef-btn px-4 py-2 text-xs font-bold text-center">فتح المخزون</a>
-          </div>
-        </section>
-
-        <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
-          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">إجمالي المبيعات</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">payments</span></div></div><div id="kpi-sales" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">ج.م</span></div><div class="text-[11px] mt-2 ef-muted">اليوم: <b id="kpi-today-sales" class="text-emerald-700">0 ج.م</b></div><div id="kpi-sales-trend" class="hidden"></div></div>
-          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">الطلبات</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">shopping_bag</span></div></div><div id="kpi-orders" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">طلب</span></div><div class="text-[11px] mt-2 ef-muted">اليوم: <b id="kpi-today-orders" class="text-emerald-700">0 طلب</b></div><div class="text-[11px] mt-1 ef-muted">جلسات: <b id="kpi-today-sessions">—</b> · تحميلات: <b id="kpi-page-loads">—</b></div></div>
-          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">متوسط قيمة الطلب</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">receipt_long</span></div></div><div id="kpi-aov" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">ج.م</span></div><div class="text-[11px] mt-2 ef-muted">للطلبات المكتملة</div></div>
-          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">قاعدة العملاء</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">groups</span></div></div><div id="kpi-customers" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">عميل</span></div><div class="text-[11px] mt-2 ef-muted">إجمالي المنتجات: <b id="kpi-products">0 <span class="text-xs font-normal">صنف</span></b></div><div id="kpi-low-stock-count" class="text-[11px] mt-1 text-amber-700">0 منتجات قرب النفاد</div></div>
-        </section>
-
-        <section class="grid grid-cols-1 xl:grid-cols-12 gap-5">
-          <div class="ef-card p-4 md:p-5 xl:col-span-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div><h2 class="ef-title text-lg">المبيعات والإيرادات</h2><p class="text-xs ef-muted mt-1">مقارنة الفترة الحالية بالفترة السابقة</p></div>
-              <div class="flex items-center gap-1 p-1 bg-slate-50 rounded-xl border border-slate-100">
-                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="daily" onclick="setChartInterval('daily')">يومي</button>
-                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="weekly" onclick="setChartInterval('weekly')">أسبوعي</button>
-                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="monthly" onclick="setChartInterval('monthly')">شهري</button>
-              </div>
-            </div>
-            <div class="flex flex-wrap gap-3 text-xs mb-3"><span id="insight-month-sales" class="ef-pill px-3 py-1.5 rounded-full font-bold">مبيعات الشهر الحالي (0 ج.م)</span><span id="insight-prev-sales" class="px-3 py-1.5 rounded-full bg-slate-50 text-slate-500">الشهر السابق (0 ج.م)</span></div>
-            <div class="relative h-64 rounded-2xl bg-slate-50/70 border border-slate-100 p-2"><canvas id="dashboard-sales-chart"></canvas></div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
-              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">طلبات الموقع</div><b id="kpi-direct-orders" class="text-sm">0 طلب</b></div>
-              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">واتساب / هاتف</div><b id="kpi-contact-orders" class="text-sm">0 طلب</b></div>
-              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">متوسط التوصيل</div><b id="kpi-avg-delivery" class="text-sm">—</b></div>
-              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">رضا العملاء</div><b id="kpi-satisfaction" class="text-sm">—</b></div>
-            </div>
-          </div>
-
-          <div class="xl:col-span-4 space-y-5">
-            <div class="ef-card p-5"><div class="flex items-center justify-between mb-3"><div><h3 class="ef-title text-base">حالة الطلبات</h3><p class="text-xs ef-muted mt-1">التوزيع الحالي</p></div><span class="material-symbols-outlined text-emerald-700">alt_route</span></div>
-              <div class="space-y-3 text-xs"><div class="flex justify-between"><span class="ef-muted">قيد التنفيذ / التجهيز / الشحن</span><b id="kpi-pending">0</b></div><div class="flex justify-between"><span class="ef-muted">تم التوصيل</span><b id="kpi-delivered" class="text-emerald-700">0</b></div><div class="flex justify-between"><span class="ef-muted">ملغي</span><b id="kpi-cancelled" class="text-red-600">0</b></div></div>
-              <div id="kpi-status-bar" class="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex mt-4"><div class="h-full bg-emerald-600" style="width:0%"></div><div class="h-full bg-amber-400" style="width:0%"></div><div class="h-full bg-red-500" style="width:0%"></div></div>
-            </div>
-            <div class="ef-card p-5"><div class="flex items-center justify-between mb-3"><div><h3 class="ef-title text-base">طرق الدفع</h3><p class="text-xs ef-muted mt-1">من الطلبات المدفوعة فقط</p></div><span class="material-symbols-outlined text-emerald-700">account_balance_wallet</span></div><div id="payment-channels-list" class="space-y-2"><div class="text-center py-5 text-xs ef-muted">جاري التحميل...</div></div></div>
-            <div class="ef-card p-5"><div class="flex items-center justify-between"><div><h3 class="ef-title text-base">الأكثر مبيعاً</h3><p class="text-xs ef-muted mt-1">حسب الطلبات المكتملة</p></div><span class="material-symbols-outlined text-amber-600">workspace_premium</span></div><p id="insight-top-product" class="text-sm font-bold mt-4">أكثر منتج مبيعاً: —</p></div>
-          </div>
-        </section>
-
-        <section class="ef-card p-4 md:p-5">
-          <div class="flex items-center justify-between mb-4"><div><h2 class="ef-title text-lg">أحدث الطلبات</h2><p class="text-xs ef-muted mt-1">آخر 5 طلبات وصلت للمتجر</p></div><div class="flex items-center gap-2"><span id="new-orders-badge" class="ef-pill px-3 py-1 rounded-full text-xs font-bold">0 طلبات جديدة</span><a href="orders.html" class="text-xs font-bold text-emerald-700 hover:underline">عرض الكل ←</a></div></div>
-          <div class="ef-table-wrap overflow-x-auto"><table class="ef-table w-full text-right"><thead><tr><th class="py-3 px-3 rounded-r-xl">العميل</th><th class="py-3 px-3">المنتجات</th><th class="py-3 px-3">الإجمالي</th><th class="py-3 px-3">الحالة</th><th class="py-3 px-3 text-center rounded-l-xl">إجراء</th></tr></thead><tbody id="recent-orders-body"><tr><td colspan="5" class="text-center py-12 text-slate-300">جاري تحميل الطلبات...</td></tr></tbody></table></div>
-        </section>
-
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <button type="button" onclick="openModal()" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition text-right"><span class="ef-kpi-icon"><span class="material-symbols-outlined">add_box</span></span><span class="text-sm font-bold">إضافة منتج</span></button>
-          <a href="orders.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">shopping_bag</span></span><span class="text-sm font-bold">إدارة الطلبات</span></a>
-          <a href="coupons.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">confirmation_number</span></span><span class="text-sm font-bold">الكوبونات</span></a>
-          <a href="sales-report.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">monitoring</span></span><span class="text-sm font-bold">تقرير المبيعات</span></a>
-        </section>
-
-        <section id="sidebar-sections" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div id="gifts-section" class="ef-card p-5"><div class="flex items-center justify-between mb-4"><h3 class="ef-title text-base flex items-center gap-2"><span class="material-symbols-outlined text-emerald-700">card_giftcard</span>الهدايا</h3><button onclick="openGiftModal()" class="ef-btn px-3 py-2 text-xs font-bold">+ هدية</button></div><div id="gifts-mini-list" class="space-y-2"><p class="text-xs text-center py-4 ef-muted">جاري التحميل...</p></div></div>
-          <div class="ef-card p-5"><h3 class="ef-title text-base mb-3">معلومات سريعة</h3><div class="grid grid-cols-2 gap-2 text-xs"><a href="messages.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">رسائل العملاء</a><a href="settings.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">إعدادات المتجر</a><a href="inventory.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">المخزون</a><a href="customers.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">العملاء</a></div></div>
-        </section>
-      </div>
-    </main>
-    <nav class="ef-mobile-nav">
-      <a href="admin.html" class="active"><span class="material-symbols-outlined">dashboard</span>الرئيسية</a>
-      <a href="orders.html"><span class="material-symbols-outlined">shopping_bag</span>الطلبات</a>
-      <a href="inventory.html"><span class="material-symbols-outlined">inventory_2</span>المخزون</a>
-      <a href="coupons.html"><span class="material-symbols-outlined">confirmation_number</span>الكوبونات</a>
-      <a href="settings.html"><span class="material-symbols-outlined">settings</span>الإعدادات</a>
-    </nav>
+    </div>
+    <div class="flex items-center gap-1">
+      <button aria-label="بحث" class="w-10 h-10 flex items-center justify-center rounded-lg text-[#0b1c30] hover:bg-[#e5eeff]" type="button"><span class="material-symbols-outlined text-[21px]">search</span></button>
+      <button aria-label="الإشعارات" class="relative w-10 h-10 flex items-center justify-center rounded-lg text-[#0b1c30] hover:bg-[#e5eeff]" type="button"><span class="material-symbols-outlined text-[21px]">notifications</span><span class="absolute top-2 left-2 w-2 h-2 bg-[#775a00] rounded-full ring-2 ring-[#f8f9ff]"></span></button>
+      <button onclick="openModal()" class="h-10 px-2.5 bg-[#003820] text-white rounded-lg flex items-center gap-1 shadow-sm hover:bg-[#0f5132]" type="button"><span class="material-symbols-outlined text-[18px]">add</span><span class="text-[11px] font-semibold">منتج جديد</span></button>
+      <div class="w-8 h-8 rounded-full bg-[#003820] text-white flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[17px]">person</span></div>
+    </div>
   </div>
-</div>
+</header>
+
+<main class="w-full px-4 pt-24 pb-24 bg-[#f8f9ff] min-h-screen">
+  <div class="max-w-5xl mx-auto flex flex-col gap-4">
+
+    <section class="bg-white rounded-xl p-4 shadow-sm border border-transparent relative overflow-hidden">
+      <div class="absolute -top-10 -left-10 w-28 h-28 bg-[#ffdf98]/30 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-[#003820]/10 flex items-center justify-center text-[#003820] shrink-0"><span class="material-symbols-outlined text-[23px]">waving_hand</span></div>
+          <div><h1 id="greeting-text" class="text-lg font-bold tracking-tight">مرحباً بك</h1><p class="text-xs text-[#404942]">لوحة تحكم المتجر والمبيعات الفورية</p></div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span id="last-update-time" class="hidden sm:inline text-[10px] text-[#404942]">جاري التحديث...</span>
+          <button id="refreshBtn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#e5eeff] text-[#003820] hover:bg-[#dce9ff]" type="button"><span class="text-[10px] font-medium">تحديث</span><span class="material-symbols-outlined text-[16px]">refresh</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="low-stock-banner" class="hidden bg-[#ffdad6]/40 rounded-xl p-4 shadow-sm border border-[#ffdad6]">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-[#ba1a1a] text-white flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[20px]">crisis_alert</span></div>
+          <div><span class="text-[10px] text-[#ba1a1a] font-bold uppercase">إشعار تشغيلي</span><h3 class="text-sm font-semibold text-[#93000a]">تنبيه حرج: المخزون وشيك النفاد</h3><p id="low-stock-text" class="text-[11px] text-[#93000a] mt-1"></p></div>
+        </div>
+        <a href="inventory.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#ba1a1a] text-white text-[11px] font-semibold shadow-sm shrink-0"><span class="material-symbols-outlined text-[16px]">inventory_2</span>عرض المخزون</a>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-2 gap-2.5">
+      <div class="col-span-2 bg-gradient-to-l from-[#003820] to-[#0f5132] text-white rounded-xl p-4 shadow-md relative overflow-hidden">
+        <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-[#fece57]/20 rounded-full blur-xl"></div>
+        <div class="flex items-center justify-between mb-1"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[#ffdf98] text-[20px]">payments</span><span class="text-xs text-[#b0f1c7] font-medium">إجمالي المبيعات</span></div><span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-[#ffdf98]">إجمالي المتجر</span></div>
+        <div class="flex items-baseline justify-between mt-1"><span id="kpi-sales" class="text-[22px] font-bold">0 <span class="text-xs font-normal text-[#b0f1c7]">ج.م</span></span><span class="text-[10px] text-[#b0f1c7]">مبيعات اليوم: <b id="kpi-today-sales">0 ج.م</b></span></div>
+      </div>
+
+      <div class="bg-white rounded-xl p-3 shadow-sm"><div class="flex items-center justify-between mb-1"><span class="text-[10px] font-medium text-[#404942]">عدد الطلبات</span><span class="material-symbols-outlined text-[#003820] text-[18px]">shopping_cart</span></div><p id="kpi-orders" class="text-lg font-bold">0 <span class="text-xs font-normal text-[#404942]">طلب</span></p><span class="text-[10px] text-[#775a00] font-medium">اليوم: <b id="kpi-today-orders">0 طلب</b></span></div>
+      <div class="bg-white rounded-xl p-3 shadow-sm"><div class="flex items-center justify-between mb-1"><span class="text-[10px] font-medium text-[#404942]">متوسط قيمة الطلب</span><span class="material-symbols-outlined text-[#775a00] text-[18px]">receipt</span></div><p id="kpi-aov" class="text-lg font-bold">0 <span class="text-xs font-normal text-[#404942]">ج.م</span></p><span class="text-[10px] text-[#404942]">للطلبات المكتملة</span></div>
+
+      <div class="col-span-2 bg-white rounded-xl p-3 shadow-sm flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg bg-[#e5eeff] flex items-center justify-center text-[#003820]"><span class="material-symbols-outlined text-[18px]">insights</span></div><p class="text-[10px] text-[#404942]">زوار اليوم: <b id="kpi-today-sessions" class="text-[#0b1c30]">—</b></p></div>
+        <p class="text-[10px] text-[#404942]">تحميلات الصفحات: <b id="kpi-page-loads" class="text-[#003820]">—</b></p>
+      </div>
+
+      <div class="bg-white rounded-xl p-3 shadow-sm"><div class="flex items-center justify-between mb-1"><span class="text-[10px] font-medium text-[#404942]">حالة الطلبات</span><span class="material-symbols-outlined text-[#003820] text-[18px]">alt_route</span></div><div class="flex flex-col gap-1 mt-1 text-[10px]"><span>قيد المتابعة: <b id="kpi-pending">0</b></span><span class="text-[#003820] font-semibold">تم التسليم: <b id="kpi-delivered">0</b></span><span class="text-[#ba1a1a]">ملغي: <b id="kpi-cancelled">0</b></span></div></div>
+      <div class="bg-white rounded-xl p-3 shadow-sm"><div class="flex items-center justify-between mb-1"><span class="text-[10px] font-medium text-[#404942]">المخزون والمنتجات</span><span class="material-symbols-outlined text-[#003820] text-[18px]">medication_liquid</span></div><p id="kpi-products" class="text-lg font-bold">0 <span class="text-xs font-normal">صنف</span></p><div class="flex items-center gap-1 text-[#ba1a1a] mt-1"><span class="material-symbols-outlined text-[14px]">warning</span><span id="kpi-low-stock-count" class="text-[10px]">0 منتجات قرب النفاد</span></div></div>
+
+      <div class="col-span-2 bg-white rounded-xl p-3 shadow-sm flex items-center justify-between"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg bg-[#e5eeff] flex items-center justify-center text-[#003820]"><span class="material-symbols-outlined text-[18px]">diversity_1</span></div><div><span class="text-[10px] text-[#404942]">قاعدة العملاء</span><p id="kpi-customers" class="text-sm font-bold">0 <span class="text-xs font-normal">عميل</span></p></div></div><span class="text-[10px] px-2.5 py-1 bg-[#e5eeff] text-[#003820] font-semibold rounded-full">الكل</span></div>
+    </section>
+
+    <section class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-3">
+      <div class="flex flex-col gap-1"><div class="flex items-center justify-between"><h2 class="text-lg font-bold text-[#003820]">منحنى المبيعات والإيرادات</h2><button onclick="fetchStats()" class="w-8 h-8 rounded-lg bg-[#e5eeff] flex items-center justify-center text-[#003820]"><span class="material-symbols-outlined text-[18px]">refresh</span></button></div><p class="text-xs text-[#404942]">مقارنة حركة الإيرادات مع الفترة السابقة</p></div>
+      <div class="flex items-center gap-1.5 p-1 bg-[#eff4ff] rounded-lg">
+        <button class="chart-interval-btn flex-1 py-1 text-center rounded text-[10px] font-medium" data-interval="daily" onclick="setChartInterval('daily')">يومياً</button>
+        <button class="chart-interval-btn flex-1 py-1 text-center rounded text-[10px] font-medium" data-interval="weekly" onclick="setChartInterval('weekly')">أسبوعياً</button>
+        <button class="chart-interval-btn flex-1 py-1 text-center rounded text-[10px] font-medium" data-interval="monthly" onclick="setChartInterval('monthly')">شهرياً</button>
+      </div>
+      <div class="flex items-center justify-between text-[10px]">
+        <span id="insight-month-sales" class="text-[#003820] font-medium">مبيعات الفترة الحالية (0 ج.م)</span>
+        <span id="insight-prev-sales" class="text-[#404942]">الفترة السابقة (0 ج.م)</span>
+      </div>
+      <div class="relative w-full h-56 bg-[#f8f9ff] rounded-lg p-2 overflow-hidden"><canvas id="dashboard-sales-chart"></canvas></div>
+      <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+        <div class="col-span-2 flex items-center gap-1 text-[#775a00] font-semibold p-2 bg-[#ffdf98]/20 rounded-lg"><span class="material-symbols-outlined text-[16px]">stars</span><span id="insight-top-product">أكثر منتج مبيعاً: —</span></div>
+        <div class="p-2 bg-[#eff4ff] rounded-lg"><span class="text-[#404942] block">الطلبات المباشرة</span><b id="kpi-direct-orders" class="text-[#003820]">0 طلب</b></div>
+        <div class="p-2 bg-[#eff4ff] rounded-lg"><span class="text-[#404942] block">واتساب / هاتف</span><b id="kpi-contact-orders" class="text-[#003820]">0 طلب</b></div>
+        <div class="p-2 bg-[#eff4ff] rounded-lg"><span class="text-[#404942] block">متوسط سرعة التوصيل</span><b id="kpi-avg-delivery">—</b></div>
+        <div class="p-2 bg-[#eff4ff] rounded-lg"><span class="text-[#404942] block">رضا العملاء</span><b id="kpi-satisfaction" class="text-[#775a00]">—</b></div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-2">
+      <div class="flex items-center justify-between"><h3 class="text-base font-bold">طرق الدفع</h3><span class="text-[10px] text-[#404942]">من الطلبات المدفوعة فقط</span></div>
+      <div id="payment-channels-list" class="p-3 bg-[#eff4ff] rounded-lg text-center text-[#404942] text-[10px]">جاري التحميل...</div>
+    </section>
+
+    <section class="bg-white rounded-xl p-4 shadow-sm flex flex-col gap-3">
+      <div class="flex items-center justify-between"><div><h2 class="text-lg font-bold text-[#003820]">أحدث الطلبات</h2><span id="new-orders-badge" class="text-[10px] text-[#404942]">0 طلبات جديدة</span></div><a href="orders.html" class="flex items-center gap-1 text-[10px] text-[#775a00] font-semibold">عرض الكل<span class="material-symbols-outlined text-[16px]">arrow_back</span></a></div>
+      <div class="w-full overflow-x-auto rounded-lg bg-[#eff4ff] p-2"><table class="w-full text-right"><thead><tr class="text-[#404942] text-[10px] bg-[#e5eeff]"><th class="p-2 rounded-r">العميل</th><th class="p-2">المنتجات</th><th class="p-2">الإجمالي</th><th class="p-2">الحالة</th><th class="p-2 rounded-l">إجراء</th></tr></thead><tbody id="recent-orders-body"><tr><td colspan="5" class="text-center py-8 text-[#404942] text-[10px]">جاري تحميل الطلبات...</td></tr></tbody></table></div>
+    </section>
+
+    <section id="gifts-section" class="bg-white rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg bg-[#775a00]/10 text-[#775a00] flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">card_giftcard</span></div><h3 class="text-base font-bold">الهدايا</h3></div><button onclick="openGiftModal()" class="px-3 py-1.5 bg-[#775a00] text-white rounded-lg text-[10px] font-semibold">+ هدية</button></div>
+      <div id="gifts-mini-list" class="p-3 bg-[#eff4ff] rounded-lg text-center text-[#404942] text-[10px]">جاري التحميل...</div>
+    </section>
+
+    <section class="grid grid-cols-2 gap-2">
+      <a href="sales-report.html" class="flex items-center gap-2 p-3 bg-white rounded-xl shadow-sm"><div class="w-8 h-8 rounded-lg bg-[#003820]/10 text-[#003820] flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">monitoring</span></div><span class="text-[11px] font-semibold">تقرير المبيعات</span></a>
+      <a href="coupons.html" class="flex items-center gap-2 p-3 bg-white rounded-xl shadow-sm"><div class="w-8 h-8 rounded-lg bg-[#775a00]/10 text-[#775a00] flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">confirmation_number</span></div><span class="text-[11px] font-semibold">إدارة الكوبونات</span></a>
+      <a href="messages.html" class="flex items-center gap-2 p-3 bg-white rounded-xl shadow-sm"><div class="w-8 h-8 rounded-lg bg-[#003820]/10 text-[#003820] flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">chat</span></div><span class="text-[11px] font-semibold">رسائل العملاء</span></a>
+      <a href="settings.html" class="flex items-center gap-2 p-3 bg-white rounded-xl shadow-sm"><div class="w-8 h-8 rounded-lg bg-[#e5eeff] text-[#404942] flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">settings</span></div><span class="text-[11px] font-semibold">إعدادات المتجر</span></a>
+    </section>
+  </div>
+</main>
+
+<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-white/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,.05)]">
+  <div class="flex justify-around items-center h-16 px-1 max-w-5xl mx-auto">
+    <a aria-current="page" href="admin.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-[#003820] font-bold"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="text-[10px]">الرئيسية</span></a>
+    <a href="sales-report.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-[#404942] hover:text-[#003820]"><span class="material-symbols-outlined text-[22px]">query_stats</span><span class="text-[10px]">تقرير المبيعات</span></a>
+    <a href="coupons.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-[#404942] hover:text-[#003820]"><span class="material-symbols-outlined text-[22px]">loyalty</span><span class="text-[10px]">الكوبونات</span></a>
+    <a href="messages.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-[#404942] hover:text-[#003820]"><span class="material-symbols-outlined text-[22px]">chat_bubble</span><span class="text-[10px]">الرسائل</span></a>
+    <a href="settings.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-[#404942] hover:text-[#003820]"><span class="material-symbols-outlined text-[22px]">store</span><span class="text-[10px]">الإعدادات</span></a>
+  </div>
+</nav>
 
 <!-- Add Product Modal -->
 <div id="product-modal" class="fixed inset-0 efp-native-overlay z-50 hidden items-center justify-center p-4">

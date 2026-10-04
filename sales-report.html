@@ -207,8 +207,13 @@ async function loadReport(p){
           o.items.forEach(it=>{
             if(!it.name||it.isGift)return;
             if(!productAgg[it.name])productAgg[it.name]={qty:0,revenue:0};
-            productAgg[it.name].qty+=(it.qty||1);
-            productAgg[it.name].revenue+=total*0;
+            const qty=Number(it.qty)||1;
+            productAgg[it.name].qty+=qty;
+            const lineTotal=Number(it.total??it.line_total??it.subtotal);
+            const unitPrice=Number(it.price??it.unit_price);
+            if(Number.isFinite(lineTotal)) productAgg[it.name].revenue+=lineTotal;
+            else if(Number.isFinite(unitPrice)) productAgg[it.name].revenue+=unitPrice*qty;
+            else productAgg[it.name].revenue+=0;
           });
         }
       }else if(o.status!=='ملغي'){

@@ -388,14 +388,30 @@ function initialsColors(name){
 
 /* ---------- data loading ---------- */
 const CUSTOMER_ORDER_COLUMNS='id,customerName,customername,customer_name,phone,customer_phone,address,total,status,status_code,items,created_at';
+async function fetchAllCustomerOrderRows(columns){
+  const PAGE_SIZE=1000;
+  const rows=[];
+  for(let pageIndex=0;;pageIndex++){
+    const from=pageIndex*PAGE_SIZE;
+    const to=from+PAGE_SIZE-1;
+    const{data,error}=await _supabase.from('orders').select(columns).order('created_at',{ascending:false}).range(from,to);
+    if(error)throw error;
+    const batch=data||[];
+    rows.push(...batch);
+    if(batch.length<PAGE_SIZE)break;
+  }
+  return rows;
+}
+
 async function loadCustomers(){
   try{
-    let{data,error}=await _supabase.from('orders').select(CUSTOMER_ORDER_COLUMNS).order('created_at',{ascending:false}).limit(3000);
-    if(error){
+    let data;
+    try{
+      data=await fetchAllCustomerOrderRows(CUSTOMER_ORDER_COLUMNS);
+    }catch(error){
       console.warn('Optimized customer orders query failed, falling back to full order rows:',error.message);
-      ({data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false}).limit(3000));
+      data=await fetchAllCustomerOrderRows('*');
     }
-    if(error)throw error;
     allOrders=(data||[]).map(o=>({...o,customerName:o.customerName||o.customername||o.customer_name||'',phone:o.phone||o.customer_phone||''}));
     aggregate();
     renderKPIs();

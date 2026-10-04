@@ -321,7 +321,12 @@ const checksAnonExtra = [
   { id: 'welcome-coupon', label: 'كوبون WELCOME10 ظاهر للمتجر وبنسبة 10%', run: async () => {
     const r = await anon().from('coupons').select('code,discount_percentage').eq('code', 'WELCOME10').maybeSingle();
     if (r.error) return r;
-    if (!r.data) return WARN('WELCOME10 مش ظاهر للمتجر (مش موجود أو موقوف/منتهي) — البانر هيظهر لكن الكود هيترفض.');
+    if (!r.data) {
+      const d = await _supabase.from('coupons').select('is_active,expiry_date').eq('code', 'WELCOME10').maybeSingle();
+      if (!d.data) return WARN('WELCOME10 مش موجود في جدول coupons — الزائر الجديد هيشوف البانر لكن الطلب بالكود هيترفض ORDER_INVALID_COUPON.');
+      if (!d.data.is_active) return WARN('WELCOME10 موجود لكنه موقوف — لازم يفضل نشط في القاعدة (التقييد لأول زيارة بيتم من welcome-offer.js + triggers الطلبات مش بإيقاف الكوبون).');
+      return WARN('WELCOME10 موجود لكن تاريخ انتهائه (' + d.data.expiry_date + ') عدّى — المتجر مش شايفه والطلب بالكود هيترفض.');
+    }
     return Number(r.data.discount_percentage) === 10 ? OK('WELCOME10 موجود وبنسبة 10% ✓') : WARN('نسبة WELCOME10 = ' + r.data.discount_percentage + '% مش 10% زي البانر.');
   } },
   { id: 'sync-products', label: 'تطابق عدد المنتجات: المتجر ↔ الداشبورد', run: async () => {

@@ -54,3 +54,24 @@ function sanitizeFileName(name) {
   const ext = (name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 }
+
+// ---------------------------------------------------------------
+// fetchAll: يجيب كل الصفوف على دفعات (Supabase بيقطع أي نتيجة عند
+// حد Max Rows — الافتراضي 1000 — مهما كان .limit()).
+// الاستخدام: buildQuery دالة بترجّع query جديد كل مرة، ولازم فيها
+// .order() ثابت (يفضل بعمود فريد زي id) وإلا الصفحات ممكن تتكرر/تتخطى.
+//   const rows = await fetchAll(() =>
+//     _supabase.from('orders').select('id,total').order('id'));
+// pageSize لازم يكون <= Max Rows في إعدادات المشروع (الافتراضي 1000).
+// ---------------------------------------------------------------
+async function fetchAll(buildQuery, { pageSize = 1000, maxRows = 50000 } = {}) {
+  const rows = [];
+  for (let from = 0; from < maxRows; from += pageSize) {
+    const { data, error } = await buildQuery().range(from, from + pageSize - 1);
+    if (error) throw error;
+    if (!data || !data.length) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+  }
+  return rows;
+}

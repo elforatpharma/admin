@@ -44,15 +44,9 @@ class NotificationManager {
 
     createToast(message, type) {
         const toast = document.createElement('div');
-        toast.className = `fixed top-4 left-4 z-50 transform transition-all duration-300 translate-x-[-100%] opacity-0`;
-        
-        const icons = {
-            success: '✓',
-            error: '✕',
-            warning: '⚠',
-            info: 'ℹ'
-        };
+        toast.className = 'fixed top-4 left-4 z-50 transform transition-all duration-300 translate-x-[-100%] opacity-0';
 
+        const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
         const colors = {
             success: 'bg-green-500',
             error: 'bg-red-500',
@@ -60,15 +54,26 @@ class NotificationManager {
             info: 'bg-blue-500'
         };
 
-        toast.innerHTML = `
-            <div class="${colors[type] || colors.info} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[300px] max-w-md">
-                <span class="text-2xl">${icons[type] || icons.info}</span>
-                <p class="font-bold text-sm flex-1">${message}</p>
-                <button onclick="this.parentElement.parentElement.remove()" class="text-white/80 hover:text-white transition-colors">
-                    ✕
-                </button>
-            </div>
-        `;
+        // بنبني العناصر بـ textContent بدل innerHTML عشان نمنع XSS
+        const box = document.createElement('div');
+        box.className = `${colors[type] || colors.info} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[300px] max-w-md`;
+
+        const icon = document.createElement('span');
+        icon.className = 'text-2xl';
+        icon.textContent = icons[type] || icons.info;
+
+        const text = document.createElement('p');
+        text.className = 'font-bold text-sm flex-1';
+        text.textContent = String(message ?? '');
+
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'text-white/80 hover:text-white transition-colors';
+        closeBtn.textContent = '✕';
+        closeBtn.addEventListener('click', () => this.removeToast(toast));
+
+        box.append(icon, text, closeBtn);
+        toast.appendChild(box);
 
         // تحريك الدخول
         requestAnimationFrame(() => {
@@ -269,7 +274,7 @@ ${orderInfo.items || 'تفاصيل الطلب'}
         this.show('طلب جديد تم استلامه!', 'info');
 
         // إشعار Push إذا كان مسموحاً
-        if (Notification.permission === 'granted') {
+        if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('طلب جديد 🛒', {
                 body: message,
                 icon: '/logo.png',

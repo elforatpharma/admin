@@ -80,13 +80,20 @@ function kpi(label,value,icon){return `<div class="bg-white rounded-2xl border b
 function bar(label,value,max){const pct=max?Math.round(value/max*100):0;return `<div><div class="flex justify-between text-sm mb-1"><span class="font-bold">${esc(label)}</span><span class="text-slate-500">${value}</span></div><div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-[#4d3ceb]" style="width:${pct}%"></div></div></div>`;}
 async function loadAnalytics(){
   const since=new Date();since.setDate(since.getDate()-30);
-  const [eventsRes,visitsRes,ordersRes,loadsRes]=await Promise.all([
-    _supabase.from('store_events').select('event_name,session_id,product_id,product_name,coupon_code,source,campaign,device_type,created_at').gte('created_at',since.toISOString()).limit(10000),
-    _supabase.from('visitor_events').select('session_id,source,device_type,created_at').gte('created_at',since.toISOString()).limit(10000),
-    _supabase.from('orders').select('id,total,status,status_code,session_id,traffic_source,traffic_campaign,address,created_at').gte('created_at',since.toISOString()).limit(5000),
-    _supabase.from('visitors').select('count')
-  ]);
-  const events=eventsRes.data||[], visits=visitsRes.data||[], orders=ordersRes.data||[];
+  const sinceIso=since.toISOString();
+  let events,visits,orders,loadsRes;
+  try{
+    [events,visits,orders,loadsRes]=await Promise.all([
+      fetchAll(()=>_supabase.from('store_events').select('event_name,session_id,product_id,product_name,coupon_code,source,campaign,device_type,created_at').gte('created_at',sinceIso).order('id')),
+      fetchAll(()=>_supabase.from('visitor_events').select('session_id,source,device_type,created_at').gte('created_at',sinceIso).order('id')),
+      fetchAll(()=>_supabase.from('orders').select('id,total,status,status_code,session_id,traffic_source,traffic_campaign,address,created_at').gte('created_at',sinceIso).order('created_at',{ascending:false}).order('id')),
+      _supabase.from('visitors').select('count')
+    ]);
+  }catch(e){
+    console.error(e);
+    document.getElementById('kpis').innerHTML='<p class="text-sm text-red-500 font-bold col-span-full">فشل تحميل البيانات. تأكدي من الجداول والصلاحيات.</p>';
+    return;
+  }
   const sessions=unique(visits.length?visits:events,x=>x.session_id);
   // الطلبات الملغية مش بتتحسب في التحويل ولا مسار "طلب مكتمل"
   const validOrders=orders.filter(o=>statusCodeOf(o)!=='cancelled');

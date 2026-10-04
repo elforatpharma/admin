@@ -1,194 +1,111 @@
 /**
- * Service Worker للفرات فارما
- * يدعم Push Notifications و Caching للأداء السريع
+ * Service Worker للفرات فارما (نسخة مُصلَّحة)
+ * - مسارات نسبية تشتغل على GitHub Pages حتى لو الموقع تحت /admin/
+ * - التثبيت مبيفشلش لو ملف واحد ناقص
+ * - بيانات Supabase والـ Auth عمرها ما بتتخزن في الكاش
+ * - صفحات HTML (خصوصاً الأدمن) شبكة أولاً ومبتتخزنش
  */
 
-const CACHE_NAME = 'elforat-pharma-v1';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/admin.html',
-    '/logo.png',
-    '/imageUploader.js',
-    '/notificationManager.js',
-    '/supabaseClient.js'
+const CACHE_NAME = 'elforat-pharma-v2';
+const STATIC_ASSETS = [
+    './logo.png',
+    './imageUploader.js',
+    './notificationManager.js',
+    './supabaseClient.js'
 ];
 
-// تثبيت Service Worker
 self.addEventListener('install', (event) => {
-    console.log('[SW] Installing Service Worker...');
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('[SW] Caching app shell');
-                return cache.addAll(urlsToCache);
-            })
-            .catch((error) => {
-                console.error('[SW] Cache failed:', error);
-            })
+        caches.open(CACHE_NAME).then((cache) =>
+            // allSettled: لو ملف فشل، الباقي يتخزن عادي
+            Promise.allSettled(STATIC_ASSETS.map((url) => cache.add(url)))
+        )
     );
     self.skipWaiting();
 });
 
-// تفعيل Service Worker
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Activating Service Worker...');
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('[SW] Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
+        caches.keys()
+            .then((names) => Promise.all(
+                names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n))
+            ))
+            .then(() => self.clients.claim())
+    );
+});
+
+self.addEventListener('fetch', (event) => {
+    const req = event.request;
+    if (req.method !== 'GET') return;
+
+    const url = new URL(req.url);
+
+    // أي طلب لبرّه موقعنا (Supabase API / Auth / CDN) → المتصفح يتعامل معاه عادي، من غير كاش
+    if (url.origin !== self.location.origin) return;
+
+    // صفحات HTML: شبكة أولاً، ومفيش تخزين (عشان بيانات الأدمن ونسخ الصفحات متتعلقش)
+    if (req.mode === 'navigate') {
+        event.respondWith(fetch(req).catch(() => caches.match(req)));
+        return;
+    }
+
+    // صور وملفات JS/CSS من نفس الموقع: كاش أولاً + تحديث في الخلفية
+    event.respondWith(
+        caches.match(req).then((cached) => {
+            const network = fetch(req)
+                .then((res) => {
+                    if (res && res.ok) {
+                        const copy = res.clone();
+                        caches.open(CACHE_NAME).then((c) => c.put(req, copy));
                     }
+                    return res;
                 })
-            );
-        }).then(() => {
-            console.log('[SW] Service Worker activated');
-            return self.clients.claim();
+                .catch(() => cached);
+            return cached || network;
         })
     );
 });
 
-// اعتراض الطلبات وتقديم المحتوى من الكاش
-self.addEventListener('fetch', (event) => {
-    // استراتيجيات مختلفة لأنواع مختلفة من الطلبات
-    
-    // طلبات API - شبكة أولاً
-    if (event.request.url.includes('/rest/v1/')) {
-        event.respondWith(
-            fetch(event.request)
-                .catch(() => {
-                    return caches.match(event.request);
-                })
-        );
-        return;
-    }
-    
-    // صور - كاش أولاً ثم شبكة
-    if (event.request.destination === 'image') {
-        event.respondWith(
-            caches.match(event.request)
-                .then((cachedResponse) => {
-                    if (cachedResponse) {
-                        // إرجاع من الكاش مع تحديث في الخلفية
-                        fetch(event.request).then((response) => {
-                            if (response.ok) {
-                                caches.open(CACHE_NAME).then((cache) => {
-                                    cache.put(event.request, response);
-                                });
-                            }
-                        });
-                        return cachedResponse;
-                    }
-                    return fetch(event.request);
-                })
-                .catch(() => {
-                    // صورة افتراضية في حالة الفشل
-                    return caches.match('/logo.png');
-                })
-        );
-        return;
-    }
-    
-    // صفحات HTML - شبكة أولاً مع fallback للكاش
-    if (event.request.mode === 'navigate') {
-        event.respondWith(
-            fetch(event.request)
-                .catch(() => {
-                    return caches.match(event.request);
-                })
-        );
-        return;
-    }
-    
-    // باقي الموارد - كاش أولاً
-    event.respondWith(
-        caches.match(event.request)
-            .then((cachedResponse) => {
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-                return fetch(event.request);
-            })
-            .catch(() => {
-                // صفحة offline مخصصة
-                if (event.request.mode === 'navigate') {
-                    return caches.match('/index.html');
-                }
-            })
-    );
-});
-
-// التعامل مع إشعارات Push
 self.addEventListener('push', (event) => {
-    console.log('[SW] Push received:', event);
-    
     let data = {};
-    
     if (event.data) {
-        try {
-            data = event.data.json();
-        } catch (e) {
-            data = { title: 'الفرات فارما', body: event.data.text() };
-        }
+        try { data = event.data.json(); }
+        catch (e) { data = { title: 'الفرات فارما', body: event.data.text() }; }
     }
-    
-    const title = data.title || 'الفرات فارما';
-    const options = {
-        body: data.body || 'إشعار جديد',
-        icon: '/logo.png',
-        badge: '/logo.png',
-        vibrate: [200, 100, 200],
-        tag: data.tag || 'default',
-        requireInteraction: true,
-        actions: [
-            { action: 'open', title: 'فتح' },
-            { action: 'dismiss', title: 'تجاهل' }
-        ],
-        data: data.url || '/'
-    };
-    
+
     event.waitUntil(
-        self.registration.showNotification(title, options)
+        self.registration.showNotification(data.title || 'الفرات فارما', {
+            body: data.body || 'إشعار جديد',
+            icon: './logo.png',
+            badge: './logo.png',
+            vibrate: [200, 100, 200],
+            tag: data.tag || 'default',
+            requireInteraction: true,
+            actions: [
+                { action: 'open', title: 'فتح' },
+                { action: 'dismiss', title: 'تجاهل' }
+            ],
+            data: data.url || './'
+        })
     );
 });
 
-// التعامل مع النقر على الإشعارات
 self.addEventListener('notificationclick', (event) => {
-    console.log('[SW] Notification clicked:', event.action);
-    
     event.notification.close();
-    
-    if (event.action === 'dismiss') {
-        return;
-    }
-    
-    // فتح التطبيق عند النقر
+    if (event.action === 'dismiss') return;
+
+    const target = new URL(event.notification.data || './', self.registration.scope).href;
+
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true })
-            .then((clientList) => {
-                // إذا كان هناك نافذة مفتوحة، ركز عليها
-                for (const client of clientList) {
-                    if (client.url === event.notification.data && 'focus' in client) {
-                        return client.focus();
-                    }
-                }
-                // وإلا افتح نافذة جديدة
-                if (clients.openWindow) {
-                    return clients.openWindow(event.notification.data);
-                }
-            })
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+            for (const client of list) {
+                if (client.url === target && 'focus' in client) return client.focus();
+            }
+            return clients.openWindow ? clients.openWindow(target) : undefined;
+        })
     );
 });
 
-// رسائل من الصفحة الرئيسية
 self.addEventListener('message', (event) => {
-    console.log('[SW] Message received:', event.data);
-    
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
+    if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
-
-console.log('[SW] Service Worker loaded');

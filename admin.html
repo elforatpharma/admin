@@ -1,116 +1,164 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>لوحة التحكم - الفرات فارما</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabaseClient.js"></script>
-<script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{surface:"#f8f9ff","surface-container-low":"#eff4ff","surface-container":"#e5eeff","surface-container-high":"#dce9ff",primary:"#003820","primary-container":"#0f5132","primary-fixed":"#b0f1c7","secondary:"#775a00","secondary-container":"#fece57","secondary-fixed":"#ffdf98","on-surface":"#0b1c30","on-surface-variant":"#404942","error:"#ba1a1a","error-container":"#ffdad6","outline:"#707971"},fontFamily:{"ibm":["IBM Plex Sans"]},borderRadius:{lg:"0.5rem",xl:"0.75rem",full:"9999px"}}}};</script>
-<style>
-*{box-sizing:border-box}html,body{width:100%;margin:0}body{font-family:'IBM Plex Sans',sans-serif;background:#f8f9ff;color:#0b1c30;overscroll-behavior:none}.material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24}::-webkit-scrollbar{display:none}
-.stitch-card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(11,28,48,.045)}.stitch-soft{background:#eff4ff}.stitch-primary{background:#003820;color:#fff}.stitch-gold{background:#fece57;color:#251a00}.stitch-muted{color:#404942}.stitch-label{font-size:11px;line-height:16px;font-weight:500}.stitch-body{font-size:12px;line-height:18px}.stitch-head{font-size:18px;line-height:26px;font-weight:600}.stitch-title{font-size:22px;line-height:32px;font-weight:700}
-@media(min-width:1024px){.mobile-shell{max-width:720px;margin:0 auto}.desktop-wide{max-width:1500px;margin:auto}}
-@media(max-width:1023px){#sidebar-placeholder{display:none!important}}
-</style>
-</head><body class="min-h-screen bg-surface">
-<header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,.04)] pt-safe">
-  <div class="h-20 px-4 flex items-center justify-between gap-2">
-    <div class="flex items-center gap-2 min-w-0">
-      <div class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[20px]">local_pharmacy</span></div>
-      <div class="flex flex-col min-w-0">
-        <div class="flex items-center gap-1.5"><span class="text-[14px] font-bold text-primary">الفرات فارما</span><span class="text-[11px] text-secondary font-medium">لوحة التحكم</span></div>
-        <div class="flex items-center gap-1.5"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-fixed opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span></span><span class="text-[11px] stitch-muted">المتجر متصل وقيد العمل</span></div>
-      </div>
-    </div>
-    <div class="flex items-center gap-1">
-      <button aria-label="بحث" class="w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-high"><span class="material-symbols-outlined text-[21px]">search</span></button>
-      <button aria-label="الإشعارات" class="relative w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-high"><span class="material-symbols-outlined text-[21px]">notifications</span><span class="absolute top-2 left-2 w-2 h-2 bg-secondary rounded-full ring-2 ring-surface"></span></button>
-      <button onclick="openModal()" class="h-10 px-3 bg-primary text-white rounded-lg flex items-center gap-1 shadow-sm"><span class="material-symbols-outlined text-[18px]">add</span><span class="text-[11px] font-semibold">منتج جديد</span></button>
-      <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-white text-[17px]">person</span></div>
-    </div>
-  </div>
-</header>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>لوحة التحكم - الفرات فارما</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-variant":"#dae2fd","surface-container-highest":"#dae2fd","secondary":"#6a00e1","outline":"#777587","warning-surface":"#fffbeb","secondary-fixed":"#ebdcff","outline-variant":"#c7c4d9","text-secondary":"#64748b","on-secondary":"#ffffff","brand-gradient-hover":"linear-gradient(90deg, #3f2fd4 0%, #7624f2 100%)","background":"#faf8ff","tertiary-fixed":"#6ffbbe","error-container":"#ffdad6","surface-container-lowest":"#ffffff","on-surface":"#131b2e","inverse-primary":"#c4c0ff","on-secondary-fixed":"#260059","surface-container":"#eaedff","on-surface-variant":"#464556","primary-border":"#ddd6fe","danger":"#ef4444","surface-container-high":"#e2e7ff","on-primary":"#ffffff","tertiary":"#004f35","accent-glow":"rgba(77, 60, 235, 0.3)","secondary-fixed-dim":"#d3bbff","on-error-container":"#93000a","warning":"#f59e0b","on-tertiary-container":"#60eeb1","inverse-surface":"#283044","surface-container-low":"#f2f3ff","tertiary-container":"#006a48","surface-tint":"#4f3eed","secondary-container":"#8434fe","primary":"#3312d5","border-strong":"#cbd5e1","success-surface":"#ecfdf5","surface":"#faf8ff","inverse-on-surface":"#eef0ff","on-tertiary-fixed-variant":"#005236","on-primary-fixed":"#110068","canvas-bg":"#f8fafc","brand-gradient":"linear-gradient(90deg, #4d3ceb 0%, #8536ff 100%)","text-primary":"#0f172a","tertiary-fixed-dim":"#4edea3","surface-bright":"#faf8ff","error":"#ba1a1a","on-secondary-container":"#f3e8ff","on-tertiary":"#ffffff","danger-surface":"#fef2f2","on-primary-fixed-variant":"#3517d6","on-background":"#131b2e","success":"#10b981","surface-card":"#ffffff","on-primary-container":"#d5d1ff","border-subtle":"#e2e8f0","primary-fixed":"#e3dfff","on-secondary-fixed-variant":"#5c00c4","surface-dim":"#d2d9f4","primary-container":"#4d3ceb","on-tertiary-fixed":"#002113","primary-surface":"#f5f3ff","primary-fixed-dim":"#c4c0ff","on-error":"#ffffff","primary-deep":"#3312d5"},borderRadius:{DEFAULT:"1rem",lg:"2rem",xl:"3rem",full:"9999px"},spacing:{"space-xs":"0.25rem",gutter:"1rem","space-sm":"0.5rem","space-xl":"2rem","margin-lg":"2rem","space-lg":"1.5rem","gutter-lg":"1.5rem","space-md":"1rem",margin:"1rem","margin-md":"1.5rem"},fontFamily:{"data-tabular":["Tajawal"],"headline-sm":["Cairo"],"body-md":["Tajawal"],"label-lg":["Tajawal"],"label-sm":["Tajawal"],"headline-lg":["Cairo"],"body-sm":["Tajawal"],"headline-xl":["Cairo"],"display-lg":["Cairo"],"display-lg-mobile":["Cairo"],"label-md":["Tajawal"],"body-lg":["Tajawal"]},fontSize:{"data-tabular":["13px",{lineHeight:"18px",letterSpacing:"-0.01em",fontWeight:"500"}],"headline-sm":["16px",{lineHeight:"24px",letterSpacing:"0",fontWeight:"600"}],"body-md":["14px",{lineHeight:"22px",letterSpacing:"0",fontWeight:"400"}],"label-lg":["14px",{lineHeight:"20px",letterSpacing:"0",fontWeight:"600"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.02em",fontWeight:"700"}],"headline-lg":["20px",{lineHeight:"28px",letterSpacing:"0",fontWeight:"600"}],"body-sm":["13px",{lineHeight:"20px",letterSpacing:"0",fontWeight:"400"}],"headline-xl":["24px",{lineHeight:"32px",letterSpacing:"0",fontWeight:"700"}],"display-lg":["32px",{lineHeight:"42px",letterSpacing:"0",fontWeight:"700"}],"label-md":["12px",{lineHeight:"16px",letterSpacing:"0",fontWeight:"500"}],"body-lg":["16px",{lineHeight:"26px",letterSpacing:"0",fontWeight:"400"}]}}}};</script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;border-radius:50px!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+    .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
+    .nav-active{background:linear-gradient(135deg,rgba(77,60,235,.1),rgba(77,60,235,.04))!important;color:#4d3ceb!important;border-right:3px solid #4d3ceb!important;border-radius:0 9999px 9999px 0!important;}
+    .modal-enter{animation:modalIn .28s cubic-bezier(.2,.9,.3,1.2) forwards;}
+    @keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  
+    /* Stitch-inspired El-Forat dashboard design system */
+    :root{--ef-green:#087f5b;--ef-green-dark:#056047;--ef-green-soft:#e8f7f1;--ef-gold:#c99a2e;--ef-ink:#14201c;--ef-muted:#6b7b75;--ef-line:#e5ebe8;--ef-bg:#f7faf8;}
+    body{background:var(--ef-bg)!important;color:var(--ef-ink)!important;}
+    .ef-card{background:#fff;border:1px solid var(--ef-line);border-radius:24px;box-shadow:0 8px 28px rgba(20,32,28,.045);}
+    .ef-kpi{position:relative;overflow:hidden;padding:18px;transition:.2s;}
+    .ef-kpi:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(20,32,28,.08);}
+    .ef-kpi-icon{width:42px;height:42px;border-radius:14px;background:var(--ef-green-soft);color:var(--ef-green);display:flex;align-items:center;justify-content:center;}
+    .ef-title{font-family:'Cairo',sans-serif;font-weight:800;color:var(--ef-ink);}
+    .ef-muted{color:var(--ef-muted);}
+    .ef-btn{background:var(--ef-green)!important;color:#fff!important;border-radius:14px!important;box-shadow:0 8px 18px rgba(8,127,91,.18)!important;}
+    .ef-btn:hover{background:var(--ef-green-dark)!important;}
+    .ef-outline{border:1px solid var(--ef-line);background:#fff;color:var(--ef-green);border-radius:14px;}
+    .ef-alert{background:linear-gradient(135deg,#fff9e8,#fff);border:1px solid #f2dfaa;}
+    .ef-pill{background:var(--ef-green-soft);color:var(--ef-green);border:1px solid #ccecdf;}
+    .ef-table th{font-size:12px;color:var(--ef-muted);font-weight:700;background:#f7faf8;}
+    .ef-table td{border-top:1px solid #eef2f0;}
+    .ef-mobile-nav{display:none;}
+    @media(max-width:1023px){
+      .ef-mobile-nav{display:flex;position:fixed;bottom:12px;left:12px;right:12px;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(16px);border:1px solid var(--ef-line);border-radius:22px;box-shadow:0 12px 35px rgba(20,32,28,.12);padding:7px;}
+      .ef-mobile-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 3px;border-radius:15px;color:#718078;font-size:10px;font-weight:800;}
+      .ef-mobile-nav a.active{background:var(--ef-green-soft);color:var(--ef-green);}
+      main{padding-bottom:105px!important;}
+    }
+    @media(min-width:1024px){.ef-content{max-width:1500px;}}
+    @media(max-width:640px){.ef-kpi{padding:15px}.ef-title{font-size:22px}.ef-table-wrap{margin-inline:-12px}.ef-card{border-radius:20px}}
+  </style>
+</head>
+<body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
+<div class="flex h-screen overflow-hidden">
 
-<div class="flex min-h-screen pt-20">
   <div id="sidebar-placeholder"></div>
-  <main class="w-full px-4 pb-24 pt-0 desktop-wide">
-    <div class="mobile-shell flex flex-col gap-4">
 
-      <section class="stitch-card p-4 relative overflow-hidden">
-        <div class="absolute -top-10 -left-10 w-28 h-28 bg-secondary-fixed/20 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[24px]">waving_hand</span></div>
-            <div><h1 id="greeting-text" class="stitch-head">مرحباً بك</h1><p class="stitch-body stitch-muted">لوحة تحكم المتجر والمبيعات الفورية</p></div>
+  <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto">
+    <header class="sticky top-0 z-30 h-16 bg-white/90 backdrop-blur-xl border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-6 shadow-[0_1px_10px_rgba(20,32,28,.04)]">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="hidden md:flex items-center gap-2"><div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><span class="material-symbols-outlined">local_pharmacy</span></div><span class="font-black text-sm">الفرات فارما</span></div>
+        <div class="hidden lg:block h-6 w-px bg-slate-200"></div>
+        <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-xs font-bold text-emerald-800">المتجر متصل</span></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openModal()" class="ef-btn flex items-center gap-1.5 px-3 sm:px-4 h-10 font-bold text-xs"><span class="material-symbols-outlined text-lg">add</span><span class="hidden sm:inline">منتج جديد</span></button>
+        <button class="relative w-10 h-10 rounded-xl hover:bg-slate-50 text-slate-600 flex items-center justify-center" title="الإشعارات"><span class="material-symbols-outlined">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span></button>
+        <div class="hidden md:flex items-center gap-2 pr-2 border-r border-slate-200"><div class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-black">أ</div></div>
+      </div>
+    </header>
+    <main class="w-full px-4 sm:px-6 py-6 min-h-screen">
+      <div class="ef-content w-full mx-auto space-y-6">
+        <section class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span class="text-xs font-bold text-emerald-700">المتجر يعمل بشكل طبيعي</span></div>
+            <h1 id="greeting-text" class="ef-title text-2xl md:text-3xl">مرحباً بك</h1>
+            <p class="text-sm ef-muted mt-1">ملخص سريع لأداء الفرات فارما اليوم.</p>
           </div>
-          <button id="refreshBtn" onclick="fetchStats()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg stitch-soft text-primary active:scale-95"><span id="last-update-time" class="stitch-label">جاري التحديث...</span><span class="material-symbols-outlined text-[16px]">refresh</span></button>
-        </div>
-      </section>
+          <div class="flex items-center gap-2">
+            <div class="ef-pill rounded-full px-3 py-2 text-xs font-bold"><span id="last-update-time">جاري التحديث...</span></div>
+            <button id="refreshBtn" class="ef-outline w-10 h-10 flex items-center justify-center" title="تحديث"><span class="material-symbols-outlined text-lg">refresh</span></button>
+          </div>
+        </section>
 
-      <section id="low-stock-banner" class="hidden bg-error-container/40 rounded-xl p-4 shadow-sm">
-        <div class="flex items-start justify-between gap-2">
-          <div class="flex items-center gap-2"><div class="w-9 h-9 rounded-lg bg-error text-white flex items-center justify-center animate-pulse"><span class="material-symbols-outlined text-[20px]">crisis_alert</span></div><div><span class="stitch-label text-error font-bold">إشعار تشغيلي</span><h3 class="text-[14px] font-semibold text-error">تنبيه حرج مخزون حرج وشيك النفاد</h3><p id="low-stock-text" class="stitch-body text-error"></p></div></div>
-          <a href="inventory.html" class="px-3 py-1.5 rounded-lg bg-error text-white stitch-label font-semibold shrink-0">عرض المخزون</a>
-        </div>
-      </section>
+        <section id="low-stock-banner" class="ef-card ef-alert hidden p-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center"><span class="material-symbols-outlined">warning</span></div>
+              <div><div class="font-bold text-amber-900">تنبيه المخزون</div><p id="low-stock-text" class="text-xs text-amber-700 mt-0.5"></p></div>
+            </div>
+            <a href="inventory.html" class="ef-btn px-4 py-2 text-xs font-bold text-center">فتح المخزون</a>
+          </div>
+        </section>
 
-      <section class="grid grid-cols-2 gap-2">
-        <div class="col-span-2 stitch-card p-4 stitch-primary relative overflow-hidden">
-          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-secondary/20 rounded-full blur-xl"></div>
-          <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary-fixed text-[20px]">payments</span><span class="stitch-label text-primary-fixed">إجمالي المبيعات</span></div><span class="stitch-label bg-primary-container/50 px-2 py-0.5 rounded-full text-secondary-fixed">—</span></div>
-          <div class="flex items-baseline justify-between mt-1"><span id="kpi-sales" class="text-[22px] leading-8 font-bold">0 <small class="text-[11px] font-normal">ج.م</small></span><span class="stitch-label text-primary-fixed">مبيعات اليوم: <b id="kpi-today-sales">0 ج.م</b></span></div>
-        </div>
-        <div class="stitch-card p-3"><div class="flex items-center justify-between mb-1"><span class="stitch-label stitch-muted">عدد الطلبات</span><span class="material-symbols-outlined text-primary text-[18px]">shopping_cart</span></div><p id="kpi-orders" class="stitch-head">0 <small class="stitch-label font-normal">طلب</small></p><span class="stitch-label text-secondary">عبر المتجر</span><div class="mt-2 pt-2 stitch-soft rounded px-1.5 py-1 stitch-label">طلبات اليوم: <b id="kpi-today-orders">0 طلب</b></div></div>
-        <div class="stitch-card p-3"><div class="flex items-center justify-between mb-1"><span class="stitch-label stitch-muted">متوسط قيمة الطلب</span><span class="material-symbols-outlined text-secondary text-[18px]">receipt</span></div><p id="kpi-aov" class="stitch-head">0 <small class="stitch-label font-normal">ج.م</small></p><span class="stitch-label stitch-muted">للطلبات المكتملة</span><div class="mt-2 pt-2 stitch-soft rounded px-1.5 py-1 stitch-label">حالة مسار نشطة</div></div>
-        <div class="col-span-2 stitch-card p-3 flex items-center justify-between gap-2"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg stitch-soft flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[18px]">insights</span></div><p class="stitch-label stitch-muted">زوار اليوم (جلسات): <b id="kpi-today-sessions" class="text-on-surface">—</b></p></div><p class="stitch-label stitch-muted">إجمالي تحميلات الصفحات: <b id="kpi-page-loads" class="text-primary">—</b></p></div>
-        <div class="stitch-card p-3"><div class="flex items-center justify-between"><span class="stitch-label stitch-muted">حالة المسار للطلبات</span><span class="material-symbols-outlined text-primary text-[18px]">alt_route</span></div><div class="flex flex-col gap-1 mt-2 stitch-label"><span>قيد التجهيز/الشحن: <b id="kpi-pending">0</b></span><span class="text-primary font-semibold">تم التسليم: <b id="kpi-delivered">0</b></span><span class="text-error">ملغي: <b id="kpi-cancelled">0</b></span></div></div>
-        <div class="stitch-card p-3"><div class="flex items-center justify-between"><span class="stitch-label stitch-muted">المخزون والمنتجات</span><span class="material-symbols-outlined text-primary text-[18px]">medication_liquid</span></div><p id="kpi-products" class="stitch-head mt-2">0 <small class="stitch-label font-normal">صنف</small></p><div id="kpi-low-stock-count" class="stitch-label text-error mt-1">0 منتجات قرب النفاد</div></div>
-        <div class="col-span-2 stitch-card p-3 flex items-center justify-between"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg stitch-soft flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[18px]">diversity_1</span></div><div><span class="stitch-label stitch-muted">قاعدة العملاء</span><p id="kpi-customers" class="text-[14px] font-bold">0 عميل</p></div></div><span class="stitch-label px-2.5 py-1 stitch-soft text-primary font-semibold rounded-full">الكل مسجل</span></div>
-      </section>
+        <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
+          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">إجمالي المبيعات</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">payments</span></div></div><div id="kpi-sales" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">ج.م</span></div><div class="text-[11px] mt-2 ef-muted">اليوم: <b id="kpi-today-sales" class="text-emerald-700">0 ج.م</b></div><div id="kpi-sales-trend" class="hidden"></div></div>
+          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">الطلبات</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">shopping_bag</span></div></div><div id="kpi-orders" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">طلب</span></div><div class="text-[11px] mt-2 ef-muted">اليوم: <b id="kpi-today-orders" class="text-emerald-700">0 طلب</b></div><div class="text-[11px] mt-1 ef-muted">جلسات: <b id="kpi-today-sessions">—</b> · تحميلات: <b id="kpi-page-loads">—</b></div></div>
+          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">متوسط قيمة الطلب</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">receipt_long</span></div></div><div id="kpi-aov" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">ج.م</span></div><div class="text-[11px] mt-2 ef-muted">للطلبات المكتملة</div></div>
+          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">قاعدة العملاء</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">groups</span></div></div><div id="kpi-customers" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">عميل</span></div><div class="text-[11px] mt-2 ef-muted">إجمالي المنتجات: <b id="kpi-products">0 <span class="text-xs font-normal">صنف</span></b></div><div id="kpi-low-stock-count" class="text-[11px] mt-1 text-amber-700">0 منتجات قرب النفاد</div></div>
+        </section>
 
-      <section class="stitch-card p-4 flex flex-col gap-2">
-        <div class="flex items-center justify-between"><div><h2 class="stitch-head text-primary">منحنى المبيعات والإيرادات الدوائية</h2><p class="stitch-body stitch-muted">مقارنة حركة الإيرادات مع الشهر الماضي ونقاط ذروة العروض الطبية</p></div><button onclick="fetchStats()" class="w-8 h-8 rounded-lg stitch-soft flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[18px]">refresh</span></button></div>
-        <div class="flex items-center gap-1.5 p-1 stitch-soft rounded-lg">
-          <button class="chart-interval-btn flex-1 py-1 rounded font-semibold stitch-label" data-interval="daily" onclick="setChartInterval('daily')">يومياً</button>
-          <button class="chart-interval-btn flex-1 py-1 rounded font-semibold stitch-label" data-interval="weekly" onclick="setChartInterval('weekly')">أسبوعياً</button>
-          <button class="chart-interval-btn flex-1 py-1 rounded bg-primary text-white font-semibold stitch-label" data-interval="monthly" onclick="setChartInterval('monthly')">شهرياً</button>
-        </div>
-        <div class="flex items-center justify-between stitch-label"><span><i class="inline-block w-2.5 h-2.5 rounded-full bg-primary"></i> مبيعات الشهر الحالي (<b id="insight-month-sales">0 ج.م</b>)</span><span class="stitch-muted"><i class="inline-block w-2.5 h-2.5 rounded-full bg-secondary"></i> الشهر السابق (<b id="insight-prev-sales">0 ج.م</b>)</span></div>
-        <div class="relative w-full h-32 bg-surface rounded-lg p-2 overflow-hidden"><canvas id="dashboard-sales-chart" class="w-full h-full"></canvas></div>
-        <div class="grid grid-cols-2 gap-1.5">
-          <div class="col-span-2 flex items-center gap-1 p-2 bg-secondary-fixed/20 rounded-lg text-secondary stitch-label"><span class="material-symbols-outlined text-[16px]">stars</span><span id="insight-top-product">أكثر منتج مبيعاً: —</span></div>
-          <div class="p-2 stitch-soft rounded-lg"><span class="stitch-label stitch-muted block">الطلبات المباشرة</span><b id="kpi-direct-orders" class="stitch-label text-primary">0 طلب</b></div>
-          <div class="p-2 stitch-soft rounded-lg"><span class="stitch-label stitch-muted block">طلبات الواتساب / الهاتف</span><b id="kpi-contact-orders" class="stitch-label text-primary">0 طلب</b></div>
-          <div class="p-2 stitch-soft rounded-lg"><span class="stitch-label stitch-muted block">متوسط سرعة التوصيل</span><b id="kpi-avg-delivery" class="stitch-label">—</b></div>
-          <div class="p-2 stitch-soft rounded-lg"><span class="stitch-label stitch-muted block">رضا العملاء</span><b id="kpi-satisfaction" class="stitch-label text-secondary">—</b></div>
-        </div>
-      </section>
+        <section class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+          <div class="ef-card p-4 md:p-5 xl:col-span-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div><h2 class="ef-title text-lg">المبيعات والإيرادات</h2><p class="text-xs ef-muted mt-1">مقارنة الفترة الحالية بالفترة السابقة</p></div>
+              <div class="flex items-center gap-1 p-1 bg-slate-50 rounded-xl border border-slate-100">
+                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="daily" onclick="setChartInterval('daily')">يومي</button>
+                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="weekly" onclick="setChartInterval('weekly')">أسبوعي</button>
+                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="monthly" onclick="setChartInterval('monthly')">شهري</button>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-3 text-xs mb-3"><span id="insight-month-sales" class="ef-pill px-3 py-1.5 rounded-full font-bold">مبيعات الشهر الحالي (0 ج.م)</span><span id="insight-prev-sales" class="px-3 py-1.5 rounded-full bg-slate-50 text-slate-500">الشهر السابق (0 ج.م)</span></div>
+            <div class="relative h-64 rounded-2xl bg-slate-50/70 border border-slate-100 p-2"><canvas id="dashboard-sales-chart"></canvas></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">طلبات الموقع</div><b id="kpi-direct-orders" class="text-sm">0 طلب</b></div>
+              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">واتساب / هاتف</div><b id="kpi-contact-orders" class="text-sm">0 طلب</b></div>
+              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">متوسط التوصيل</div><b id="kpi-avg-delivery" class="text-sm">—</b></div>
+              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">رضا العملاء</div><b id="kpi-satisfaction" class="text-sm">—</b></div>
+            </div>
+          </div>
 
-      <section class="stitch-card p-4"><div class="flex items-center justify-between"><h3 class="stitch-head">طرق الدفع</h3><span class="stitch-label stitch-muted">من الطلبات المدفوعة فقط</span></div><div id="payment-channels-list" class="mt-2 p-2 stitch-soft rounded-lg text-center stitch-label stitch-muted">جاري التحميل...</div></section>
+          <div class="xl:col-span-4 space-y-5">
+            <div class="ef-card p-5"><div class="flex items-center justify-between mb-3"><div><h3 class="ef-title text-base">حالة الطلبات</h3><p class="text-xs ef-muted mt-1">التوزيع الحالي</p></div><span class="material-symbols-outlined text-emerald-700">alt_route</span></div>
+              <div class="space-y-3 text-xs"><div class="flex justify-between"><span class="ef-muted">قيد التنفيذ / التجهيز / الشحن</span><b id="kpi-pending">0</b></div><div class="flex justify-between"><span class="ef-muted">تم التوصيل</span><b id="kpi-delivered" class="text-emerald-700">0</b></div><div class="flex justify-between"><span class="ef-muted">ملغي</span><b id="kpi-cancelled" class="text-red-600">0</b></div></div>
+              <div id="kpi-status-bar" class="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex mt-4"><div class="h-full bg-emerald-600" style="width:0%"></div><div class="h-full bg-amber-400" style="width:0%"></div><div class="h-full bg-red-500" style="width:0%"></div></div>
+            </div>
+            <div class="ef-card p-5"><div class="flex items-center justify-between mb-3"><div><h3 class="ef-title text-base">طرق الدفع</h3><p class="text-xs ef-muted mt-1">من الطلبات المدفوعة فقط</p></div><span class="material-symbols-outlined text-emerald-700">account_balance_wallet</span></div><div id="payment-channels-list" class="space-y-2"><div class="text-center py-5 text-xs ef-muted">جاري التحميل...</div></div></div>
+            <div class="ef-card p-5"><div class="flex items-center justify-between"><div><h3 class="ef-title text-base">الأكثر مبيعاً</h3><p class="text-xs ef-muted mt-1">حسب الطلبات المكتملة</p></div><span class="material-symbols-outlined text-amber-600">workspace_premium</span></div><p id="insight-top-product" class="text-sm font-bold mt-4">أكثر منتج مبيعاً: —</p></div>
+          </div>
+        </section>
 
-      <section class="stitch-card p-4"><div class="flex items-center justify-between mb-2"><div><h2 class="stitch-head text-primary">أحدث الطلبات</h2><span id="new-orders-badge" class="stitch-label stitch-muted">0 طلبات جديدة</span></div><a href="orders.html" class="stitch-label text-secondary font-semibold">عرض الكل ←</a></div><div class="overflow-x-auto rounded-lg stitch-soft p-2"><table class="w-full text-right stitch-label"><thead><tr class="stitch-muted stitch-soft"><th class="p-2">العميل</th><th class="p-2">المنتجات</th><th class="p-2">الإجمالي</th><th class="p-2">الحالة</th><th class="p-2">إجراء</th></tr></thead><tbody id="recent-orders-body"></tbody></table></div></section>
+        <section class="ef-card p-4 md:p-5">
+          <div class="flex items-center justify-between mb-4"><div><h2 class="ef-title text-lg">أحدث الطلبات</h2><p class="text-xs ef-muted mt-1">آخر 5 طلبات وصلت للمتجر</p></div><div class="flex items-center gap-2"><span id="new-orders-badge" class="ef-pill px-3 py-1 rounded-full text-xs font-bold">0 طلبات جديدة</span><a href="orders.html" class="text-xs font-bold text-emerald-700 hover:underline">عرض الكل ←</a></div></div>
+          <div class="ef-table-wrap overflow-x-auto"><table class="ef-table w-full text-right"><thead><tr><th class="py-3 px-3 rounded-r-xl">العميل</th><th class="py-3 px-3">المنتجات</th><th class="py-3 px-3">الإجمالي</th><th class="py-3 px-3">الحالة</th><th class="py-3 px-3 text-center rounded-l-xl">إجراء</th></tr></thead><tbody id="recent-orders-body"><tr><td colspan="5" class="text-center py-12 text-slate-300">جاري تحميل الطلبات...</td></tr></tbody></table></div>
+        </section>
 
-      <section id="gifts-section" class="stitch-card p-4"><div class="flex items-center justify-between mb-2"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">card_giftcard</span></div><h3 class="stitch-head">الهدايا</h3></div><button onclick="openGiftModal()" class="px-3 py-1 bg-secondary text-white rounded-lg stitch-label font-semibold">+ هدية</button></div><div id="gifts-mini-list" class="p-2 stitch-soft rounded-lg text-center stitch-label stitch-muted">جاري التحميل...</div></section>
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <button type="button" onclick="openModal()" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition text-right"><span class="ef-kpi-icon"><span class="material-symbols-outlined">add_box</span></span><span class="text-sm font-bold">إضافة منتج</span></button>
+          <a href="orders.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">shopping_bag</span></span><span class="text-sm font-bold">إدارة الطلبات</span></a>
+          <a href="coupons.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">confirmation_number</span></span><span class="text-sm font-bold">الكوبونات</span></a>
+          <a href="sales-report.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">monitoring</span></span><span class="text-sm font-bold">تقرير المبيعات</span></a>
+        </section>
 
-      <section class="grid grid-cols-2 gap-1.5">
-        <a href="sales-report.html" class="flex items-center gap-2 p-3 stitch-card"><div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">monitoring</span></div><span class="stitch-label font-semibold">تقرير المبيعات</span></a>
-        <a href="coupons.html" class="flex items-center gap-2 p-3 stitch-card"><div class="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">confirmation_number</span></div><span class="stitch-label font-semibold">إدارة الكوبونات</span></a>
-        <a href="messages.html" class="flex items-center gap-2 p-3 stitch-card"><div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">chat</span></div><span class="stitch-label font-semibold">رسائل العملاء</span></a>
-        <a href="settings.html" class="flex items-center gap-2 p-3 stitch-card"><div class="w-8 h-8 rounded-lg bg-surface-container text-on-surface-variant flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">settings</span></div><span class="stitch-label font-semibold">إعدادات المتجر</span></a>
-      </section>
-
-      <div id="sidebar-sections" class="hidden"></div>
-    </div>
-  </main>
+        <section id="sidebar-sections" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div id="gifts-section" class="ef-card p-5"><div class="flex items-center justify-between mb-4"><h3 class="ef-title text-base flex items-center gap-2"><span class="material-symbols-outlined text-emerald-700">card_giftcard</span>الهدايا</h3><button onclick="openGiftModal()" class="ef-btn px-3 py-2 text-xs font-bold">+ هدية</button></div><div id="gifts-mini-list" class="space-y-2"><p class="text-xs text-center py-4 ef-muted">جاري التحميل...</p></div></div>
+          <div class="ef-card p-5"><h3 class="ef-title text-base mb-3">معلومات سريعة</h3><div class="grid grid-cols-2 gap-2 text-xs"><a href="messages.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">رسائل العملاء</a><a href="settings.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">إعدادات المتجر</a><a href="inventory.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">المخزون</a><a href="customers.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">العملاء</a></div></div>
+        </section>
+      </div>
+    </main>
+    <nav class="ef-mobile-nav">
+      <a href="admin.html" class="active"><span class="material-symbols-outlined">dashboard</span>الرئيسية</a>
+      <a href="orders.html"><span class="material-symbols-outlined">shopping_bag</span>الطلبات</a>
+      <a href="inventory.html"><span class="material-symbols-outlined">inventory_2</span>المخزون</a>
+      <a href="coupons.html"><span class="material-symbols-outlined">confirmation_number</span>الكوبونات</a>
+      <a href="settings.html"><span class="material-symbols-outlined">settings</span>الإعدادات</a>
+    </nav>
+  </div>
 </div>
+
+<!-- Add Product Modal -->
 <div id="product-modal" class="fixed inset-0 efp-native-overlay z-50 hidden items-center justify-center p-4">
   <div class="bg-white efp-native-card w-full max-w-3xl overflow-hidden modal-enter">
     <div class="efp-native-header">
@@ -201,9 +249,7 @@
 </div>
 
 <script src="imageUploader.js"></script>
-
-<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-white/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,.05)] lg:hidden"><div class="flex justify-around items-center h-16 px-1"><a href="admin.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-primary font-bold"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="stitch-label">الرئيسية</span></a><a href="sales-report.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-on-surface-variant"><span class="material-symbols-outlined text-[22px]">query_stats</span><span class="stitch-label">تقرير المبيعات</span></a><a href="coupons.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-on-surface-variant"><span class="material-symbols-outlined text-[22px]">loyalty</span><span class="stitch-label">إدارة الكوبونات</span></a><a href="messages.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-on-surface-variant"><span class="material-symbols-outlined text-[22px]">chat_bubble</span><span class="stitch-label">رسائل العملاء</span></a><a href="settings.html" class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 text-on-surface-variant"><span class="material-symbols-outlined text-[22px]">store</span><span class="stitch-label">إعدادات المتجر</span></a></div></nav>
-</body></html><script src="layout.js"></script>
+<script src="layout.js"></script>
 <script>
 // Auth + Notifications (from original admin.html)
 (async()=>{const{data:{session}}=await _supabase.auth.getSession();if(!session){window.location.replace('index.html');return;}if(!isAdminUser(session.user)){await _supabase.auth.signOut();window.location.replace('index.html');}})();
@@ -531,6 +577,11 @@ async function fetchStats(){
       n(stats.total_products).toLocaleString('en')+
       ' <span class="font-label-md text-label-md font-normal text-on-surface-variant">صنف</span>';
 
+    document.getElementById('kpi-sales-trend').innerHTML=
+      '<span class="material-symbols-outlined text-xs">payments</span>'+
+      '<span>'+n(stats.paid_orders).toLocaleString('en')+' طلب مدفوع / '+
+      n(stats.coupon_orders).toLocaleString('en')+' بكوبون</span>';
+
     document.getElementById('kpi-direct-orders').textContent=
       n(stats.direct_orders).toLocaleString('en')+' طلب';
 
@@ -579,6 +630,16 @@ async function fetchStats(){
     document.getElementById('kpi-pending').textContent=n(stats.pending_orders);
     document.getElementById('kpi-delivered').textContent=n(stats.delivered_orders);
     document.getElementById('kpi-cancelled').textContent=n(stats.cancelled_orders);
+
+    const totalAll=Math.max(n(stats.total_orders),1);
+    const dPct=Math.round((n(stats.delivered_orders)/totalAll)*100);
+    const cPct=Math.round((n(stats.cancelled_orders)/totalAll)*100);
+    const pPct=Math.max(0,Math.min(100-dPct-cPct,Math.round((n(stats.pending_orders)/totalAll)*100)));
+    const bar=document.getElementById('kpi-status-bar');
+    bar.innerHTML=
+      '<div class="bg-emerald-600 h-full" style="width:'+dPct+'%"></div>'+
+      '<div class="bg-amber-400 h-full" style="width:'+pPct+'%"></div>'+
+      '<div class="bg-red-500 h-full" style="width:'+cPct+'%"></div>';
 
     document.getElementById('new-orders-badge').textContent=
       n(stats.pending_orders).toLocaleString('en')+' طلبات قيد المتابعة';

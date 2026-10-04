@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>إدارة المخزون - الفرات فارما</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <script src="imageUploader.js"></script>
+  <script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-variant":"#dae2fd","surface-container-highest":"#dae2fd","secondary":"#6a00e1","outline":"#777587","warning-surface":"#fffbeb","secondary-fixed":"#ebdcff","outline-variant":"#c7c4d9","text-secondary":"#64748b","on-secondary":"#ffffff","brand-gradient-hover":"linear-gradient(90deg, #3f2fd4 0%, #7624f2 100%)","background":"#faf8ff","tertiary-fixed":"#6ffbbe","error-container":"#ffdad6","surface-container-lowest":"#ffffff","on-surface":"#131b2e","inverse-primary":"#c4c0ff","on-secondary-fixed":"#260059","surface-container":"#eaedff","on-surface-variant":"#464556","primary-border":"#ddd6fe","danger":"#ef4444","surface-container-high":"#e2e7ff","on-primary":"#ffffff","tertiary":"#004f35","accent-glow":"rgba(77, 60, 235, 0.3)","secondary-fixed-dim":"#d3bbff","on-error-container":"#93000a","warning":"#f59e0b","on-tertiary-container":"#60eeb1","inverse-surface":"#283044","surface-container-low":"#f2f3ff","tertiary-container":"#006a48","surface-tint":"#4f3eed","secondary-container":"#8434fe","primary":"#3312d5","border-strong":"#cbd5e1","success-surface":"#ecfdf5","surface":"#faf8ff","inverse-on-surface":"#eef0ff","on-tertiary-fixed-variant":"#005236","on-primary-fixed":"#110068","canvas-bg":"#f8fafc","brand-gradient":"linear-gradient(90deg, #4d3ceb 0%, #8536ff 100%)","text-primary":"#0f172a","tertiary-fixed-dim":"#4edea3","surface-bright":"#faf8ff","error":"#ba1a1a","on-secondary-container":"#f3e8ff","on-tertiary":"#ffffff","danger-surface":"#fef2f2","on-primary-fixed-variant":"#3517d6","on-background":"#131b2e","success":"#10b981","surface-card":"#ffffff","on-primary-container":"#d5d1ff","border-subtle":"#e2e8f0","primary-fixed":"#e3dfff","on-secondary-fixed-variant":"#5c00c4","surface-dim":"#d2d9f4","primary-container":"#4d3ceb","on-tertiary-fixed":"#002113","primary-surface":"#f5f3ff","primary-fixed-dim":"#c4c0ff","on-error":"#ffffff"},borderRadius:{DEFAULT:"1rem",lg:"2rem",xl:"3rem",full:"9999px"},spacing:{gutter:"1rem","gutter-lg":"1.5rem","space-lg":"1.5rem","space-sm":"0.5rem","space-md":"1rem","space-xs":"0.25rem","margin-lg":"2rem","space-xl":"2rem",margin:"1rem","margin-md":"1.5rem"},fontFamily:{"body-lg":["Tajawal"],"label-lg":["Tajawal"],"headline-xl":["Cairo"],"data-tabular":["Tajawal"],"headline-sm":["Cairo"],"label-sm":["Tajawal"],"label-md":["Tajawal"],"headline-lg":["Cairo"],"body-md":["Tajawal"],"display-lg-mobile":["Cairo"],"body-sm":["Tajawal"],"display-lg":["Cairo"]},fontSize:{"body-lg":["16px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"600"}],"headline-xl":["24px",{"lineHeight":"32px","letterSpacing":"0","fontWeight":"700"}],"data-tabular":["13px",{"lineHeight":"18px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"500"}],"headline-lg":["20px",{"lineHeight":"28px","letterSpacing":"0","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","letterSpacing":"0","fontWeight":"400"}],"display-lg-mobile":["26px",{"lineHeight":"34px","letterSpacing":"0","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"display-lg":["32px",{"lineHeight":"42px","letterSpacing":"0","fontWeight":"700"}]}}}};</script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:10px;}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;border-radius:9999px!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
+    .btn-brand-gradient:hover{background:linear-gradient(90deg,#3f2fd4 0%,#7624f2 100%)!important;box-shadow:0 12px 24px rgba(77,60,235,0.4)!important;}
+    body::-webkit-scrollbar{display:none;}
+    .scrollbar-none::-webkit-scrollbar{display:none;}
+    /* هوية النوافذ المنبثقة (SweetAlert2) موحّدة الآن في layout.js لتطبق على كل صفحات اللوحة */
+  </style>
+</head>
+<body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
+<div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
+
+  <div id="sidebar-placeholder"></div>
+
+  <header class="sticky top-0 z-30 h-16 bg-surface/80 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(15,23,42,0.04)]">
+    <div class="flex items-center gap-4 w-1/2">
+      <div class="relative w-full max-w-xl">
+        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px] pointer-events-none">search</span>
+        <input id="global-search" class="w-full h-11 pr-10 pl-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="بحث شامل عن الأصناف أو الباركود..." type="text" oninput="onSearch(this.value)"/>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="hidden lg:flex items-center gap-2 bg-success-surface text-tertiary px-3 py-1 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-success"></span>
+        <span class="font-label-sm text-label-sm font-bold">المتجر متصل وقيد العمل</span>
+      </div>
+      <a class="relative p-2 rounded-full hover:bg-surface-container-high transition-colors text-text-secondary hover:text-on-surface" href="#" title="الإشعارات">
+        <span class="material-symbols-outlined text-[22px]">notifications</span>
+        <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-danger rounded-full ring-2 ring-surface-container-lowest"></span>
+      </a>
+      <button onclick="supplyRequest()" class="flex items-center gap-2 btn-brand-gradient text-on-primary px-4 py-2.5 rounded-full transition-all transform hover:-translate-y-0.5">
+        <span class="material-symbols-outlined text-[18px]">add_circle</span>
+        <span class="font-label-lg text-label-lg">طلب توريد عاجل</span>
+      </button>
+      <button onclick="fetchProducts()" class="flex items-center gap-2 px-3 h-10 rounded-full bg-surface-container-low text-text-secondary hover:text-on-surface text-label-sm font-label-sm shadow-sm transition-all" title="تحديث">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full pt-6 bg-canvas-bg min-h-screen px-4 sm:px-6 py-4">
+    <div class="flex flex-col w-full">
+
+      <!-- رأس الصفحة ومحطة العمليات السريعة -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+            <span class="font-label-sm text-label-sm text-primary tracking-wide">نظام إدارة المستودعات وسلاسل الإمداد الدوائية</span>
+          </div>
+          <h1 class="font-headline-xl text-headline-xl text-on-surface">إدارة المخزون والرقابة المركزية</h1>
+          <p class="font-body-sm text-body-sm text-text-secondary mt-1">متابعة دقيقة للأرصدة وتنبيهات الصلاحية والمزامنة مع المتجر.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="exportCSV()" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-lowest text-text-secondary hover:text-on-surface shadow-sm transition-all transform hover:-translate-y-0.5">
+            <span class="material-symbols-outlined text-[18px]">download</span>
+            <span class="font-label-lg text-label-lg">تصدير Excel</span>
+          </button>
+          <button onclick="inventoryCount()" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-lowest text-primary hover:bg-primary-surface shadow-sm transition-all transform hover:-translate-y-0.5">
+            <span class="material-symbols-outlined text-[18px]">inventory</span>
+            <span class="font-label-lg text-label-lg">جرد المستودع الدوري</span>
+          </button>
+          <button onclick="newProductModal()" class="flex items-center gap-2 px-5 py-2.5 btn-brand-gradient text-on-primary rounded-full shadow-[0px_8px_20px_rgba(77,60,235,0.3)] transition-all transform hover:-translate-y-0.5">
+            <span class="material-symbols-outlined text-[20px]">add_circle</span>
+            <span class="font-label-lg text-label-lg">إذن إضافة مخزني جديد</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- شبكة بطاقات المؤشرات الإحصائية الرئيسية (KPIs) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- بطاقة 1: إجمالي الأصناف المخزنة -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-text-secondary mb-1">إجمالي الأصناف بالكتالوج</span>
+              <span class="font-display-lg text-display-lg text-on-surface" id="kpi-total">0</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-primary-surface flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-[26px]">category</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between pt-1">
+            <span class="inline-flex items-center gap-1 font-data-tabular text-data-tabular text-success bg-success-surface px-2 py-0.5 rounded-full">
+              <span class="material-symbols-outlined text-[14px]">trending_up</span>
+              هذا الأسبوع
+            </span>
+          </div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+        <!-- بطاقة 2: أصناف قاربت على النفاد -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-warning mb-1 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-warning animate-ping"></span>
+                أصناف قاربت على النفاد
+              </span>
+              <span class="font-display-lg text-display-lg text-on-surface"><span id="kpi-low">0</span> <span class="font-headline-sm text-headline-sm text-text-secondary">صنف</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-warning-surface flex items-center justify-center text-warning group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-[26px]">warning</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between pt-1">
+            <span class="inline-flex items-center gap-1 font-data-tabular text-data-tabular text-warning bg-warning-surface px-2 py-0.5 rounded-full">دون حد الأمان</span>
+            <button onclick="setStatusFilter('low')" class="font-label-sm text-label-sm text-primary hover:underline font-bold">عرض الأصناف ←</button>
+          </div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-warning/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+        <!-- بطاقة 3: أصناف منتهية الصلاحية قريباً -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-danger mb-1 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-danger"></span>
+                صلاحيات وشيكة (&lt; 90 يوم)
+              </span>
+              <span class="font-display-lg text-display-lg text-danger"><span id="kpi-expiring">0</span> <span class="font-headline-sm text-headline-sm text-text-secondary">صنف</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-danger-surface flex items-center justify-center text-danger group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-[26px]">event_busy</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between pt-1">
+            <span class="font-data-tabular text-data-tabular text-danger bg-danger-surface px-2 py-0.5 rounded-full">تنبيه تلقائي للصلاحية</span>
+            <span class="font-label-sm text-label-sm text-text-secondary">متابعة بروتوكول FEFO</span>
+          </div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-danger/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+        <!-- بطاقة 4: القيمة الإجمالية للمخزون -->
+        <div class="relative overflow-hidden bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-all">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-text-secondary mb-1">القيمة المالية للمخزون</span>
+              <span class="font-display-lg text-display-lg text-on-surface"><span id="kpi-value">0</span> <span class="font-headline-sm text-headline-sm text-primary">ج.م</span></span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-success-surface flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
+              <span class="material-symbols-outlined text-[26px]">account_balance_wallet</span>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between pt-1">
+            <span class="inline-flex items-center gap-1 font-data-tabular text-data-tabular text-tertiary bg-success-surface px-2 py-0.5 rounded-full">
+              <span class="material-symbols-outlined text-[14px]">verified</span>
+              مؤمن ومطابق
+            </span>
+            <span class="font-label-sm text-label-sm text-text-secondary">بسعر البيع الحالي</span>
+          </div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-success/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+      </div>
+
+      <!-- شريط المراقبة والتحكم اللوجستي السريع -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-full bg-primary-surface flex items-center justify-center text-primary">
+              <span class="material-symbols-outlined text-[22px]">verified</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-label-lg text-label-lg text-on-surface">مطابقة أرصدة المتجر</span>
+              <span class="font-label-sm text-label-sm text-tertiary font-bold flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-success"></span>
+                متزامنة لحظياً مع الطلبات
+              </span>
+            </div>
+          </div>
+          <span class="font-label-sm text-label-sm bg-surface-container px-2 py-1 rounded-full text-text-secondary">100% مطابق</span>
+        </div>
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary">
+              <span class="material-symbols-outlined text-[22px]">local_shipping</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-label-lg text-label-lg text-on-surface">مزامنة الكتالوج</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">الأصناف والعروض منشورة للمتجر</span>
+            </div>
+          </div>
+          <span class="font-label-sm text-label-sm bg-primary-surface text-primary px-2.5 py-1 rounded-full font-bold" id="sync-badge">نشط</span>
+        </div>
+        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-full bg-success-surface flex items-center justify-center text-tertiary">
+              <span class="material-symbols-outlined text-[22px]">inventory_2</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-label-lg text-label-lg text-on-surface">بث حي للأرصدة</span>
+              <span class="font-label-sm text-label-sm text-text-secondary">كل تحديث ينعكس فوراً على الصفحة</span>
+            </div>
+          </div>
+          <button onclick="supplyRequest()" class="font-label-sm text-label-sm text-primary hover:underline font-bold">طلب توريد ←</button>
+        </div>
+      </div>
+
+      <!-- لوحة التصفية والبحث المتقدم -->
+      <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm mb-6 flex flex-col gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+          <div class="md:col-span-5 relative">
+            <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[20px] pointer-events-none">search</span>
+            <input class="w-full h-11 pr-11 pl-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" id="inventorySearch" placeholder="بحث بالاسم التجاري، الاسم العلمي، أو الباركود..." type="text" oninput="onSearch(this.value)"/>
+          </div>
+          <div class="md:col-span-3 relative">
+<select class="w-full h-11 px-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer" id="warehouseFilter" onchange="applyFilters()"><option value="all">All Warehouses</option><option value="cairo">Cairo</option><option value="giza">Giza</option><option value="alex">Alexandria</option></select>
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[18px] pointer-events-none">expand_more</span>
+          </div>
+          <div class="md:col-span-2 relative">
+            <select class="w-full h-11 px-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer" id="statusFilter" onchange="setStatusFilter(this.value)">
+              <option value="all">كافة الحالات</option>
+              <option value="available">متوفر ومطابق</option>
+              <option value="low">منخفض (تحت الأمان)</option>
+              <option value="out">نافد تماماً</option>
+              <option value="disabled">غير نشط</option>
+            </select>
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[18px] pointer-events-none">filter_list</span>
+          </div>
+          <div class="md:col-span-2 flex items-center gap-2 justify-end">
+            <button onclick="toggleCustomize()" class="h-11 px-4 rounded-full bg-surface-container-low text-text-secondary hover:text-on-surface flex items-center justify-center gap-1 transition-all">
+              <span class="material-symbols-outlined text-[18px]">tune</span>
+              <span class="font-label-md text-label-md" id="customize-label">تخصيص العرض</span>
+            </button>
+            <button onclick="resetFilters()" class="h-11 w-11 rounded-full bg-surface-container-low text-text-secondary hover:text-primary flex items-center justify-center transition-all" title="إعادة تعيين">
+              <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+            </button>
+          </div>
+        </div>
+        </div>
+
+      <!-- جدول تفصيلي احترافي للمخزون -->
+      <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-6">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right border-collapse">
+            <thead>
+              <tr class="h-11 bg-surface-container-low text-text-secondary font-label-sm text-label-sm">
+                <th class="px-4 py-2 w-12 text-center">
+                  <input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" onclick="toggleAll(this.checked)" title="تحديد الكل"/>
+                </th>
+                <th class="px-4 py-2">الصنف والاسم العلمي</th>
+                <th class="px-4 py-2">كود SKU / الباركود</th>
+                <th class="px-4 py-2">الفئة</th>
+                <th class="px-4 py-2">التشغيلة (Batch)</th>
+                <th class="px-4 py-2">انتهاء الصلاحية</th>
+                <th class="px-4 py-2">الرصيد ومستوى التوفر</th>
+                <th class="px-4 py-2">حد الطلب</th>
+                <th class="px-4 py-2">السعر / البيع</th>
+                <th class="px-4 py-2">الحالة</th>
+                <th class="px-4 py-2 text-center">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-body" class="divide-y divide-border-subtle font-body-sm text-body-sm text-on-surface">
+              <tr><td colspan="11" class="text-center py-12 text-text-secondary font-bold animate-pulse">جاري تحميل المخزون...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- تذييل الجدول وترقيم الصفحات -->
+        <div class="p-4 bg-surface-container-low/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-2 font-body-sm text-body-sm text-text-secondary">
+            <span id="range-info">عرض 0 من 0 صنف مخزني مسجل</span>
+            <span class="hidden sm:inline" id="bulk-info"></span>
+          </div>
+          <div class="flex items-center gap-1" id="pagination"></div>
+        </div>
+      </div>
+
+      <!-- شبكة سفلية مقسمة -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- إحصائيات الفئات والمخزون -->
+        <div class="lg:col-span-6 bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[22px]">insights</span>
+                <h2 class="font-headline-lg text-headline-lg text-on-surface">توزيع الأصناف حسب الفئة</h2>
+              </div>
+              <span class="font-label-sm text-label-sm text-tertiary bg-success-surface px-2 py-0.5 rounded-full font-bold">ضمن الحدود الآمنة</span>
+            </div>
+            <p class="font-body-sm text-body-sm text-text-secondary mb-4">نسب الأصناف النشطة في كتالوج المتجر حسب التصنيف.</p>
+            <div id="category-bars" class="flex flex-col gap-3">
+              <div class="text-center py-6 text-text-secondary">جاري احتساب التوزيع...</div>
+            </div>
+          </div>
+          <div class="mt-4 pt-2 border-t border-border-subtle flex items-center justify-between">
+            <span class="font-label-sm text-label-sm text-text-secondary">آخر مزامنة مع المتجر: لحظياً</span>
+            <button onclick="fetchProducts()" class="font-label-md text-label-md text-primary font-bold hover:underline">تحديث الأرصدة ←</button>
+          </div>
+        </div>
+        <!-- سجل أحدث الأصناف المضافة -->
+        <div class="lg:col-span-6 bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[22px]">history</span>
+                <h2 class="font-headline-lg text-headline-lg text-on-surface">أحدث الأصناف والتحركات</h2>
+              </div>
+              <button onclick="fetchProducts()" class="font-label-sm text-label-sm text-primary font-bold hover:underline">تحديث</button>
+            </div>
+            <div class="flex flex-col divide-y divide-border-subtle" id="recent-list">
+              <div class="py-6 text-center text-text-secondary">جاري التحميل...</div>
+            </div>
+          </div>
+          <div class="mt-4 p-2 rounded-xl bg-surface-container-low flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[20px] text-tertiary">qr_code_scanner</span>
+              <span class="font-label-md text-label-md text-on-surface">ربط مباشر لماسحات الباركود بالمستودع</span>
+            </div>
+            <span class="font-label-sm text-label-sm bg-success-surface text-tertiary px-2.5 py-0.5 rounded-full font-bold">جاهز للمسح</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="layout.js"></script>
+<script>
+let products=[],page=1,perPage=10,warehouse='all',statusF='all',hideCols=new Set(),sel=new Set();
+let HAS_STOCK=false,HAS_ACTIVE=false,HAS_BARCODE=false,HAS_EXPIRY=false,HAS_BATCH=false,HAS_GALLERY=false;
+
+function lowThreshold(o){const r=Number(o.reorder_level)||10;return r;}
+function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function relTime(iso){
+  if(!iso)return '';
+  const d=new Date(iso),now=new Date(),mins=Math.floor((now-d)/60000);
+  if(mins<1)return 'الآن';
+  if(mins<60)return 'منذ '+mins+' دقيقة';
+  const hrs=Math.floor(mins/60);
+  if(hrs<24)return 'منذ '+hrs+' ساعة';
+  return 'منذ '+Math.floor(hrs/24)+' يوم';
+}
+function expDaysRemaining(o){
+  if(!HAS_EXPIRY||!o.expiry)return null;
+  const days=Math.ceil((new Date(o.expiry)-Date.now())/86400000);
+  return days;
+}
+
+function pctOf(o){
+  if(!HAS_STOCK)return 0;
+  const st=Number(o.stock)||0;
+  const cap=Math.max(50,(lowThreshold(o))*5);
+  return Math.max(0,Math.min(100,Math.round(st/cap*100)));
+}
+
+function statusInfo(o){
+  const st=Number(o.stock)||0;
+  let exp=expDaysRemaining(o);
+  if(exp!==null&&exp<=90)return{label:exp<=0?'منتهية الصلاحية':'انتهاء وشيك',cls:'bg-danger-surface text-danger font-bold',dot:'bg-danger',icon:'event_busy'};
+  if(HAS_STOCK&&st<=0)return{label:'نافد تماماً',cls:'bg-danger-surface text-danger font-bold',dot:'bg-danger',icon:'cancel'};
+  if(HAS_STOCK&&st<=lowThreshold(o))return{label:'قارب على النفاد',cls:'bg-warning-surface text-warning font-bold',dot:'bg-warning',icon:'warning'};
+  if(HAS_ACTIVE&&!o.is_active)return{label:'غير نشط',cls:'bg-surface-container-high text-on-surface-variant font-bold',dot:'bg-outline',icon:'block'};
+  return{label:'متوفر بالكامل',cls:'bg-success-surface text-tertiary font-bold',dot:'bg-success',icon:'check_circle'};
+}
+
+async function detectColumns(){
+  try{
+    const{data,error}=await _supabase.from('products').select('*').limit(1);
+    if(error)return;
+    const row=data&&data[0]||{};
+    HAS_STOCK=('stock' in row);
+    HAS_ACTIVE=('is_active' in row);
+    HAS_BARCODE=('barcode' in row||'sku' in row);
+    HAS_EXPIRY=('expiry' in row||'expiry_date' in row);
+    HAS_BATCH=('batch' in row||'batch_no' in row||'lot' in row);
+    HAS_GALLERY=('images' in row);
+  }catch(e){}
+}
+
+function productSelectColumns(){
+  const cols=['id','name','category','price','oldPrice','discount','img','image','brand','science_name','desc','ingredients','created_at','reorder_level','images'];
+  if(HAS_STOCK)cols.push('stock');
+  if(HAS_ACTIVE)cols.push('is_active');
+  if(HAS_BARCODE)cols.push('barcode','sku');
+  if(HAS_EXPIRY)cols.push('expiry','expiry_date');
+  if(HAS_BATCH)cols.push('batch','batch_no','lot');
+  return [...new Set(cols)].join(',');
+}
+
+function normalizeGallery(g){
+  if(Array.isArray(g))return g.filter(Boolean);
+  if(typeof g==='string'&&g.trim()){
+    try{const parsed=JSON.parse(g);if(Array.isArray(parsed))return parsed.filter(Boolean);}catch(e){}
+    return g.split(',').map(s=>s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+async function fetchProducts(){
+  try{
+    let{data,error}=await _supabase.from('products').select(productSelectColumns()).order('created_at',{ascending:false}).limit(1000);
+    if(error){
+      console.warn('Optimized products query failed, falling back to full product rows:',error.message);
+      ({data,error}=await _supabase.from('products').select('*').order('created_at',{ascending:false}).limit(1000));
+    }
+    if(error)throw error;
+    products=data||[];
+    fillWarehouseSelect();renderKPIs();renderTable();renderRecent();renderCategoryBars();
+  }catch(e){
+    document.getElementById('inventory-body').innerHTML=`<tr><td colspan="11" class="text-center py-16 text-error font-bold">فشل جلب المخزون.</td></tr>`;
+  }
+}
+
+function fillWarehouseSelect(){const s=document.getElementById('warehouseFilter');s.innerHTML='<option value="all">All Warehouses</option><option value="cairo">Cairo</option><option value="giza">Giza</option><option value="alex">Alexandria</option>';}
+function setStatusFilter(v){
+  statusF=v;
+  const sel=document.getElementById('statusFilter');
+  if(sel&&sel.value!==v)sel.value=v;
+  page=1;renderTable();
+}
+function resetFilters(){
+  document.getElementById('inventorySearch').value='';
+  document.getElementById('statusFilter').value='all';
+  warehouse='all';statusF='all';page=1;hideCols.clear();
+  document.getElementById('customize-label').textContent='تخصيص العرض';
+  fillWarehouseSelect();renderTable();
+}
+function onSearch(){page=1;renderTable();}
+function applyFilters(){page=1;renderTable();}
+
+function getFiltered(){
+  const q=(document.getElementById('inventorySearch').value||'').trim().toLowerCase();
+  return products.filter(p=>{
+    if(warehouse!=='all'&&(p.category||'بدون فئة')!==warehouse)return false;
+    if(statusF!=='all'){
+      const st=Number(p.stock)||0;
+      const sLow=HAS_STOCK&&st<=0;
+      const sNear=HAS_STOCK&&st>0&&st<=lowThreshold(p);
+      const sDis=HAS_ACTIVE&&!p.is_active;
+      const sExp=expDaysRemaining(p)!==null&&expDaysRemaining(p)<=90;
+      if(statusF==='available'){if(sLow||sNear||sDis||sExp)return false;}
+      else if(statusF==='low'){if(!sNear)return false;}
+      else if(statusF==='out'){if(!sLow)return false;}
+      else if(statusF==='disabled'){if(!sDis)return false;}
+    }
+    if(q){
+      const hay=String(p.name||'')+' '+String(p.category||'')+' '+String(p.barcode||'')+' '+String(p.sku||'');
+      if(!hay.toLowerCase().includes(q))return false;
+    }
+    return true;
+  });
+}
+
+function renderKPIs(){
+  const n=products.length;
+  const low=products.filter(p=>HAS_STOCK&&Number(p.stock)>0&&Number(p.stock)<=lowThreshold(p)).length;
+  const out=(p=>HAS_STOCK&&Number(p.stock)<=0?1:0);
+  const exp=products.filter(p=>{const d=expDaysRemaining(p);return d!==null&&d<=90;}).length;
+  const val=products.reduce((s,p)=>s+(Number(p.price)||0)*(HAS_STOCK?Math.max(0,Number(p.stock)||0):1),0);
+  document.getElementById('kpi-total').textContent=n;
+  document.getElementById('kpi-low').textContent=(low||out(products)).toString();
+  document.getElementById('kpi-expiring').textContent=HAS_EXPIRY?exp:0;
+  document.getElementById('kpi-value').textContent=money(val);
+  document.getElementById('sync-badge').textContent='متزامن'; 
+}
+
+function renderTable(){
+  const filtered=getFiltered();
+  const total=filtered.length,tp=Math.max(1,Math.ceil(total/perPage));
+  if(page>tp)page=tp;
+  const start=(page-1)*perPage,slice=filtered.slice(start,start+perPage);
+  const tbody=document.getElementById('inventory-body');
+
+  document.getElementById('range-info').textContent='عرض '+(total?start+1:0)+' إلى '+Math.min(start+perPage,total)+' من أصل '+total+' صنف مخزني مسجل';
+  document.getElementById('bulk-info').textContent=sel.size?`| المحدد: ${sel.size} — <a href="#" onclick="bulkDelete()" class="text-danger font-bold">حذف المحدد</a>`:'';
+
+  if(!slice.length){
+    tbody.innerHTML=`<tr><td colspan="11" class="text-center py-16 text-text-secondary">لا توجد أصناف مطابقة حالياً</td></tr>`;
+  }else{
+    tbody.innerHTML=slice.map(p=>{
+      const id=String(p.id),rowSel=sel.has(id);
+      const info=statusInfo(p);
+      const sku=p.sku||p.barcode||'#'+id;
+      const barc=p.barcode||p.sku||'';
+      const st=Number(p.stock)||0;
+      const pct=pctOf(p);
+      const barColor=pct<=30?'bg-warning':(info.label==='انتهاء وشيك'||info.label==='منتهية الصلاحية'?'bg-danger':'bg-success');
+      const exp=expDaysRemaining(p);
+      const location=p.category||'—';
+      const batch=HAS_BATCH?(p.batch||p.batch_no||p.lot||'—'):'—';
+      const reorder=Number(p.reorder_level);
+      let actions='';
+      const editBtn=`<button onclick="editProduct('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="تعديل بيانات الصنف"><span class="material-symbols-outlined text-[18px]">edit_square</span></button>`;
+      if(info.label==='قارب على النفاد'&&HAS_STOCK){
+        actions=editBtn+`<button onclick="supplyFor('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-primary font-bold transition-colors" title="إصدار طلب توريد عاجل"><span class="material-symbols-outlined text-[18px]">add_shopping_cart</span></button>
+                 <button onclick="editStock('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="تعديل الرصيد"><span class="material-symbols-outlined text-[18px]">edit_note</span></button>`;
+      }else if(info.label==='انتهاء وشيك'||info.label==='منتهية الصلاحية'){
+        actions=editBtn+`<button onclick="deleteProduct('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-danger font-bold transition-colors" title="إجراء تخريد أو تصريف عاجل"><span class="material-symbols-outlined text-[18px]">local_fire_department</span></button>
+                 <button onclick="toggleActive('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="تعطيل/تفعيل">${HAS_ACTIVE?`<span class="material-symbols-outlined text-[18px]">swap_horiz</span>`:''}</button>`;
+      }else{
+        actions=editBtn+`<button onclick="toggleActive('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="${HAS_ACTIVE?'تعطيل/تفعيل':'تحويل بين المستودعات'}"><span class="material-symbols-outlined text-[18px]">swap_horiz</span></button>
+                 <button onclick="editStock('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="تعديل الرصيد/السعر"><span class="material-symbols-outlined text-[18px]">edit_note</span></button>`;
+      }
+      return `
+      <tr class="hover:bg-canvas-bg transition-colors group ${rowSel?'bg-primary/5':''}">
+        <td class="px-4 py-3 text-center"><input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" ${rowSel?'checked':''} onclick="toggleOne('${id}',this.checked)"/></td>
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-2">
+            <img class="w-10 h-10 rounded-lg object-cover shadow-sm bg-surface-container ${hideCols.has('img')?'hidden':''}" onerror="this.style.display='none'" alt="" src="${escapeHtml(p.img||p.image)||''}"/>
+            <div class="flex flex-col min-w-0">
+              <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">${escapeHtml(p.name)||'منتج'}</span>
+              <span class="font-label-sm text-label-sm text-text-secondary truncate">${escapeHtml(p.brand||p.science_name||p.category||'')}</span>
+            </div>
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <div class="flex flex-col">
+            <span class="font-data-tabular text-data-tabular font-bold text-on-surface">${escapeHtml(String(sku))}</span>
+            ${HAS_BARCODE?`<span class="font-label-sm text-label-sm text-text-secondary">${escapeHtml(String(barc))}</span>`:''}
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <div class="flex flex-col">
+            <span class="font-label-md text-label-md text-on-surface font-semibold">${escapeHtml(location)}</span>
+            <span class="font-label-sm text-label-sm text-text-secondary">القاهرة المركزي</span>
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <span class="font-data-tabular text-data-tabular px-2 py-0.5 rounded bg-surface-container font-mono text-on-surface">${escapeHtml(String(batch))}</span>
+        </td>
+        <td class="px-4 py-3">
+          ${HAS_EXPIRY&&p.expiry?`
+            <div class="flex items-center gap-1.5 font-data-tabular text-data-tabular ${exp<=90?'text-danger font-bold':'text-on-surface'}">
+              <span class="material-symbols-outlined text-[16px] ${exp<=90?'text-danger':'text-tertiary'}">${exp<=90?'event_busy':'calendar_today'}</span>
+              <span>${escapeHtml(String(p.expiry).slice(0,10))}</span>
+            </div>
+            <span class="font-label-sm text-label-sm ${exp<=90?'bg-danger text-on-primary px-1.5 py-0.5 rounded font-bold':'text-tertiary'}">${exp<=0?'منتهية':('متبقي '+exp+' يوماً')}</span>`
+          :'<span class="text-text-secondary">—</span>'}
+        </td>
+        <td class="px-4 py-3 w-44">
+          ${HAS_STOCK?`
+            <div class="flex flex-col gap-1">
+              <div class="flex justify-between items-center font-data-tabular text-data-tabular">
+                <span class="font-bold text-on-surface">${st} وحدة</span>
+                <span class="${pct<=30?'text-warning':'text-tertiary'}">${pct}%</span>
+              </div>
+              <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+                <div class="h-full ${barColor} rounded-full" style="width: ${pct}%;"></div>
+              </div>
+            </div>`:'<span class="text-text-secondary">كمية غير مسجلة</span>'}
+        </td>
+        <td class="px-4 py-3 font-data-tabular text-data-tabular">${reorder?reorder+' وحدة':'—'}</td>
+        <td class="px-4 py-3 font-data-tabular text-data-tabular">
+          <div class="flex flex-col">
+            <span class="font-bold text-on-surface">${p.price?money(p.price)+' ج.م':'—'}</span>
+            ${Number(p.discount)?`<span class="text-text-secondary text-label-sm">خصم ${p.discount}%</span>`:''}
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${info.cls} font-label-sm text-label-sm">
+            <span class="w-2 h-2 rounded-full ${info.dot}"></span>
+            ${info.label}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-center">
+          <div class="flex items-center justify-center gap-1">${actions}</div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // pagination
+  const p=document.getElementById('pagination');
+  if(tp<=1){p.innerHTML='';return;}
+  let html=`<button onclick="changePage(${page-1})" class="w-9 h-9 rounded-full bg-surface-container-lowest text-text-secondary hover:text-on-surface flex items-center justify-center shadow-sm disabled:opacity-40 ${page<=1?'pointer-events-none opacity-40':''}"><span class="material-symbols-outlined text-[18px]">chevron_right</span></button>`;
+  let pages=[];
+  for(let i=1;i<=tp;i++){
+    if(i===1||i===tp||Math.abs(i-page)<=1)pages.push(i);
+    else if(pages[pages.length-1]!=='…')pages.push('…');
+  }
+  pages.forEach(x=>{
+    if(x==='…')html+=`<span class="px-1 text-text-secondary">...</span>`;
+    else html+=`<button onclick="changePage(${x})" class="w-9 h-9 rounded-full font-bold font-data-tabular text-data-tabular shadow-sm ${x===page?'btn-brand-gradient text-on-primary':'bg-surface-container-lowest text-text-secondary hover:text-on-surface'}">${x}</button>`;
+  });
+  html+=`<button onclick="changePage(${page+1})" class="w-9 h-9 rounded-full bg-surface-container-lowest text-text-secondary hover:text-on-surface flex items-center justify-center shadow-sm ${page>=tp?'pointer-events-none opacity-40':''}"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>`;
+  p.innerHTML=html;
+}
+
+function changePage(pg){
+  const tp=Math.max(1,Math.ceil(getFiltered().length/perPage));
+  if(pg<1||pg>tp)return;
+  page=pg;renderTable();
+}
+
+function toggleOne(id,on){on?sel.add(id):sel.delete(id);renderTable();}
+function toggleAll(on){
+  sel.clear();
+  if(on)getFiltered().forEach(p=>sel.add(String(p.id)));
+  renderTable();
+}
+
+async function bulkDelete(){
+  if(!sel.size)return toast('error','حدد أصنافاً أولاً');
+  const r=await confirmDialog('حذف الأصناف المحددة','سيتم حذف '+sel.size+' صنف نهائياً!');
+  if(!r)return;
+  for(const id of sel){
+    const p=products.find(x=>String(x.id)===String(id));
+    const{error}=await _supabase.from('products').delete().eq('id',id);
+    if(!error){
+      sel.delete(id);
+      const img=p&&(p.img||p.image);
+      if(img&&window.deleteStorageFile)deleteStorageFile(img).catch(()=>{});
+    }
+  }
+  sel.clear();toast('success','تم الحذف');fetchProducts();
+}
+
+async function editStock(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  if(!HAS_STOCK){toast('error','لا يوجد عمود stock في جدول products');return;}
+  const{value}=await Swal.fire({title:'تعديل رصيد: '+p.name,input:'number',inputValue:p.stock??0,showCancelButton:true,confirmButtonColor:'#4d3ceb',confirmButtonText:'حفظ',cancelButtonText:'إلغاء',inputAttributes:{min:'0'}});
+  if(value===undefined||value===null)return;
+  const{error}=await _supabase.from('products').update({stock:Number(value)}).eq('id',p.id);
+  if(error){toast('error','فشل التحديث');return;}
+  p.stock=Number(value);toast('success','تم تحديث الرصيد');renderTable();renderKPIs();
+}
+
+async function toggleActive(id){
+  if(!HAS_ACTIVE){toast('error','لا يوجد عمود is_active');return;}
+  const p=products.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  const newVal=!p.is_active;
+  const{error}=await _supabase.from('products').update({is_active:newVal}).eq('id',p.id);
+  if(error){toast('error','فشل التحديث');return;}
+  p.is_active=newVal;toast('success',newVal?'تم التفعيل':'تم التعطيل');renderTable();renderKPIs();
+}
+
+async function deleteProduct(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  const r=await confirmDialog('تخريد الصنف','سيتم حذف " '+(p?p.name:'')+' " نهائياً!');
+  if(!r)return;
+  const{error}=await _supabase.from('products').delete().eq('id',id);
+  if(error){toast('error','فشل الحذف');return;}
+  const img=p&&(p.img||p.image);
+  if(img&&window.deleteStorageFile)deleteStorageFile(img).catch(()=>{});
+  sel.delete(id);toast('success','تم التخريد');fetchProducts();
+}
+
+function supplyFor(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  const txt='طلب توريد عاجل: '+(p?p.name:'صنف')+(HAS_STOCK?(' - المتبقي: '+(p.stock||0)):'');
+  navigator.clipboard.writeText(txt).then(()=>toast('success','تم نسخ طلب التوريد'));
+}
+
+function supplyRequest(){
+  const low=products.filter(p=>HAS_STOCK&&((Number(p.stock)||0)<=lowThreshold(p)));
+  if(!low.length){toast('success','لا توجد أصناف تحتاج توريد حالياً');return;}
+  const txt='قائمة التوريد العاجل:\n'+low.slice(0,15).map(p=>'- '+(p.name||'صنف')+' (المتبقي '+(p.stock||0)+')').join('\n');
+  navigator.clipboard.writeText(txt).then(()=>Swal.fire({icon:'success',title:'تم تجهيز قائمة التوريد',text:low.length+' صنف قارب على النفاد — تم نسخ القائمة للحافظة.',confirmButtonColor:'#4d3ceb'}));
+}
+
+function inventoryCount(){
+  const total=products.length;
+  const low=products.filter(p=>HAS_STOCK&&((Number(p.stock)||0)<=lowThreshold(p))).length;
+  const val=products.reduce((s,p)=>s+(Number(p.price)||0)*(HAS_STOCK?Math.max(0,Number(p.stock)||0):1),0);
+  Swal.fire({icon:'success',title:'اكتمل الجرد الدوري',html:`<div class="text-right space-y-2 text-sm"><div>إجمالي الأصناف: <b>${total}</b></div><div>قاربت على النفاد: <b class="text-amber-600">${low}</b></div><div>القيمة المالية: <b>${money(val)} ج.م</b></div></div>`,confirmButtonColor:'#4d3ceb'});
+}
+
+async function newProductModal(){
+  const{value:fv}=await Swal.fire({
+    title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">add_box</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">إضافة صنف جديد للمخزون</span><span class="efp-modal-title-sub">سيظهر في المتجر مباشرة بعد الحفظ</span></div></div>`,
+    width:560,padding:0,showCloseButton:true,
+    customClass:{popup:'efp-modal-popup',htmlContainer:'efp-modal-html',actions:'efp-modal-actions'},
+    html:`<div class="efp-field-group">
+        <label class="efp-label">اسم الصنف *</label>
+        <input id="swal-name" class="swal2-input efp-input" placeholder="مثال: سيروم جوزيل 100 مل">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الفئة</label>
+        <input id="swal-warehouse" class="swal2-input efp-input" placeholder="مثال: سيرومات">
+      </div>
+      <div class="efp-row-2">
+        <div class="efp-field-group">
+          <label class="efp-label">السعر (ج.م) *</label>
+          <input id="swal-price" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0">
+        </div>
+        <div class="efp-field-group">
+          <label class="efp-label">الخصم %</label>
+          <input id="swal-disc" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0">
+        </div>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الوصف</label>
+        <textarea id="swal-desc" class="swal2-textarea efp-input" placeholder="اكتب تفاصيل ومزايا الصنف (يمكنك وضع كل نقطة في سطر منفصل)..."></textarea>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">المكونات</label>
+        <textarea id="swal-ingredients" class="swal2-textarea efp-input" placeholder="اكتب المكونات (يمكنك كتابتها تحت بعضها أو مفصولة بنقاط)..."></textarea>
+      </div>
+      ${HAS_STOCK?'<div class="efp-field-group"><label class="efp-label">الرصيد الابتدائي</label><input id="swal-stock" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0"></div>':''}
+      ${HAS_EXPIRY?'<div class="efp-field-group"><label class="efp-label">تاريخ الانتهاء</label><input id="swal-expiry" class="swal2-input efp-input" type="date"></div>':''}
+      <div class="efp-field-group">
+        <label class="efp-label">صورة المنتج الرئيسية</label>
+        <input id="swal-img-file" type="file" accept="image/jpeg,image/png,image/webp" class="swal2-input efp-input" style="padding:6px;height:auto;">
+      </div>`,
+    showCancelButton:true,confirmButtonText:'إضافة للمخزون',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
+    preConfirm:async()=>{
+      const name=document.getElementById('swal-name').value.trim();
+      if(!name){Swal.showValidationMessage('اسم الصنف مطلوب');return false;}
+      const priceRaw=document.getElementById('swal-price').value;
+      if(priceRaw===''){Swal.showValidationMessage('السعر مطلوب — اكتب رقم حقيقي');return false;}
+      const price=Number(priceRaw);
+      if(!(price>0)){Swal.showValidationMessage('السعر لازم يكون أكبر من صفر');return false;}
+      const stockEl=document.getElementById('swal-stock');
+      if(stockEl&&stockEl.value===''){Swal.showValidationMessage('الرصيد الابتدائي مطلوب (اكتب 0 لو فعلاً مفيش رصيد)');return false;}
+      // رفع الصورة الرئيسية إن اختار المستخدم ملفاً
+      let imgUrl='';
+      const imgFileEl=document.getElementById('swal-img-file');
+      if(imgFileEl&&imgFileEl.files[0]){
+        try{
+          Swal.showLoading();
+          let upFile=imgFileEl.files[0];
+          if(window.resizeImage){const dUrl=await resizeImage(await blobToDataUrl(upFile),1200,1200);upFile=await dataUrlToBlob(dUrl,'image/jpeg');}
+          const fn=sanitizeFileName(imgFileEl.files[0].name);
+          const{error:upErr}=await _supabase.storage.from('products').upload(`uploads/${fn}`,upFile,{contentType:upFile.type||'image/jpeg'});
+          if(upErr)throw upErr;
+          const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fn}`);
+          imgUrl=publicUrl;
+        }catch(err){Swal.showValidationMessage('فشل رفع الصورة: '+(err.message||''));return false;}
+      }
+      return{
+        name,
+        category:document.getElementById('swal-warehouse').value.trim(),
+        price,
+        discount:Number(document.getElementById('swal-disc').value)||0,
+        stock:stockEl?Number(stockEl.value):undefined,
+        expiry:document.getElementById('swal-expiry')?document.getElementById('swal-expiry').value:undefined,
+        desc:document.getElementById('swal-desc')?document.getElementById('swal-desc').value.trim():'',
+        ingredients:document.getElementById('swal-ingredients')?document.getElementById('swal-ingredients').value.trim():'',
+        imgUrl
+      };
+    }
+  });
+  if(!fv)return;
+  const oldPrice=fv.discount>0?Math.round(fv.price/(1-Math.min(fv.discount,90)/100)):null;
+  const payload={name:fv.name,price:fv.price,is_active:true,images:[]};
+  if(fv.category)payload.category=fv.category;
+  if(oldPrice)payload.oldPrice=oldPrice;
+  if(fv.discount>0)payload.badge='خصم '+fv.discount+'%';
+  if(fv.stock!==undefined)payload.stock=fv.stock;
+  if(fv.expiry)payload.expiry=fv.expiry;
+  if(fv.desc)payload.desc=fv.desc;
+  if(fv.ingredients)payload.ingredients=fv.ingredients;
+  if(fv.imgUrl)payload.img=fv.imgUrl;
+  try{
+    const{data:inserted,error}=await _supabase.from('products').insert(payload).select('id');
+    if(error)throw error;
+    toast('success','تمت إضافة الصنف للمخزون وسيظهر في المتجر مباشرة');
+    fetchProducts();
+    // فتح نموذج التعديل لإضافة صور معرض المنتج مباشرةً
+    const newId = inserted && inserted.length > 0 ? inserted[0].id : null;
+    if(newId){
+      setTimeout(()=>{
+        Swal.fire({icon:'question',title:'إضافة صور معرض المنتج',text:'هل تريد إضافة صور إضافية لمعرض هذا المنتج الآن؟',showCancelButton:true,confirmButtonText:'نعم، أضف الآن',cancelButtonText:'لاحقاً',confirmButtonColor:'#4d3ceb'}).then(r=>{if(r.isConfirmed){editProduct(newId);}});
+      },600);
+    }
+  }catch(e){toast('error','فشل الإضافة: '+(e.message||''));}
+}
+
+function setupGalleryHandlers(productId,initialGallery){
+  window.__egGalleryState=Array.isArray(initialGallery)?[...initialGallery]:[];
+  window.__egGalleryProductId=productId;
+  window.__egRenderGallery=function(){
+    const box=document.getElementById('e-gallery-grid');
+    if(!box)return;
+    const list=window.__egGalleryState||[];
+    box.innerHTML=list.length?list.map((url,i)=>`
+      <div style="position:relative;width:64px;height:64px;">
+        <img src="${escapeHtml(url)}" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;background:#f2f3ff;" onerror="this.style.opacity='0.25'">
+        <button type="button" title="حذف من المعرض" onclick="window.__egRemoveGalleryImage(${i})" style="position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:9999px;background:#ef4444;color:#fff;border:2px solid #fff;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
+      </div>`).join(''):'<div style="color:#64748b;font-size:13px;">لا توجد صور إضافية بعد.</div>';
+  };
+  window.__egAddGalleryFiles=async function(fileList){
+    const files=Array.from(fileList||[]);
+    if(!files.length)return;
+    const input=document.getElementById('e-gallery-file');
+    if(input)input.value='';
+    Swal.showLoading();
+    try{
+      for(const file of files){
+        let upFile=file;
+        if(window.resizeImage){
+          const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);
+          upFile=await dataUrlToBlob(dataUrl,'image/jpeg');
+        }
+        const fileName=sanitizeFileName(file.name);
+        const path=`uploads/gallery/${window.__egGalleryProductId}-${Date.now()}-${fileName}`;
+        const{error:upErr}=await _supabase.storage.from('products').upload(path,upFile,{contentType:upFile.type||'image/jpeg'});
+        if(upErr)throw upErr;
+        const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(path);
+        window.__egGalleryState.push(publicUrl);
+      }
+      const{error}=await _supabase.from('products').update({images:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
+      if(error)throw error;
+      const p = products.find(x => String(x.id) === String(window.__egGalleryProductId));
+      if(p) p.images = [...window.__egGalleryState];
+      window.__egRenderGallery();
+      toast('success','تمت إضافة الصور لمعرض المنتج');
+    }catch(err){
+      toast('error','فشل رفع إحدى صور المعرض: '+(err.message||''));
+    }finally{
+      Swal.hideLoading();
+    }
+  };
+  window.__egRemoveGalleryImage=async function(idx){
+    const url=window.__egGalleryState[idx];
+    if(!url)return;
+    const ok=await confirmDialog('حذف هذه الصورة من المعرض؟','لن تظهر هذه الصورة في صفحة عرض المنتج بالمتجر بعد الحذف.');
+    if(!ok)return;
+    const removed=window.__egGalleryState.splice(idx,1)[0];
+    try{
+      const{error}=await _supabase.from('products').update({images:window.__egGalleryState}).eq('id',window.__egGalleryProductId);
+      if(error)throw error;
+      const p = products.find(x => String(x.id) === String(window.__egGalleryProductId));
+      if(p) p.images = [...window.__egGalleryState];
+      if(window.deleteStorageFile)deleteStorageFile(removed).catch(()=>{});
+      window.__egRenderGallery();
+      toast('success','تم حذف الصورة من المعرض');
+    }catch(err){
+      window.__egGalleryState.splice(idx,0,removed);
+      window.__egRenderGallery();
+      toast('error','فشل حذف الصورة: '+(err.message||''));
+    }
+  };
+}
+
+async function editProduct(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  const currentImg=p.img||p.image||'';
+  setupGalleryHandlers(id,normalizeGallery(p.images));
+  const{value:fv}=await Swal.fire({
+    title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">edit_square</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">تعديل بيانات الصنف</span><span class="efp-modal-title-sub">${escapeHtml(p.name||'')}</span></div></div>`,
+    width:600,
+    padding:0,
+    showCloseButton:true,
+    backdrop:'rgba(19,27,46,0.55)',
+    customClass:{container:'efp-modal-container',popup:'efp-modal-popup',htmlContainer:'efp-modal-html',closeButton:'efp-modal-close',actions:'efp-modal-actions',confirmButton:'efp-modal-confirm',cancelButton:'efp-modal-cancel'},
+    showClass:{popup:'efp-modal-show'},
+    hideClass:{popup:'efp-modal-hide'},
+    didOpen:()=>{if(window.__egRenderGallery)window.__egRenderGallery();},
+    didClose:()=>{window.__egRenderGallery=null;window.__egAddGalleryFiles=null;window.__egRemoveGalleryImage=null;},
+    html:`<div class="efp-field-group">
+        <label class="efp-label">اسم الصنف *</label>
+        <input id="e-name" class="swal2-input efp-input" value="${escapeHtml(p.name||'')}">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الفئة</label>
+        <input id="e-cat" class="swal2-input efp-input" value="${escapeHtml(p.category||'')}">
+      </div>
+      <div class="efp-row-2">
+        <div class="efp-field-group">
+          <label class="efp-label">السعر الحالي (ج.م) *</label>
+          <input id="e-price" class="swal2-input efp-input" type="number" min="0" value="${Number(p.price)||0}">
+        </div>
+        <div class="efp-field-group">
+          <label class="efp-label">السعر قبل الخصم (اختياري)</label>
+          <input id="e-oldprice" class="swal2-input efp-input" type="number" min="0" value="${p.oldPrice!=null?Number(p.oldPrice):''}">
+        </div>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">شارة العرض (اختياري)</label>
+        <input id="e-badge" class="swal2-input efp-input" value="${escapeHtml(p.badge||'')}" placeholder="مثال: خصم 20%">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">الوصف</label>
+        <textarea id="e-desc" class="swal2-textarea efp-input">${escapeHtml(p.desc||'')}</textarea>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">المكونات</label>
+        <textarea id="e-ingredients" class="swal2-textarea efp-input">${escapeHtml(p.ingredients||'')}</textarea>
+      </div>
+      ${HAS_STOCK?`<div class="efp-field-group"><label class="efp-label">الرصيد</label><input id="e-stock" class="swal2-input efp-input" type="number" min="0" value="${p.stock??0}"></div>`:''}
+      <div class="efp-field-group">
+        <label class="efp-label">صورة المنتج</label>
+        <div class="efp-img-row">
+          <img id="e-img-preview" src="${escapeHtml(currentImg)}" onerror="this.style.visibility='hidden'">
+          <input id="e-img-file" type="file" accept="image/jpeg,image/png,image/webp">
+        </div>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">معرض صور المنتج <span style="font-weight:400;color:#64748b;">(تظهر في صفحة عرض المنتج بالمتجر)</span></label>
+        <div id="e-gallery-grid" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;min-height:0;"></div>
+        <input id="e-gallery-file" type="file" accept="image/jpeg,image/png,image/webp" multiple onchange="window.__egAddGalleryFiles(this.files)">
+        <div style="margin-top:6px;font-size:12px;color:#64748b;">يمكن اختيار أكثر من صورة دفعة واحدة. الحذف فوري ولا يحتاج حفظ.</div>
+      </div>`,
+    showCancelButton:true,confirmButtonText:'حفظ التعديلات',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',
+    focusConfirm:false,
+    preConfirm:async()=>{
+      const name=document.getElementById('e-name').value.trim();
+      if(!name){Swal.showValidationMessage('اسم الصنف مطلوب');return false;}
+      const price=Number(document.getElementById('e-price').value)||0;
+      const oldPriceRaw=document.getElementById('e-oldprice').value;
+      const oldPrice=oldPriceRaw?Number(oldPriceRaw):null;
+      const category=document.getElementById('e-cat').value.trim();
+      const badge=document.getElementById('e-badge').value.trim();
+      const desc=document.getElementById('e-desc').value.trim();
+      const ingredients=document.getElementById('e-ingredients').value.trim();
+      const stockEl=document.getElementById('e-stock');
+      const stock=stockEl?(Number(stockEl.value)||0):undefined;
+      const file=document.getElementById('e-img-file').files[0]||null;
+      let img=currentImg;
+      if(file){
+        try{
+          Swal.showLoading();
+          let upFile=file;
+          if(window.resizeImage){
+            const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);
+            upFile=await dataUrlToBlob(dataUrl,'image/jpeg');
+          }
+          const fileName=sanitizeFileName(file.name);
+          const{error:upErr}=await _supabase.storage.from('products').upload(`uploads/${fileName}`,upFile,{contentType:upFile.type||'image/jpeg'});
+          if(upErr)throw upErr;
+          const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
+          img=publicUrl;
+        }catch(err){
+          Swal.showValidationMessage('فشل رفع الصورة: '+(err.message||''));
+          return false;
+        }
+      }
+      return{name,category,price,oldPrice,badge,desc,ingredients,stock,img,imageChanged:!!file};
+    }
+  });
+  if(!fv)return;
+  const payload={name:fv.name,category:fv.category,price:fv.price,oldPrice:fv.oldPrice,badge:fv.badge,desc:fv.desc,ingredients:fv.ingredients,img:fv.img};
+  if(HAS_STOCK&&fv.stock!==undefined)payload.stock=fv.stock;
+  try{
+    const{error}=await _supabase.from('products').update(payload).eq('id',id);
+    if(error)throw error;
+    // حذف الصورة القديمة من التخزين لو اتبدلت بصورة جديدة (تنظيف تلقائي)
+    if(fv.imageChanged&&currentImg&&window.deleteStorageFile){
+      deleteStorageFile(currentImg).catch(()=>{});
+    }
+    Object.assign(p,payload);
+    toast('success','تم حفظ تعديلات الصنف بنجاح');
+    renderTable();renderKPIs();
+  }catch(err){
+    toast('error','فشل حفظ التعديلات: '+(err.message||''));
+  }
+}
+
+function exportCSV(){
+  const filtered=getFiltered();
+  if(!filtered.length){toast('error','لا توجد أصناف للتصدير');return;}
+  const head=['الاسم','الفئة','السعر','السعر قبل الخصم','الرصيد','الحالة','التاريخ'];
+  const lines=filtered.map(p=>[`"${(p.name||'').replace(/"/g,'""')}"`,`"${(p.category||'').replace(/"/g,'""')}"`,p.price,p.oldPrice||'',HAS_STOCK?(p.stock??0):'',statusInfo(p).label,p.created_at||'']);
+  const csv='\ufeff'+[head.join(','),...lines.map(r=>r.join(','))].join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='inventory-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  toast('success','تم تصدير '+filtered.length+' صنف');
+}
+
+function toggleCustomize(){
+  const imgHidden=hideCols.has('img');
+  if(imgHidden)hideCols.delete('img');else hideCols.add('img');
+  document.getElementById('customize-label').textContent=imgHidden?'إظهار الصور':'إخفاء الصور';
+  renderTable();
+}
+
+function renderRecent(){
+  const box=document.getElementById('recent-list');
+  const recent=(products||[]).slice(0,3);
+  if(!recent.length){box.innerHTML='<div class="py-6 text-center text-text-secondary">لا توجد تحركات بعد.</div>';return;}
+  box.innerHTML=recent.map((p,i)=>{
+    const kind=i===0?'إضافة جديدة':'إضافة مخزني';
+    const icon=i===0?'input':'add_box';
+    const cls=i===0?'bg-success-surface text-tertiary':'bg-primary-surface text-primary';
+    return `<div class="py-2.5 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-full ${cls} flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">${icon}</span></div>
+        <div class="flex flex-col">
+          <span class="font-label-lg text-label-lg text-on-surface">${escapeHtml(p.name)||'منتج'}</span>
+          <span class="font-label-sm text-label-sm text-text-secondary">${escapeHtml(p.category)||'بدون فئة'} - ${HAS_STOCK?('الرصيد: '+(p.stock||0)):'متوفر في الكتالوج'}</span>
+        </div>
+      </div>
+      <div class="flex flex-col text-left">
+        <span class="font-data-tabular text-data-tabular font-bold text-tertiary">${kind}</span>
+        <span class="font-label-sm text-label-sm text-text-secondary">${relTime(p.created_at)||'الآن'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCategoryBars(){
+  const box=document.getElementById('category-bars');
+  const cats=[...new Set((products||[]).map(p=>(p.category||'بدون فئة')).filter(Boolean))];
+  if(!cats.length){box.innerHTML='<div class="text-center py-6 text-text-secondary">لا توجد فئات بعد.</div>';return;}
+  const active=cats.map(c=>products.filter(p=>(p.category||'بدون فئة')===c).length);
+  const total=products.length||1;
+  box.innerHTML=cats.slice(0,5).map((c,i)=>{
+    const pct=Math.round(active[i]/total*100);
+    return `<div class="flex flex-col gap-1.5">
+      <div class="flex justify-between items-center">
+        <span class="font-label-lg text-label-lg text-on-surface">${escapeHtml(c)}</span>
+        <span class="font-data-tabular text-data-tabular text-primary font-bold">${active[i]} صنف (${pct}%)</span>
+      </div>
+      <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+        <div class="bg-gradient-to-r from-primary to-[#8536ff] h-full rounded-full" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toast(icon,title){
+  if(typeof Swal==='undefined'){alert(title);return;}
+  Swal.fire({icon,title,toast:true,position:'bottom-end',showConfirmButton:false,timer:2500,timerProgressBar:true});
+}
+function confirmDialog(title,text){
+  return Swal.fire({title,text,icon:'warning',showCancelButton:true,confirmButtonColor:'#4d3ceb',confirmButtonText:'نعم',cancelButtonText:'إلغاء'}).then(r=>r.isConfirmed);
+}
+
+window.onload=async function(){
+  renderSidebar('inventory.html');
+  const ok=await requireAdmin();
+  if(ok){
+    await detectColumns();
+    fetchProducts();
+    try{
+      _supabase.channel('inventory-live')
+        .on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{fetchProducts();})
+        .subscribe();
+    }catch(e){}
+  }
+};
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();const s=document.getElementById('global-search');if(s)s.focus();}
+});
+</script>
+</body>
+</html>

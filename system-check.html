@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>فحص الربط - الفرات فارما</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <style>
+    body{font-family:'Tajawal',sans-serif;background:#faf8ff;color:#131b2e}
+    .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24}
+    .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%);border-radius:9999px;color:#fff}
+    .section-title{font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;padding:0.75rem 1rem;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+  </style>
+</head>
+<body>
+<div class="flex min-h-screen">
+  <div id="sidebar-placeholder"></div>
+  <main class="pr-0 lg:pr-64 flex-1 p-3 sm:p-6">
+    <div class="max-w-6xl mx-auto space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 class="font-[Cairo] text-2xl font-bold">فحص ربط المتجر بالداشبورد</h1>
+          <p class="text-sm text-slate-500 mt-1">اختبار مباشر للجداول الأساسية — كتابة الـ anon، قراءة الأدمن، وأعمدة الدفع والكوبونات والتتبع.</p>
+        </div>
+        <button onclick="runChecks()" class="btn-brand-gradient h-11 px-5 font-bold inline-flex items-center gap-2">
+          <span class="material-symbols-outlined text-lg">refresh</span><span>إعادة الفحص</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3" id="score-cards"></div>
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="font-[Cairo] font-bold">نتائج الفحص</h2>
+          <span id="score-label" class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">جاري الفحص...</span>
+        </div>
+        <div id="checks-list" class="divide-y divide-slate-100"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="layout.js"></script>
+<script>
+// ──────────────────────────────────────────────────────────────────────
+// مجموعات الفحص
+// scope: 'anon'   → يُختبر بكلاينت anon (كتابة المتجر / قراءة عامة)
+//        'admin'  → يُختبر بكلاينت الأدمن (الأحرف المحمية بـ RLS)
+//        'columns'→ فحص وجود أعمدة معيّنة بدون RLS حساسة
+// ──────────────────────────────────────────────────────────────────────
+
+// كلاينت anon منفصل (بدون جلسة أدمن)
+let _anonClient = null;
+function getAnonClient() {
+  if (_anonClient) return _anonClient;
+  // نستعمل نفس URL و anonKey من الكلاينت الحالي
+  const url  = _supabase.supabaseUrl;
+  const key  = _supabase.supabaseKey;
+  _anonClient = supabase.createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+  return _anonClient;
+}
+
+// ─── إدراج تجريبي عبر anon ثم تحقّق + تنظيف عبر كلاينت الأدمن ────
+// ملاحظة: لا نستخدم .select('id') بعد الإدراج لأن إرجاع الصفوف
+// يتطلّب سياسة SELECT للـ anon، والمتجر غير مسموح له بقراءة
+// الطلبات/الرسائل. التحقّق يتم بكلاينت الأدمن.
+// optional: مفاتيح قد لا تكون موجودة بعد (أعمدة الدفع مثلاً) — نُسقطها عند الخطأ.
+async function anonInsertCheck(table, payload, find, optional) {
+  const db = getAnonClient();
+  let r = await db.from(table).insert(payload);
+  if (r.error && optional && optional.length && /column .* does not exist|schema cache/i.test(r.error.message || '')) {
+    for (const k of optional) delete payload[k];
+    r = await db.from(table).insert(payload);
+  }
+  if (r.error) return r;
+  const chk = await _supabase.from(table).select('id').match(find).order('created_at',{ascending:false}).limit(1);
+  if (chk.error) return chk;
+  if (!chk.data || chk.data.length === 0) {
+    return { data: null, error: { message: 'الإدراج لم يُرجع خطأ لكن السجل غير ظاهر للأدمن — راجع سياسات RLS.' } };
+  }
+  await _supabase.from(table).delete().eq('id', chk.data[0].id);
+  return { data: chk.data, error: null };
+}
+
+// ─── فحوصات anon: ما يفعله المتجر بدون تسجيل دخول ───────────────────
+const checksAnon = [
+  {id:'anon-products-read', label:'قراءة المنتجات (anon / المتجر)', run: async () => {
+    const db = getAnonClient();
+    const r  = await db.from('products').select('id,name').limit(1);
+    return r;
+  }},
+  {id:'anon-settings-read', label:'قراءة إعدادات المتجر (anon)', run: async () => {
+    const db = getAnonClient();
+    return db.from('settings').select('id,data').limit(1);
+  }},
+  {id:'anon-coupons-read', label:'قراءة الكوبونات النشطة (anon)', run: async () => {
+    const db = getAnonClient();
+    // RLS يشترط is_active=true AND expiry_date >= today → نستخدم فلتر مطابق
+    const today = new Date().toISOString().slice(0,10);
+    const r = await db.from('coupons')
+      .select('id,code,discount_percentage,is_active,expiry_date')
+      .eq('is_active', true)
+      .gte('expiry_date', today)
+      .limit(1);
+    // إذا رجع فارغاً فهذا طبيعي (لا يوجد كوبون نشط)
+    if (!r.error) return { data: r.data, error: null, warn: r.data.length === 0 ? 'القراءة تعمل — لا يوجد كوبون نشط حالياً (طبيعي).' : null };
+    return r;
+  }},
+  {id:'anon-orders-insert', label:'إدراج طلب جديد (anon / المتجر)', run: async () => {
+    return anonInsertCheck('orders', {
+      total: 0.01,
+      status: '__test__',
+      customer_name: 'test-anon',
+      payment_method: 'cod',
+      payment_status: 'pending'
+    }, { status: '__test__', customer_name: 'test-anon' }, ['payment_method','payment_status']);
+  }},
+  {id:'anon-messages-insert', label:'إدراج رسالة عميل (anon)', run: async () => {
+    return anonInsertCheck('messages', {
+      name: 'test-anon',
+      phone: '000',
+      message: '__test__'
+    }, { message: '__test__', name: 'test-anon' });
+  }},
+  {id:'anon-store-events-insert', label:'إدراج حدث تتبع (anon / store_events)', run: async () => {
+    return anonInsertCheck('store_events', {
+      session_id: 'test-session',
+      event_name: '__test__'
+    }, { event_name: '__test__', session_id: 'test-session' });
+  }},
+  {id:'anon-visitor-events-insert', label:'إدراج زيارة (anon / visitor_events)', run: async () => {
+    return anonInsertCheck('visitor_events', {
+      session_id: 'test-session',
+      page_path: '/test',
+      device_type: 'desktop'
+    }, { session_id: 'test-session', page_path: '/test' });
+  }},
+  {id:'anon-visitors-rw', label:'قراءة وتحديث عداد الزيارات القديم (anon)', run: async () => {
+    const db = getAnonClient();
+    const r = await db.from('visitors').select('id,count').limit(1);
+    return r;
+  }},
+];
+
+// ─── فحوصات الأدمن: قراءة البيانات الحساسة ──────────────────────────
+const checksAdmin = [
+  {id:'admin-orders-read', label:'قراءة الطلبات (أدمن)', run: () =>
+    _supabase.from('orders').select('id,total,status,created_at').order('created_at',{ascending:false}).limit(1)},
+  {id:'admin-payment-cols', label:'أعمدة الدفع والكوبونات في الطلبات (أدمن)', run: () =>
+    _supabase.from('orders').select('payment_method,payment_status,merchant_order_id,coupon_code,discount_amount').limit(1)},
+  {id:'admin-order-session', label:'أعمدة الجلسة والحملة في الطلبات (أدمن)', run: () =>
+    _supabase.from('orders').select('id,session_id,traffic_source,traffic_campaign').limit(1)},
+  {id:'admin-coupons', label:'قراءة جميع الكوبونات (أدمن)', run: () =>
+    _supabase.from('coupons').select('id,code,discount_percentage,is_active,expiry_date').limit(1)},
+  {id:'admin-messages', label:'قراءة رسائل العملاء (أدمن)', run: () =>
+    _supabase.from('messages').select('id,name,phone,message,status,created_at').limit(1)},
+  {id:'admin-store-events', label:'قراءة أحداث المتجر (أدمن)', run: () =>
+    _supabase.from('store_events').select('id,session_id,event_name,product_id,coupon_code,created_at').limit(1)},
+  {id:'admin-visitor-events', label:'قراءة التتبع التفصيلي للزيارات (أدمن)', run: () =>
+    _supabase.from('visitor_events').select('id,session_id,page_path,source,device_type,created_at').limit(1)},
+  {id:'admin-products-with-stock', label:'عمود stock في المنتجات (أدمن)', run: async () => {
+    const r = await _supabase.from('products').select('id,name,stock').limit(1);
+    if (!r.error) return r;
+    if (/stock/i.test(r.error.message||'')) {
+      const r2 = await _supabase.from('products').select('id,name').limit(1);
+      if (!r2.error) return {data:r2.data,error:null,warn:'القراءة تعمل لكن لا يوجد عمود stock — نظام المخزون سيتعامل مع الحالة تلقائياً.'};
+      return r2;
+    }
+    return r;
+  }},
+];
+
+const allChecks = [
+  {section:'🔓 فحوصات anon — ما يفعله المتجر بدون تسجيل دخول', items: checksAnon},
+  {section:'🔐 فحوصات الأدمن — قراءة البيانات الحساسة', items: checksAdmin},
+];
+
+function row(c, state, msg) {
+  const cls  = state==='ok'  ? 'text-emerald-700 bg-emerald-50'
+             : state==='warn'? 'text-amber-700 bg-amber-50'
+             :                 'text-red-700 bg-red-50';
+  const ico  = state==='ok'  ? 'check_circle'
+             : state==='warn'? 'warning'
+             :                 'error';
+  const label= state==='ok'  ? 'سليم'
+             : state==='warn'? 'تنبيه'
+             :                 'مشكلة';
+  return `<div class="p-4 flex items-start justify-between gap-4">
+    <div class="flex items-start gap-3"><span class="material-symbols-outlined ${cls.split(' ')[0]}">${ico}</span><div><p class="font-bold">${c.label}</p><p class="text-xs text-slate-500 mt-1">${msg}</p></div></div>
+    <span class="px-3 py-1 rounded-full ${cls} text-xs font-bold whitespace-nowrap">${label}</span>
+  </div>`;
+}
+
+function renderCards(ok, total) {
+  const pct = Math.round(ok / total * 100);
+  document.getElementById('score-cards').innerHTML = [
+    ['نسبة الترابط',   pct + '%',              'hub'],
+    ['اختبارات ناجحة', ok + ' / ' + total,     'task_alt'],
+    ['آخر فحص',        new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}), 'schedule'],
+    ['الحالة العامة',  pct >= 90 ? 'جاهز' : 'يحتاج متابعة', 'health_and_safety']
+  ].map(x => `<div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm"><div class="flex items-center justify-between"><span class="text-sm text-slate-500">${x[0]}</span><span class="material-symbols-outlined text-[#4d3ceb]">${x[2]}</span></div><p class="text-2xl font-black mt-2">${x[1]}</p></div>`).join('');
+  document.getElementById('score-label').textContent = 'نسبة الترابط الحالية: ' + pct + '%';
+}
+
+async function runChecks() {
+  const list = document.getElementById('checks-list');
+  list.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold">جاري تشغيل الاختبارات...</div>';
+
+  let html = '';
+  let okTotal = 0, allTotal = 0;
+
+  for (const group of allChecks) {
+    html += `<div class="section-title">${group.section}</div>`;
+    for (const c of group.items) {
+      try {
+        const r     = await c.run();
+        const state = r.error ? 'bad' : (r.warn ? 'warn' : 'ok');
+        const msg   = r.error
+          ? (r.error.message || 'فشل الاتصال')
+          : (r.warn || 'الاتصال والقراءة / الكتابة يعملان بنجاح');
+        if (state !== 'bad') okTotal++;
+        allTotal++;
+        html += row(c, state, msg);
+      } catch(e) {
+        allTotal++;
+        html += row(c, 'bad', e.message || 'فشل غير متوقع');
+      }
+    }
+  }
+
+  renderCards(okTotal, allTotal);
+  list.innerHTML = html;
+}
+
+window.onload = async function() {
+  renderSidebar('system-check.html');
+  const ok = await requireAdmin();
+  if (ok) runChecks();
+};
+</script>
+</body>
+</html>

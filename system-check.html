@@ -236,9 +236,274 @@ const checksAdmin = [
   }},
 ];
 
+// ═══════════════ فحوصات موسّعة ═══════════════
+const isMissing = e => !!e && /does not exist|schema cache|Could not find|relation/i.test(e.message || '');
+const OK   = m => ({ data: [], error: null, ok: m });
+const BAD  = m => ({ data: null, error: { message: m } });
+const WARN = m => ({ data: null, error: null, warn: m });
+const MISSING = t => WARN('الجدول/العمود "' + t + '" غير موجود في القاعدة (لو مش مستخدم عندك تجاهل التنبيه).');
+const anon = () => getAnonClient();
+const rnd = () => Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+
+function adminRead(id, label, t, cols) {
+  return { id, label, run: async () => {
+    const r = await _supabase.from(t).select(cols || '*').limit(1);
+    return isMissing(r.error) ? MISSING(t) : r;
+  }};
+}
+function denyRead(t, label) {
+  return { id: 'deny-read-' + t, label, run: async () => {
+    const a = await anon().from(t).select('*').limit(1);
+    if (a.data && a.data.length) return BAD('⚠️ تسريب: الزائر (anon) قدر يقرأ صفوف من ' + t + ' — راجع سياسات RLS فوراً');
+    const d = await _supabase.from(t).select('*', { count: 'exact', head: true });
+    if (d.error) return isMissing(d.error) ? MISSING(t) : d;
+    if (!d.count) return WARN('الجدول ' + t + ' فاضي حالياً — مش قادر أثبت الحماية بدون بيانات.');
+    return OK('محمي ✓ — الأدمن شايف ' + d.count + ' صف والزائر مش شايف أي صف');
+  }};
+}
+function denyWrite(t, label, payload, cleanup) {
+  return { id: 'deny-write-' + t, label, run: async () => {
+    const r = await anon().from(t).insert(payload);
+    if (!r.error) { await cleanup(); return BAD('⚠️ ثغرة: الزائر (anon) قدر يكتب في ' + t + ' (اتحذف السجل التجريبي)'); }
+    if (/row-level security|permission denied|policy/i.test(r.error.message || '')) return OK('محمي ✓ — الكتابة مرفوضة للزائر');
+    return isMissing(r.error) ? MISSING(t) : WARN('اترفض بسبب مختلف (مش RLS): ' + r.error.message);
+  }};
+}
+
+// ─── مُعدّات حراس الطلبات ───
+let _fx = null;
+async function orderFixture() {
+  if (_fx) return _fx;
+  const pr = await _supabase.from('products').select('*').limit(50);
+  const prod = (pr.data || []).find(p => Number(p.price) > 0 && (p.stock == null || Number(p.stock) >= 1));
+  const gv = await _supabase.from('shipping_rates').select('governorate').limit(1);
+  const gov = gv.data && gv.data[0] && gv.data[0].governorate;
+  _fx = (prod && gov) ? { prod, gov } : { err: 'محتاج منتج بسعر أكبر من صفر ومخزون متاح + صف واحد على الأقل في shipping_rates.' };
+  return _fx;
+}
+function baseOrder(fx, sid) {
+  return {
+    customerName: 'اختبار فحص النظام', phone: '01000000000',
+    address: 'عنوان تجريبي لفحص النظام - لا يتم شحنه', governorate: fx.gov,
+    items: [{ id: String(fx.prod.id), name: fx.prod.name, price: Number(fx.prod.price), qty: 1 }],
+    total: Number(fx.prod.price), status: 'قيد التنفيذ', payment_method: 'cod', session_id: sid
+  };
+}
+async function purgeOrder(sid) {
+  const c = await _supabase.from('orders').select('id').eq('session_id', sid).limit(1);
+  if (c.data && c.data[0]) {
+    await _supabase.from('orders').update({ status: 'ملغي' }).eq('id', c.data[0].id);
+    await _supabase.from('orders').delete().eq('id', c.data[0].id);
+  }
+}
+function guardCheck(id, label, mut, pattern, why) {
+  return { id: 'guard-' + id, label, run: async () => {
+    const fx = await orderFixture(); if (fx.err) return WARN(fx.err);
+    const sid = 'syscheck-g-' + rnd();
+    const o = baseOrder(fx, sid); mut(o, fx);
+    const r = await anon().from('orders').insert(o);
+    if (r.error) {
+      const m = r.error.message || '';
+      if (pattern.test(m)) return OK('مرفوض صح ✓ — ' + why);
+      if (/ORDER_RATE_LIMITED/.test(m)) return WARN('rate limit اتفعّل أثناء الفحص — أعد المحاولة بعد ساعة.');
+      return WARN('اترفض لكن بخطأ مختلف عن المتوقع: ' + m);
+    }
+    await purgeOrder(sid);
+    return BAD('⚠️ ثغرة: الطلب المخالف اتقبل! ' + why + ' (اتلغى واتحذف الطلب التجريبي)');
+  }};
+}
+
+// ─── 1) قراءة إضافية للمتجر ───
+const checksAnonExtra = [
+  { id: 'anon-gifts', label: 'قراءة الهدايا النشطة (anon)', run: async () => { const r = await anon().from('gifts').select('*').limit(1); return isMissing(r.error) ? MISSING('gifts') : r; } },
+  { id: 'anon-shipping', label: 'قراءة أسعار الشحن (anon)', run: async () => { const r = await anon().from('shipping_rates').select('governorate,fee').limit(1); return isMissing(r.error) ? MISSING('shipping_rates') : (r.error ? r : (r.data.length ? r : WARN('shipping_rates فاضي أو الزائر ممنوع من قراءته — الطلبات هتترفض ORDER_BAD_GOVERNORATE.'))); } },
+  { id: 'anon-countdowns', label: 'قراءة عدّادات العروض (anon)', run: async () => { const r = await anon().from('offer_countdowns').select('*').limit(1); return isMissing(r.error) ? MISSING('offer_countdowns') : r; } },
+  { id: 'welcome-coupon', label: 'كوبون WELCOME10 ظاهر للمتجر وبنسبة 10%', run: async () => {
+    const r = await anon().from('coupons').select('code,discount_percentage').eq('code', 'WELCOME10').maybeSingle();
+    if (r.error) return r;
+    if (!r.data) return WARN('WELCOME10 مش ظاهر للمتجر (مش موجود أو موقوف/منتهي) — البانر هيظهر لكن الكود هيترفض.');
+    return Number(r.data.discount_percentage) === 10 ? OK('WELCOME10 موجود وبنسبة 10% ✓') : WARN('نسبة WELCOME10 = ' + r.data.discount_percentage + '% مش 10% زي البانر.');
+  } },
+  { id: 'sync-products', label: 'تطابق عدد المنتجات: المتجر ↔ الداشبورد', run: async () => {
+    const a = await anon().from('products').select('*', { count: 'exact', head: true });
+    const d = await _supabase.from('products').select('*', { count: 'exact', head: true });
+    if (a.error) return a; if (d.error) return d;
+    return a.count === d.count ? OK(a.count + ' منتج ظاهر للاتنين ✓') : BAD('المتجر شايف ' + a.count + ' والداشبورد ' + d.count);
+  } },
+  { id: 'sync-gifts', label: 'المتجر بيشوف الهدايا النشطة فقط', run: async () => {
+    const a = await anon().from('gifts').select('*', { count: 'exact', head: true });
+    const d = await _supabase.from('gifts').select('*', { count: 'exact', head: true }).or('is_active.is.null,is_active.eq.true');
+    if (isMissing(a.error) || isMissing(d.error)) return MISSING('gifts');
+    if (a.error) return a; if (d.error) return d;
+    return a.count === d.count ? OK(a.count + ' هدية نشطة ✓') : BAD('المتجر شايف ' + a.count + ' والنشط في الداشبورد ' + d.count);
+  } },
+  { id: 'sync-settings', label: 'إعدادات المتجر متطابقة ومكتملة', run: async () => {
+    const a = await anon().from('settings').select('data').eq('id', 1).maybeSingle();
+    const d = await _supabase.from('settings').select('data').eq('id', 1).maybeSingle();
+    if (a.error) return a; if (d.error) return d;
+    if (!d.data) return WARN('مفيش صف settings id=1 — احفظ الإعدادات مرة من صفحة الإعدادات.');
+    if (JSON.stringify(a.data && a.data.data) !== JSON.stringify(d.data.data)) return BAD('إعدادات المتجر مختلفة عن الداشبورد.');
+    const dd = d.data.data || {};
+    const miss = ['store_name', 'phone', 'whatsapp', 'free_shipping_threshold'].filter(k => dd[k] == null || dd[k] === '');
+    return miss.length ? WARN('متزامنة لكن ناقصة: ' + miss.join('، ')) : OK('متزامنة ومكتملة ✓');
+  } },
+];
+
+// ─── 2) الحماية: اللي الزائر ميقدرش يعمله ───
+const checksSecurity = [
+  denyRead('orders', 'الزائر لا يقرأ الطلبات (بيانات العملاء)'),
+  denyRead('messages', 'الزائر لا يقرأ رسائل العملاء'),
+  denyRead('store_events', 'الزائر لا يقرأ أحداث المتجر'),
+  denyRead('visitor_events', 'الزائر لا يقرأ تتبع الزيارات'),
+  denyRead('error_logs', 'الزائر لا يقرأ سجل الأخطاء'),
+  denyRead('blocked_phones', 'الزائر لا يقرأ الأرقام المحظورة'),
+  denyRead('blocked_ips', 'الزائر لا يقرأ الـ IPs المحظورة'),
+  { id: 'deny-inactive-coupons', label: 'الزائر لا يرى الكوبونات الموقوفة', run: async () => {
+    const r = await anon().from('coupons').select('code').eq('is_active', false).limit(1);
+    if (r.error) return r;
+    return r.data.length ? BAD('⚠️ المتجر شايف كوبونات موقوفة.') : OK('محمي ✓ — الموقوف مش ظاهر');
+  } },
+  (() => { const code = 'SYSCHK-ANON-' + rnd(); return denyWrite('coupons', 'الزائر لا يستطيع إنشاء كوبون',
+    { code, discount_percentage: 99, expiry_date: '2099-01-01', is_active: true },
+    () => _supabase.from('coupons').delete().eq('code', code)); })(),
+  (() => { const name = 'SYSCHK-ANON-' + rnd(); return denyWrite('products', 'الزائر لا يستطيع إضافة منتج',
+    { name, price: 1 }, () => _supabase.from('products').delete().eq('name', name)); })(),
+];
+
+// ─── 3) حراس الطلبات: طلبات مخالفة لازم تترفض (مفيش إشعار تليجرام ولا خصم مخزون) ───
+const checksGuards = [
+  guardCheck('price', 'تلاعب بالسعر (إجمالي أقل من الحقيقي)', (o, fx) => { o.total = Math.max(0.01, +(Number(fx.prod.price) * 0.1).toFixed(2)); }, /ORDER_TOTAL_MISMATCH/, 'السعر بيتحسب من القاعدة مش من المتصفح'),
+  guardCheck('unknown', 'منتج غير موجود', o => { o.items[0].id = '__no_such_product__'; }, /ORDER_UNKNOWN_PRODUCT/, 'منتج وهمي'),
+  guardCheck('phone', 'رقم موبايل غير صالح', o => { o.phone = '12345'; }, /ORDER_INVALID_DATA/, 'رقم غلط'),
+  guardCheck('address', 'عنوان قصير جداً', o => { o.address = '123'; }, /ORDER_INVALID_DATA/, 'عنوان أقل من 15 حرف'),
+  guardCheck('xss', 'اسم فيه HTML (حقن)', o => { o.customerName = 'اسم <b>HTML</b> تجريبي'; }, /ORDER_INVALID_DATA/, 'منع حقن HTML'),
+  guardCheck('qty', 'كمية غير منطقية (500)', o => { o.items[0].qty = 500; }, /ORDER_INVALID_DATA/, 'الكمية القصوى 99'),
+  guardCheck('empty', 'طلب بدون أصناف', o => { o.items = []; }, /ORDER_INVALID_DATA/, 'items فاضية'),
+  guardCheck('gov', 'محافظة غير معروفة', o => { o.governorate = 'محافظة وهمية'; }, /ORDER_BAD_GOVERNORATE/, 'الشحن بيتحسب من shipping_rates'),
+  guardCheck('coupon', 'كوبون وهمي', o => { o.coupon_code = 'FAKE-' + rnd(); }, /ORDER_INVALID_COUPON/, 'كوبون مش موجود'),
+  guardCheck('gift', 'هدية وهمية', (o, fx) => { o.items.push({ id: 'gift_0', name: 'هدية', price: 0, qty: 1, isGift: true }); }, /ORDER_INVALID_GIFT/, 'هدية غير موجودة'),
+  guardCheck('giftflag', 'منتج عادي متعلّم isGift لتجاوز السعر', o => { o.items[0].isGift = true; }, /ORDER_INVALID_GIFT/, 'علامة isGift على منتج مش هدية'),
+];
+
+// ─── 4) تدفقات كاملة المتجر ↔ الداشبورد ───
+const checksFlows = [
+  { id: 'flow-coupon', label: 'دورة الكوبون: إنشاء ← ظهور بالمتجر ← إيقاف ← اختفاء', run: async () => {
+    const code = 'SYSCHK' + Date.now().toString(36).toUpperCase();
+    const exp = new Date(Date.now() + 864e5 * 30).toISOString().slice(0, 10);
+    const ins = await _supabase.from('coupons').insert({ code, discount_percentage: 5, expiry_date: exp, is_active: true, description: 'system-check' });
+    if (ins.error) return ins;
+    try {
+      const a1 = await anon().from('coupons').select('code').eq('code', code).maybeSingle();
+      if (a1.error || !a1.data) return BAD('الكوبون اتعمل من الداشبورد لكن المتجر مش شايفه.');
+      await _supabase.from('coupons').update({ is_active: false }).eq('code', code);
+      const a2 = await anon().from('coupons').select('code').eq('code', code).maybeSingle();
+      if (a2.data) return BAD('الكوبون اتوقف من الداشبورد لكن المتجر لسه شايفه.');
+      return OK('إنشاء ← ظهور ← إيقاف ← اختفاء ✓');
+    } finally { await _supabase.from('coupons').delete().eq('code', code); }
+  } },
+  { id: 'flow-message', label: 'دورة رسالة العميل: إرسال من المتجر ← ظهور وتحديث حالة بالداشبورد', run: async () => {
+    const name = 'syscheck-' + rnd();
+    const i = await anon().from('messages').insert({ name, phone: '000', message: '__flow__' });
+    if (i.error) return i;
+    const f = await _supabase.from('messages').select('id').eq('name', name).limit(1);
+    if (f.error) return f;
+    if (!f.data.length) return BAD('الرسالة اتبعتت من المتجر لكن مش ظاهرة للأدمن.');
+    const u = await _supabase.from('messages').update({ status: 'read' }).eq('id', f.data[0].id).select('status');
+    await _supabase.from('messages').delete().eq('id', f.data[0].id);
+    return (!u.error && u.data && u.data[0] && u.data[0].status === 'read') ? OK('إرسال ← ظهور ← تعليم كمقروءة ← حذف ✓') : BAD('فشل تحديث حالة الرسالة من الداشبورد.');
+  } },
+  { id: 'flow-event-to-orders', label: 'ربط الجلسة: الطلب بيتخزن بـ session_id (للتتبع والحملات)', run: async () => {
+    const r = await _supabase.from('orders').select('session_id').not('session_id', 'is', null).order('created_at', { ascending: false }).limit(1);
+    if (r.error) return r;
+    return r.data.length ? OK('فيه طلبات مربوطة بجلسات ✓') : WARN('مفيش أي طلب فيه session_id — تأكد إن المتجر بيبعت session_id مع الطلب.');
+  } },
+];
+
+// ─── 5) سلامة البيانات ───
+const checksData = [
+  { id: 'dq-products', label: 'المنتجات: أسعار وأسماء صالحة', run: async () => {
+    const r = await _supabase.from('products').select('*').limit(1000); if (r.error) return r;
+    const bad = r.data.filter(p => !(Number(p.price) > 0)), noName = r.data.filter(p => !p.name);
+    const out = r.data.filter(p => p.stock != null && Number(p.stock) <= 0);
+    if (bad.length || noName.length) return WARN(bad.length + ' منتج بدون سعر صالح، ' + noName.length + ' بدون اسم — الطلب عليهم هيترفض.');
+    return OK(r.data.length + ' منتج سليم' + (out.length ? ' (منهم ' + out.length + ' نفد مخزونه)' : '') + ' ✓');
+  } },
+  { id: 'dq-shipping', label: 'أسعار الشحن: تغطية المحافظات', run: async () => {
+    const r = await _supabase.from('shipping_rates').select('governorate,fee').limit(100);
+    if (r.error) return isMissing(r.error) ? MISSING('shipping_rates') : r;
+    if (r.data.some(x => x.fee == null || Number(x.fee) < 0)) return BAD('فيه محافظة بسعر شحن فاضي أو سالب.');
+    return r.data.length < 27 ? WARN('عدد المحافظات ' + r.data.length + ' (أقل من 27) — طلبات المحافظات الناقصة هتترفض.') : OK(r.data.length + ' محافظة بأسعار صالحة ✓');
+  } },
+  { id: 'dq-coupons', label: 'الكوبونات: نسب وتواريخ منطقية', run: async () => {
+    const r = await _supabase.from('coupons').select('code,discount_percentage,expiry_date,is_active').limit(500); if (r.error) return r;
+    const today = new Date().toISOString().slice(0, 10);
+    const badPct = r.data.filter(c => c.discount_percentage < 1 || c.discount_percentage > 99);
+    const stale = r.data.filter(c => c.is_active && c.expiry_date && c.expiry_date < today);
+    if (badPct.length) return BAD(badPct.length + ' كوبون بنسبة خارج 1-99%.');
+    return stale.length ? WARN(stale.length + ' كوبون منتهي لكن لسه "نشط" في الداشبورد (المتجر مش بيشوفهم).') : OK(r.data.length + ' كوبون سليم ✓');
+  } },
+  { id: 'dq-orders', label: 'الطلبات (آخر 300): اتساق الحالة والإجمالي', run: async () => {
+    const r = await _supabase.from('orders').select('id,total,status_code,items,coupon_code,discount_amount,created_at').order('created_at', { ascending: false }).limit(300);
+    if (r.error) return r;
+    const noCode = r.data.filter(o => !o.status_code).length;
+    const zero = r.data.filter(o => !(Number(o.total) > 0)).length;
+    const cpn = r.data.filter(o => o.coupon_code && !(Number(o.discount_amount) > 0)).length;
+    const old = r.data.filter(o => o.status_code === 'pending' && Date.now() - new Date(o.created_at) > 3 * 864e5).length;
+    const w = [];
+    if (noCode) w.push(noCode + ' طلب بدون status_code'); if (zero) w.push(zero + ' طلب بإجمالي صفر');
+    if (cpn) w.push(cpn + ' طلب بكوبون بدون خصم مسجّل'); if (old) w.push(old + ' طلب معلّق (pending) من أكتر من 3 أيام');
+    return w.length ? WARN(w.join(' • ')) : OK('الطلبات متسقة (' + r.data.length + ' طلب) ✓');
+  } },
+];
+
+// ─── 6) البنية: صلاحيات، جداول، Realtime، Storage ───
+const checksInfra = [
+  { id: 'infra-is-admin', label: 'دالة is_admin() وجلسة الأدمن الحالية', run: async () => {
+    const s = await _supabase.auth.getSession();
+    if (!isAdminUser(s.data && s.data.session && s.data.session.user)) return BAD('الجلسة الحالية مش بإيميل الأدمن.');
+    const r = await _supabase.rpc('is_admin');
+    if (r.error) return r;
+    return r.data === true ? OK('is_admin() = true ✓') : BAD('is_admin() رجعت false رغم إن الإيميل صحيح — الداشبورد مش هيقدر يكتب.');
+  } },
+  adminRead('infra-gifts', 'جدول الهدايا (أدمن)', 'gifts'),
+  adminRead('infra-shipping', 'جدول أسعار الشحن (أدمن)', 'shipping_rates'),
+  adminRead('infra-blocked-phones', 'جدول الأرقام المحظورة (أدمن)', 'blocked_phones'),
+  adminRead('infra-blocked-ips', 'جدول الـ IPs المحظورة (أدمن)', 'blocked_ips'),
+  adminRead('infra-countdowns', 'جدول عدّادات العروض (أدمن)', 'offer_countdowns'),
+  adminRead('infra-error-logs', 'جدول سجل الأخطاء (أدمن)', 'error_logs'),
+  adminRead('infra-visitors', 'عدّاد الزيارات visitors (أدمن)', 'visitors'),
+  adminRead('infra-campaign-view', 'view تقرير الحملات campaign_performance (أدمن)', 'campaign_performance'),
+  adminRead('infra-order-cols', 'أعمدة الطلبات المستخدمة بالمتجر', 'orders', 'id,customerName,phone,address,governorate,items,total,shipping_fee,status_code,stock_restored,client_ip'),
+  { id: 'infra-realtime', label: 'اشتراك Realtime على رسائل العملاء', run: () => new Promise(res => {
+    const ch = _supabase.channel('syscheck-' + rnd());
+    const t = setTimeout(() => { _supabase.removeChannel(ch); res(WARN('الاشتراك اللحظي ما اتأكدش خلال 6 ثواني — تأكد إن Realtime مفعّل لجدول messages.')); }, 6000);
+    ch.on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {}).subscribe(st => {
+      if (st === 'SUBSCRIBED') { clearTimeout(t); _supabase.removeChannel(ch); res(OK('اتصال Realtime شغال ✓')); }
+      else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') { clearTimeout(t); _supabase.removeChannel(ch); res(BAD('فشل اشتراك Realtime: ' + st)); }
+    });
+  }) },
+  { id: 'infra-storage', label: 'Storage: باكت صور المنتجات وإتاحتها للزوار', run: async () => {
+    const l = await _supabase.storage.from('products').list('', { limit: 5 });
+    if (l.error) return BAD('مشكلة في باكت products: ' + l.error.message);
+    const f = (l.data || []).find(x => x.name && x.id);
+    if (!f) return WARN('الباكت شغال لكن فاضي — مفيش صورة أختبر إتاحتها.');
+    try {
+      const u = _supabase.storage.from('products').getPublicUrl(f.name).data.publicUrl;
+      const h = await fetch(u, { method: 'HEAD' });
+      return h.ok ? OK('الباكت شغال والصور متاحة للزوار ✓') : BAD('الصورة مش متاحة للزوار (HTTP ' + h.status + ') — الباكت لازم يكون Public.');
+    } catch (e) { return WARN('تعذّر فحص إتاحة الصورة: ' + e.message); }
+  } },
+];
+
 const allChecks = [
   {section:'🔓 فحوصات anon — ما يفعله المتجر بدون تسجيل دخول', items: checksAnon},
+  {section:'🛍️ المتجر: قراءة إضافية وتطابق البيانات مع الداشبورد', items: checksAnonExtra},
+  {section:'🚫 الحماية — اللي المفروض الزائر ميقدرش يعمله', items: checksSecurity},
+  {section:'🧱 حراس الطلبات — طلبات مخالفة لازم تترفض (بدون إشعار ولا خصم مخزون)', items: checksGuards},
+  {section:'🔄 تدفقات كاملة بين المتجر والداشبورد', items: checksFlows},
   {section:'🔐 فحوصات الأدمن — قراءة البيانات الحساسة', items: checksAdmin},
+  {section:'🧹 سلامة البيانات', items: checksData},
+  {section:'⚙️ البنية: الصلاحيات والجداول وRealtime وStorage', items: checksInfra},
 ];
 
 function row(c, state, msg) {
@@ -270,6 +535,7 @@ function renderCards(ok, total) {
 
 async function runChecks(real) {
   REAL_ORDER_TEST = real === true;
+  _fx = null;
   const list = document.getElementById('checks-list');
   list.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold">جاري تشغيل الاختبارات...</div>';
 
@@ -284,7 +550,7 @@ async function runChecks(real) {
         const state = r.error ? 'bad' : (r.warn ? 'warn' : 'ok');
         const msg   = r.error
           ? (r.error.message || 'فشل الاتصال')
-          : (r.warn || 'الاتصال والقراءة / الكتابة يعملان بنجاح');
+          : (r.warn || r.ok || 'الاتصال والقراءة / الكتابة يعملان بنجاح');
         if (state !== 'bad') okTotal++;
         allTotal++;
         html += row(c, state, msg);

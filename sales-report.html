@@ -162,7 +162,7 @@ async function loadReport(p){
   document.getElementById('chart-subtitle').textContent=subtitles[p];
 
   const{data:orders,error}=await _supabase.from('orders')
-    .select('status,total,created_at,items')
+    .select('status,status_code,total,created_at,items')
     .gte('created_at',def.prevStart.toISOString())
     .order('created_at',{ascending:true});
   const bars=document.getElementById('sales-chart');
@@ -181,11 +181,11 @@ async function loadReport(p){
     const total=parseFloat(o.total)||0;
 
     if(t>=def.prevStart.getTime()&&t<def.currentStart.getTime()){
-      if(o.status==='تم التوصيل') prevRevenue+=total;
+      if((o.status_code||'')==='delivered'||o.status==='تم التوصيل') prevRevenue+=total;
     }
     if(t>=def.currentStart.getTime()){
       curOrders++;
-      if(o.status==='تم التوصيل'){
+      if((o.status_code||'')==='delivered'||o.status==='تم التوصيل'){
         curRevenue+=total; curDelivered++;
         const k=bucketKey(t,isHour);
         buckets[k]=(buckets[k]||0)+total;

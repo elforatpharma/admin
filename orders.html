@@ -426,16 +426,13 @@ async function fetchOrders(){
 }
 
 function renderKPIs(){
-  const d=DELIVERED,c=CANCELLED,p=PROCESSING,pend=PENDING;
   const n=allOrders.length;
-  const st=o=>normStatus(o.status);
-  const cNew=allOrders.filter(o=>o.status==='جديد').length;
-  const cPending=allOrders.filter(o=>PENDING.has(st(o))).length;
-  const cP=allOrders.filter(o=>PROCESSING.includes(st(o))).length;
-  const cDel=allOrders.filter(o=>DELIVERED.includes(st(o))).length;
-  const cCanc=allOrders.filter(o=>CANCELLED.includes(st(o))).length;
+  const cPending=allOrders.filter(o=>statusCodeOf(o)==='pending').length;
+  const cP=allOrders.filter(o=>statusCodeOf(o)==='processing').length;
+  const cDel=allOrders.filter(o=>statusCodeOf(o)==='delivered').length;
+  const cCanc=allOrders.filter(o=>statusCodeOf(o)==='cancelled').length;
   document.getElementById('kpi-all').textContent=n;
-  document.getElementById('kpi-new').textContent=cNew||cPending;
+  document.getElementById('kpi-new').textContent=cPending;
   document.getElementById('kpi-processing').textContent=cP;
   document.getElementById('kpi-pending').textContent=cPending;
   document.getElementById('kpi-delivered').textContent=cDel;

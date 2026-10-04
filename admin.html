@@ -722,7 +722,7 @@ async function fetchStats(){
     const[statsSnap,recentSnap,lowStockSnap]=await Promise.all([
       _supabase.rpc('admin_dashboard_stats'),
       _supabase.from('orders')
-        .select('id,total,status,status_code,customerName,customer_name,phone,customer_phone,created_at,items')
+        .select('id,total,status,status_code,customerName,customername,customer_name,phone,customer_phone,created_at,items')
         .order('created_at',{ascending:false})
         .limit(5),
       _supabase.from('products')

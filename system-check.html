@@ -27,9 +27,14 @@
           <h1 class="font-[Cairo] text-2xl font-bold">فحص ربط المتجر بالداشبورد</h1>
           <p class="text-sm text-slate-500 mt-1">اختبار مباشر للجداول الأساسية — كتابة الـ anon، قراءة الأدمن، وأعمدة الدفع والكوبونات والتتبع.</p>
         </div>
-        <button onclick="runChecks()" class="btn-brand-gradient h-11 px-5 font-bold inline-flex items-center gap-2">
-          <span class="material-symbols-outlined text-lg">refresh</span><span>إعادة الفحص</span>
-        </button>
+        <div class="flex gap-2">
+          <button onclick="runChecks(true)" class="h-11 px-5 rounded-full border-2 border-[#4d3ceb] text-[#4d3ceb] font-bold inline-flex items-center gap-2" title="يسجّل طلب تجريبي حقيقي ويرسل إشعار تليجرام">
+            <span class="material-symbols-outlined text-lg">shopping_cart_checkout</span><span>فحص طلب حقيقي</span>
+          </button>
+          <button onclick="runChecks()" class="btn-brand-gradient h-11 px-5 font-bold inline-flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">refresh</span><span>إعادة الفحص</span>
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-3" id="score-cards"></div>
@@ -92,6 +97,65 @@ async function anonInsertCheck(table, payload, find, optional, tolerate) {
   return { data: chk.data, error: null };
 }
 
+// ─── فحص طلب حقيقي ──────────────────────────────────────────────────
+// الطلب بيعدّي على: orders_spam_guard (تحقق بيانات + rate limit) ← orders_validate_totals
+// (سعر/شحن/كوبون من القاعدة) ← orders_reserve_stock (بيخصم المخزون).
+// آثار جانبية: إشعار تليجرام للطلب + خصم مخزون مؤقت (بيتم إرجاعه بإلغاء الطلب ثم حذفه).
+// عشان كده مبيشتغلش تلقائياً مع فتح الصفحة، بس بزرار "فحص طلب حقيقي".
+let REAL_ORDER_TEST = false;
+async function anonRealOrderCheck() {
+  if (!REAL_ORDER_TEST) {
+    return { data: null, error: null, warn: 'لم يُنفَّذ تلقائياً: الاختبار بيسجّل طلب حقيقي (إشعار تليجرام + خصم/إرجاع مخزون مؤقت). اضغط زر "فحص طلب حقيقي" لتشغيله.' };
+  }
+  const pr = await _supabase.from('products').select('*').limit(50);
+  if (pr.error) return pr;
+  const prod = (pr.data || []).find(p => Number(p.price) > 0 && (p.stock == null || Number(p.stock) >= 1));
+  if (!prod) return { data: null, error: { message: 'مفيش منتج بسعر أكبر من صفر ومخزون متاح لاستخدامه في الاختبار.' } };
+
+  const gv = await _supabase.from('shipping_rates').select('governorate').limit(1);
+  if (gv.error) return gv;
+  if (!gv.data || !gv.data.length) return { data: null, error: { message: 'جدول shipping_rates فاضي — أي طلب هيترفض ORDER_BAD_GOVERNORATE.' } };
+
+  const sid = 'syscheck-' + Date.now();
+  const mk = (total) => ({
+    customerName: 'اختبار فحص النظام',
+    phone: '01000000000',
+    address: 'عنوان تجريبي لفحص النظام - لا يتم شحنه',
+    governorate: gv.data[0].governorate,
+    items: [{ id: String(prod.id), name: prod.name, price: Number(prod.price), qty: 1 }],
+    total: total,
+    status: 'قيد التنفيذ',
+    payment_method: 'cod',
+    session_id: sid
+  });
+
+  const db = getAnonClient();
+  let r = await db.from('orders').insert(mk(Number(prod.price)));
+  // لو الإجمالي مختلف (الشحن) نقرأ الرقم المتوقع من رسالة القاعدة ونعيد المحاولة مرة واحدة
+  const m = r.error && /ORDER_TOTAL_MISMATCH: expected ([0-9.]+)/.exec(r.error.message || '');
+  if (m) r = await db.from('orders').insert(mk(Number(m[1])));
+
+  if (r.error) {
+    const msg = r.error.message || '';
+    if (/ORDER_RATE_LIMITED/.test(msg)) return { data: null, error: null, warn: 'حد الطلبات (rate limit) اتفعّل — استنى ساعة وأعد الفحص. ده معناه إن حماية السبام شغالة.' };
+    if (/ORDER_OUT_OF_STOCK/.test(msg)) return { data: null, error: null, warn: 'المنتج المختار خلص من المخزون لحظة الفحص — أعد المحاولة.' };
+    return r;
+  }
+
+  // تحقق + تنظيف بكلاينت الأدمن
+  const chk = await _supabase.from('orders').select('id,total').eq('session_id', sid).limit(1);
+  if (chk.error) return chk;
+  if (!chk.data || !chk.data.length) return { data: null, error: { message: 'الإدراج نجح بدون خطأ لكن الطلب مش ظاهر للأدمن — راجع سياسات RLS.' } };
+  const id = chk.data[0].id;
+
+  // إلغاء الطلب بيرجّع المخزون (trigger orders_restore_stock) ثم نحذفه
+  const up = await _supabase.from('orders').update({ status: 'ملغي' }).eq('id', id);
+  if (up.error) return { data: null, error: null, warn: 'الطلب اتسجل بنجاح لكن فشل إلغاؤه لإرجاع المخزون (' + up.error.message + '). راجع الطلب رقم ' + id + ' يدوياً وارجع مخزون المنتج "' + prod.name + '".' };
+  const del = await _supabase.from('orders').delete().eq('id', id);
+  if (del.error) return { data: null, error: null, warn: 'الطلب اتسجل واتلغى (المخزون رجع) لكن فشل حذفه: ' + del.error.message + ' — احذف الطلب رقم ' + id + ' يدوياً.' };
+  return { data: chk.data, error: null };
+}
+
 // ─── فحوصات anon: ما يفعله المتجر بدون تسجيل دخول ───────────────────
 const checksAnon = [
   {id:'anon-products-read', label:'قراءة المنتجات (anon / المتجر)', run: async () => {
@@ -116,18 +180,7 @@ const checksAnon = [
     if (!r.error) return { data: r.data, error: null, warn: r.data.length === 0 ? 'القراءة تعمل — لا يوجد كوبون نشط حالياً (طبيعي).' : null };
     return r;
   }},
-  {id:'anon-orders-insert', label:'إدراج طلب جديد (anon / المتجر)', run: async () => {
-    return anonInsertCheck('orders', {
-      total: 0.01,
-      status: '__test__',
-      customer_name: 'test-anon',
-      payment_method: 'cod',
-      payment_status: 'pending'
-    }, { status: '__test__', customer_name: 'test-anon' }, ['payment_method','payment_status'], {
-      pattern: /ORDER_INVALID_DATA/i,
-      warn: 'قاعدة البيانات رفضت الطلب التجريبي بقاعدة التحقق (طلب وهمي بدون منتجات/بيانات كاملة) — متوقع مع create_secure_order. الفحص ده مبيثبتش إن إدراج طلب حقيقي شغال؛ اعمل طلب تجريبي حقيقي من المتجر للتأكد.'
-    });
-  }},
+  {id:'anon-orders-insert', label:'إدراج طلب حقيقي (anon / المتجر) — يمر على كل triggers الحماية', run: () => anonRealOrderCheck()},
   {id:'anon-messages-insert', label:'إدراج رسالة عميل (anon)', run: async () => {
     return anonInsertCheck('messages', {
       name: 'test-anon',
@@ -215,7 +268,8 @@ function renderCards(ok, total) {
   document.getElementById('score-label').textContent = 'نسبة الترابط الحالية: ' + pct + '%';
 }
 
-async function runChecks() {
+async function runChecks(real) {
+  REAL_ORDER_TEST = real === true;
   const list = document.getElementById('checks-list');
   list.innerHTML = '<div class="p-8 text-center text-slate-400 font-bold">جاري تشغيل الاختبارات...</div>';
 

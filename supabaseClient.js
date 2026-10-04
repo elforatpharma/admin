@@ -22,7 +22,10 @@ function getUserEmail(user) {
 }
 
 function isAdminUser(user) {
-  return getUserEmail(user) === normalizeEmail(ADMIN_EMAIL);
+  return (
+    getUserEmail(user) === normalizeEmail(ADMIN_EMAIL) &&
+    String(user?.app_metadata?.role || '').toLowerCase() === 'admin'
+  );
 }
 
 function getStorageObjectFromUrl(publicUrl) {

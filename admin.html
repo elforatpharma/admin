@@ -23,6 +23,32 @@
     .nav-active{background:linear-gradient(135deg,rgba(77,60,235,.1),rgba(77,60,235,.04))!important;color:#4d3ceb!important;border-right:3px solid #4d3ceb!important;border-radius:0 9999px 9999px 0!important;}
     .modal-enter{animation:modalIn .28s cubic-bezier(.2,.9,.3,1.2) forwards;}
     @keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  
+    /* Stitch-inspired El-Forat dashboard design system */
+    :root{--ef-green:#087f5b;--ef-green-dark:#056047;--ef-green-soft:#e8f7f1;--ef-gold:#c99a2e;--ef-ink:#14201c;--ef-muted:#6b7b75;--ef-line:#e5ebe8;--ef-bg:#f7faf8;}
+    body{background:var(--ef-bg)!important;color:var(--ef-ink)!important;}
+    .ef-card{background:#fff;border:1px solid var(--ef-line);border-radius:24px;box-shadow:0 8px 28px rgba(20,32,28,.045);}
+    .ef-kpi{position:relative;overflow:hidden;padding:18px;transition:.2s;}
+    .ef-kpi:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(20,32,28,.08);}
+    .ef-kpi-icon{width:42px;height:42px;border-radius:14px;background:var(--ef-green-soft);color:var(--ef-green);display:flex;align-items:center;justify-content:center;}
+    .ef-title{font-family:'Cairo',sans-serif;font-weight:800;color:var(--ef-ink);}
+    .ef-muted{color:var(--ef-muted);}
+    .ef-btn{background:var(--ef-green)!important;color:#fff!important;border-radius:14px!important;box-shadow:0 8px 18px rgba(8,127,91,.18)!important;}
+    .ef-btn:hover{background:var(--ef-green-dark)!important;}
+    .ef-outline{border:1px solid var(--ef-line);background:#fff;color:var(--ef-green);border-radius:14px;}
+    .ef-alert{background:linear-gradient(135deg,#fff9e8,#fff);border:1px solid #f2dfaa;}
+    .ef-pill{background:var(--ef-green-soft);color:var(--ef-green);border:1px solid #ccecdf;}
+    .ef-table th{font-size:12px;color:var(--ef-muted);font-weight:700;background:#f7faf8;}
+    .ef-table td{border-top:1px solid #eef2f0;}
+    .ef-mobile-nav{display:none;}
+    @media(max-width:1023px){
+      .ef-mobile-nav{display:flex;position:fixed;bottom:12px;left:12px;right:12px;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(16px);border:1px solid var(--ef-line);border-radius:22px;box-shadow:0 12px 35px rgba(20,32,28,.12);padding:7px;}
+      .ef-mobile-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 3px;border-radius:15px;color:#718078;font-size:10px;font-weight:800;}
+      .ef-mobile-nav a.active{background:var(--ef-green-soft);color:var(--ef-green);}
+      main{padding-bottom:105px!important;}
+    }
+    @media(min-width:1024px){.ef-content{max-width:1500px;}}
+    @media(max-width:640px){.ef-kpi{padding:15px}.ef-title{font-size:22px}.ef-table-wrap{margin-inline:-12px}.ef-card{border-radius:20px}}
   </style>
 </head>
 <body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
@@ -31,324 +57,104 @@
   <div id="sidebar-placeholder"></div>
 
   <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto">
-    <header class="sticky top-0 z-30 h-16 bg-surface/90 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div class="flex items-center gap-4 w-1/3">
-        <div class="relative w-full">
-          <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none">search</span>
-          <input class="w-full h-10 pr-10 pl-16 rounded-full bg-surface-container-lowest font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-sm border border-transparent focus:border-primary-border" placeholder="بحث سريع في الأدوية، الطلبات، الكوبونات..." type="text"/>
-        </div>
+    <header class="sticky top-0 z-30 h-16 bg-white/90 backdrop-blur-xl border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-6 shadow-[0_1px_10px_rgba(20,32,28,.04)]">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="hidden md:flex items-center gap-2"><img src="logo.png" alt="الفرات فارما" class="h-9 w-auto object-contain"><span class="font-black text-sm">الفرات فارما</span></div>
+        <div class="hidden lg:block h-6 w-px bg-slate-200"></div>
+        <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-xs font-bold text-emerald-800">المتجر متصل</span></div>
       </div>
-      <div class="flex items-center gap-4">
-        <div class="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-success-surface border border-emerald-200">
-          <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-          <span class="font-label-sm text-label-sm text-emerald-800 font-medium">المتجر متصل وقيد العمل</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="openModal()" class="flex items-center gap-2 px-4 h-10 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02]">
-            <span class="material-symbols-outlined text-lg">add</span><span>منتج جديد</span>
-          </button>
-          <button class="relative p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" title="إشعارات">
-            <span class="material-symbols-outlined text-2xl">notifications</span>
-          </button>
-        </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openModal()" class="ef-btn flex items-center gap-1.5 px-3 sm:px-4 h-10 font-bold text-xs"><span class="material-symbols-outlined text-lg">add</span><span class="hidden sm:inline">منتج جديد</span></button>
+        <button class="relative w-10 h-10 rounded-xl hover:bg-slate-50 text-slate-600 flex items-center justify-center" title="الإشعارات"><span class="material-symbols-outlined">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span></button>
+        <div class="hidden md:flex items-center gap-2 pr-2 border-r border-slate-200"><div class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-black">أ</div></div>
       </div>
     </header>
-
-    <main class="w-full px-4 sm:px-6 py-6 bg-surface min-h-screen">
-      <div class="flex flex-col w-full max-w-[1600px] mx-auto">
-
-        <!-- Greeting -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+    <main class="w-full px-4 sm:px-6 py-6 min-h-screen">
+      <div class="ef-content w-full mx-auto space-y-6">
+        <section class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 class="font-headline-xl text-headline-xl text-on-surface" id="greeting-text">مرحباً بك</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant">لوحة تحكم المتجر والمبيعات الفورية</p>
+            <div class="flex items-center gap-2 mb-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span class="text-xs font-bold text-emerald-700">المتجر يعمل بشكل طبيعي</span></div>
+            <h1 id="greeting-text" class="ef-title text-2xl md:text-3xl">مرحباً بك</h1>
+            <p class="text-sm ef-muted mt-1">ملخص سريع لأداء الفرات فارما اليوم.</p>
           </div>
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant border border-border-subtle">
-              <span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
-              <span class="font-label-sm text-label-sm" id="last-update-time">جاري التحديث...</span>
-              <button onclick="fetchStats()" class="p-1 rounded-full hover:bg-surface-container-high transition-colors" title="تحديث فوري">
-                <span class="material-symbols-outlined text-sm leading-none text-primary">refresh</span>
-              </button>
-            </div>
+          <div class="flex items-center gap-2">
+            <div class="ef-pill rounded-full px-3 py-2 text-xs font-bold"><span id="last-update-time">جاري التحديث...</span></div>
+            <button id="refreshBtn" class="ef-outline w-10 h-10 flex items-center justify-center" title="تحديث"><span class="material-symbols-outlined text-lg">refresh</span></button>
           </div>
-        </div>
+        </section>
 
-        <!-- Low Stock Alert -->
-        <div id="low-stock-banner" class="relative overflow-hidden rounded-2xl bg-gradient-to-l from-error-container via-surface-container-low to-surface-container-lowest p-4 shadow-sm mb-6 border border-red-100 hidden">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-error/10 flex items-center justify-center text-error flex-shrink-0">
-                <span class="material-symbols-outlined text-2xl animate-pulse">crisis_alert</span>
-              </div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-error text-on-error font-bold">تنبيه حرج</span>
-                  <span class="font-headline-sm text-headline-sm text-on-surface">مخزون حرج وشيك النفاد</span>
-                </div>
-                <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5" id="low-stock-text"></p>
-              </div>
+        <section id="low-stock-banner" class="ef-card ef-alert hidden p-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center"><span class="material-symbols-outlined">warning</span></div>
+              <div><div class="font-bold text-amber-900">تنبيه المخزون</div><p id="low-stock-text" class="text-xs text-amber-700 mt-0.5"></p></div>
             </div>
-            <a href="inventory.html" class="flex items-center gap-2 px-4 py-2 rounded-full btn-brand-gradient font-label-md text-label-md transition-transform hover:scale-[1.02] shrink-0">
-              <span class="material-symbols-outlined text-sm">inventory_2</span><span>عرض المخزون</span>
-            </a>
+            <a href="inventory.html" class="ef-btn px-4 py-2 text-xs font-bold text-center">فتح المخزون</a>
           </div>
-        </div>
+        </section>
 
-        <!-- KPI Cards (6) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-          <!-- Sales -->
-          <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between border border-border-subtle/70">
-            <div class="flex items-start justify-between">
-              <span class="font-body-sm text-body-sm text-on-surface-variant">إجمالي المبيعات</span>
-              <div class="w-9 h-9 rounded-xl bg-primary-surface text-primary flex items-center justify-center border border-primary-border">
-                <span class="material-symbols-outlined text-xl">payments</span>
-              </div>
-            </div>
-            <div class="my-2">
-              <div class="font-headline-xl text-headline-xl text-on-surface font-bold" id="kpi-sales">0 <span class="font-label-md text-label-md font-normal text-on-surface-variant">ج.م</span></div>
-              <div class="flex items-center gap-1 mt-1 font-label-sm text-label-sm text-primary font-semibold" id="kpi-sales-trend">
-                <span class="material-symbols-outlined text-xs">trending_up</span><span>—</span>
-              </div>
-            </div>
-            <div class="pt-2 bg-surface-container-low rounded-full px-3 py-1 text-on-surface-variant font-label-sm text-label-sm flex justify-between">
-              <span>مبيعات اليوم:</span><span class="font-bold text-primary" id="kpi-today-sales">0 ج.م</span>
-            </div>
-          </div>
-          <!-- Orders -->
-          <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between border border-border-subtle/70">
-            <div class="flex items-start justify-between">
-              <span class="font-body-sm text-body-sm text-on-surface-variant">عدد الطلبات</span>
-              <div class="w-9 h-9 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary">
-                <span class="material-symbols-outlined text-xl">shopping_cart</span>
-              </div>
-            </div>
-            <div class="my-2">
-              <div class="font-headline-xl text-headline-xl text-on-surface font-bold" id="kpi-orders">0 <span class="font-label-md text-label-md font-normal text-on-surface-variant">طلب</span></div>
-              <div class="flex items-center gap-1 mt-1 font-label-sm text-label-sm text-secondary font-semibold">
-                <span class="text-on-surface-variant font-normal">عبر المتجر</span>
-              </div>
-            </div>
-            <div class="pt-2 bg-surface-container-low rounded-full px-3 py-1 text-on-surface-variant font-label-sm text-label-sm flex justify-between">
-              <span>طلبات اليوم:</span><span class="font-bold text-secondary" id="kpi-today-orders">0 طلب</span>
-            </div>
-            <div class="mt-1 bg-surface-container-low rounded-full px-3 py-1 text-on-surface-variant font-label-sm text-label-sm flex justify-between">
-              <span>زوار اليوم (جلسات):</span><span class="font-bold text-secondary" id="kpi-today-sessions">—</span>
-            </div>
-            <div class="mt-1 bg-surface-container-low rounded-full px-3 py-1 text-on-surface-variant font-label-sm text-label-sm flex justify-between">
-              <span>إجمالي تحميلات الصفحات:</span><span class="font-bold text-secondary" id="kpi-page-loads">—</span>
-            </div>
-          </div>
-          <!-- AOV -->
-          <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between border border-border-subtle/70">
-            <div class="flex items-start justify-between">
-              <span class="font-body-sm text-body-sm text-on-surface-variant">متوسط قيمة الطلب</span>
-              <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
-                <span class="material-symbols-outlined text-xl">receipt</span>
-              </div>
-            </div>
-            <div class="my-2">
-              <div class="font-headline-xl text-headline-xl text-on-surface font-bold" id="kpi-aov">0 <span class="font-label-md text-label-md font-normal text-on-surface-variant">ج.م</span></div>
-            </div>
-            <div class="pt-2 bg-surface-container-low rounded-full px-3 py-1 text-on-surface-variant font-label-sm text-label-sm flex justify-between">
-              <span>للطلبات المكتملة</span>
-            </div>
-          </div>
-          <!-- Order Status -->
-          <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between border border-border-subtle/70">
-            <div class="flex items-start justify-between">
-              <span class="font-body-sm text-body-sm text-on-surface-variant">حالة المسار للطلبات</span>
-              <div class="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant">
-                <span class="material-symbols-outlined text-xl">alt_route</span>
-              </div>
-            </div>
-            <div class="my-2 space-y-1">
-              <div class="flex items-center justify-between font-label-sm text-label-sm">
-                <span class="text-on-surface-variant">قيد التجهيز/الشحن:</span><span class="font-bold text-primary" id="kpi-pending">0</span>
-              </div>
-              <div class="flex items-center justify-between font-label-sm text-label-sm">
-                <span class="text-on-surface-variant">تم التسليم:</span><span class="font-bold text-secondary" id="kpi-delivered">0</span>
-              </div>
-              <div class="flex items-center justify-between font-label-sm text-label-sm">
-                <span class="text-on-surface-variant">ملغي:</span><span class="font-bold text-error" id="kpi-cancelled">0</span>
-              </div>
-            </div>
-            <div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden flex" id="kpi-status-bar">
-              <div class="bg-primary h-full" style="width:0%"></div>
-              <div class="bg-secondary-container h-full" style="width:0%"></div>
-              <div class="bg-error h-full" style="width:0%"></div>
-            </div>
-          </div>
-          <!-- Inventory -->
-          <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between border border-border-subtle/70">
-            <div class="flex items-start justify-between">
-              <span class="font-body-sm text-body-sm text-on-surface-variant">المخزون والمنتجات</span>
-              <div class="w-9 h-9 rounded-xl bg-primary-surface flex items-center justify-center text-primary border border-primary-border">
-                <span class="material-symbols-outlined text-xl">medication_liquid</span>
-              </div>
-            </div>
-            <div class="my-2">
-              <div class="font-headline-xl text-headline-xl text-on-surface font-bold" id="kpi-products">0 <span class="font-label-md text-label-md font-normal text-on-surface-variant">صنف</span></div>
-              <div class="flex items-center gap-1 mt-1 font-label-sm text-label-sm text-amber-600 font-semibold">
-                <span class="material-symbols-outlined text-xs">warning</span><span id="kpi-low-stock-count">0 منتجات قرب النفاد</span>
-              </div>
-            </div>
-          </div>
-          <!-- Customers -->
-          <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between border border-border-subtle/70">
-            <div class="flex items-start justify-between">
-              <span class="font-body-sm text-body-sm text-on-surface-variant">قاعدة العملاء</span>
-              <div class="w-9 h-9 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-xl">diversity_1</span>
-              </div>
-            </div>
-            <div class="my-2">
-              <div class="font-headline-xl text-headline-xl text-on-surface font-bold" id="kpi-customers">0 <span class="font-label-md text-label-md font-normal text-on-surface-variant">عميل</span></div>
-            </div>
-            <div class="pt-2 bg-surface-container-low rounded-full px-3 py-1 text-on-surface-variant font-label-sm text-label-sm flex justify-between">
-              <span>الكل مسجل</span>
-            </div>
-          </div>
-        </div>
+        <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
+          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">إجمالي المبيعات</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">payments</span></div></div><div id="kpi-sales" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">ج.م</span></div><div class="text-[11px] mt-2 ef-muted">اليوم: <b id="kpi-today-sales" class="text-emerald-700">0 ج.م</b></div><div id="kpi-sales-trend" class="hidden"></div></div>
+          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">الطلبات</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">shopping_bag</span></div></div><div id="kpi-orders" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">طلب</span></div><div class="text-[11px] mt-2 ef-muted">اليوم: <b id="kpi-today-orders" class="text-emerald-700">0 طلب</b></div><div class="text-[11px] mt-1 ef-muted">جلسات: <b id="kpi-today-sessions">—</b> · تحميلات: <b id="kpi-page-loads">—</b></div></div>
+          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">متوسط قيمة الطلب</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">receipt_long</span></div></div><div id="kpi-aov" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">ج.م</span></div><div class="text-[11px] mt-2 ef-muted">للطلبات المكتملة</div></div>
+          <div class="ef-card ef-kpi"><div class="flex items-center justify-between"><span class="text-xs font-bold ef-muted">قاعدة العملاء</span><div class="ef-kpi-icon"><span class="material-symbols-outlined">groups</span></div></div><div id="kpi-customers" class="text-2xl font-black mt-4">0 <span class="text-xs font-normal ef-muted">عميل</span></div><div class="text-[11px] mt-2 ef-muted">إجمالي المنتجات: <b id="kpi-products">0 <span class="text-xs font-normal">صنف</span></b></div><div id="kpi-low-stock-count" class="text-[11px] mt-1 text-amber-700">0 منتجات قرب النفاد</div></div>
+        </section>
 
-        <!-- Analytics & Channels Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-          <!-- Sales Chart Section (8 Cols) -->
-          <div class="lg:col-span-8 rounded-2xl bg-surface-container-lowest p-6 shadow-sm flex flex-col justify-between border border-border-subtle/70">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-              <div>
-                <h2 class="font-headline-lg text-headline-lg text-on-surface">منحنى المبيعات والإيرادات الدوائية</h2>
-                <p class="font-body-sm text-body-sm text-on-surface-variant">مقارنة حركة الإيرادات مع الشهر الماضي ونقاط ذروة العروض الطبية</p>
-              </div>
-              <!-- Interval Switcher -->
-              <div class="flex items-center gap-1 p-1 rounded-full bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm self-start border border-border-subtle">
-                <button class="chart-interval-btn px-3 py-1 rounded-full btn-brand-gradient text-white font-bold shadow-xs" data-interval="daily" onclick="setChartInterval('daily')">يومياً</button>
-                <button class="chart-interval-btn px-3 py-1 rounded-full hover:text-primary transition-colors" data-interval="weekly" onclick="setChartInterval('weekly')">أسبوعياً</button>
-                <button class="chart-interval-btn px-3 py-1 rounded-full hover:text-primary transition-colors" data-interval="monthly" onclick="setChartInterval('monthly')">شهرياً</button>
-              </div>
-              <button class="p-1 rounded-full hover:bg-surface-container-high transition-colors" id="refreshBtn" title="تحديث البيانات">
-                <span class="material-symbols-outlined text-sm leading-none text-primary">refresh</span>
-              </button>
-            </div>
-            <!-- Key Insights Sub-strip -->
-            <div class="flex flex-wrap items-center gap-4 pb-3 mb-3 font-label-sm text-label-sm">
-              <div class="flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-full bg-gradient-to-r from-[#4d3ceb] to-[#8536ff]"></span>
-                <span class="text-on-surface font-semibold" id="insight-month-sales">مبيعات الشهر الحالي (0 ج.م)</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <span class="w-3 h-0.5 bg-on-surface-variant/40"></span>
-                <span class="text-on-surface-variant" id="insight-prev-sales">الشهر السابق (0 ج.م)</span>
-              </div>
-              <div class="flex items-center gap-1 mr-auto text-primary font-semibold">
-                <span class="material-symbols-outlined text-sm">stars</span>
-                <span id="insight-top-product">أكثر منتج مبيعاً: —</span>
+        <section class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+          <div class="ef-card p-4 md:p-5 xl:col-span-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div><h2 class="ef-title text-lg">المبيعات والإيرادات</h2><p class="text-xs ef-muted mt-1">مقارنة الفترة الحالية بالفترة السابقة</p></div>
+              <div class="flex items-center gap-1 p-1 bg-slate-50 rounded-xl border border-slate-100">
+                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="daily" onclick="setChartInterval('daily')">يومي</button>
+                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="weekly" onclick="setChartInterval('weekly')">أسبوعي</button>
+                <button class="chart-interval-btn px-3 py-1.5 rounded-lg text-xs font-bold" data-interval="monthly" onclick="setChartInterval('monthly')">شهري</button>
               </div>
             </div>
-            <!-- Sales Chart: real data, current vs previous month -->
-            <div class="relative w-full h-64 bg-primary-surface/40 rounded-2xl p-3 overflow-hidden border border-primary-border/40">
-              <canvas id="dashboard-sales-chart"></canvas>
-            </div>
-            <!-- Quick Summary Pills below chart -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 mt-4 bg-surface-container-lowest">
-              <div class="p-2.5 rounded-2xl bg-surface-container-low border border-border-subtle/60">
-                <span class="block font-label-sm text-label-sm text-on-surface-variant">الطلبات المباشرة</span>
-                <span class="font-headline-sm text-headline-sm text-on-surface" id="kpi-direct-orders">0 طلب</span>
-              </div>
-              <div class="p-2.5 rounded-2xl bg-surface-container-low border border-border-subtle/60">
-                <span class="block font-label-sm text-label-sm text-on-surface-variant">طلبات الواتساب / الهاتف</span>
-                <span class="font-headline-sm text-headline-sm text-on-surface" id="kpi-contact-orders">0 طلب</span>
-              </div>
-              <div class="p-2.5 rounded-2xl bg-surface-container-low border border-border-subtle/60">
-                <span class="block font-label-sm text-label-sm text-on-surface-variant">متوسط سرعة التوصيل</span>
-                <span class="font-headline-sm text-headline-sm text-primary font-bold" id="kpi-avg-delivery">—</span>
-              </div>
-              <div class="p-2.5 rounded-2xl bg-surface-container-low border border-border-subtle/60">
-                <span class="block font-label-sm text-label-sm text-on-surface-variant">رضا العملاء</span>
-                <span class="font-headline-sm text-headline-sm text-on-surface" id="kpi-satisfaction">—</span>
-              </div>
+            <div class="flex flex-wrap gap-3 text-xs mb-3"><span id="insight-month-sales" class="ef-pill px-3 py-1.5 rounded-full font-bold">مبيعات الشهر الحالي (0 ج.م)</span><span id="insight-prev-sales" class="px-3 py-1.5 rounded-full bg-slate-50 text-slate-500">الشهر السابق (0 ج.م)</span></div>
+            <div class="relative h-64 rounded-2xl bg-slate-50/70 border border-slate-100 p-2"><canvas id="dashboard-sales-chart"></canvas></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">طلبات الموقع</div><b id="kpi-direct-orders" class="text-sm">0 طلب</b></div>
+              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">واتساب / هاتف</div><b id="kpi-contact-orders" class="text-sm">0 طلب</b></div>
+              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">متوسط التوصيل</div><b id="kpi-avg-delivery" class="text-sm">—</b></div>
+              <div class="rounded-xl bg-slate-50 p-3"><div class="text-[10px] ef-muted">رضا العملاء</div><b id="kpi-satisfaction" class="text-sm">—</b></div>
             </div>
           </div>
-          <!-- Payment & Category Distribution -->
-          <div class="lg:col-span-4 flex flex-col gap-4">
-            <!-- Payment Channels Card -->
-            <div class="rounded-2xl bg-surface-container-lowest p-4 shadow-sm flex flex-col border border-border-subtle/70">
-              <h3 class="font-headline-sm text-headline-sm text-on-surface mb-3">طرق الدفع</h3>
-              <p class="font-label-sm text-label-sm text-on-surface-variant -mt-2 mb-3">من الطلبات المدفوعة فقط</p>
-              <div class="space-y-2" id="payment-channels-list">
-                <div class="text-center py-6 text-on-surface-variant/60 text-xs">جاري التحميل...</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Orders Table + Coupons/Gifts -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <!-- Recent Orders -->
-          <div class="lg:col-span-8 rounded-2xl bg-surface-container-lowest p-6 shadow-sm flex flex-col border border-border-subtle/70">
-            <div class="flex items-center justify-between mb-5">
-              <div class="flex items-center gap-2">
-                <h2 class="font-headline-lg text-headline-lg text-on-surface">أحدث الطلبات</h2>
-                <span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-bold border border-primary-border" id="new-orders-badge">0 طلبات جديدة</span>
-              </div>
-              <a href="orders.html" class="font-label-lg text-label-lg text-primary hover:underline flex items-center gap-1 font-semibold">
-                <span>عرض الكل</span><span class="material-symbols-outlined text-sm">arrow_back</span>
-              </a>
+          <div class="xl:col-span-4 space-y-5">
+            <div class="ef-card p-5"><div class="flex items-center justify-between mb-3"><div><h3 class="ef-title text-base">حالة الطلبات</h3><p class="text-xs ef-muted mt-1">التوزيع الحالي</p></div><span class="material-symbols-outlined text-emerald-700">alt_route</span></div>
+              <div class="space-y-3 text-xs"><div class="flex justify-between"><span class="ef-muted">قيد التنفيذ / التجهيز / الشحن</span><b id="kpi-pending">0</b></div><div class="flex justify-between"><span class="ef-muted">تم التوصيل</span><b id="kpi-delivered" class="text-emerald-700">0</b></div><div class="flex justify-between"><span class="ef-muted">ملغي</span><b id="kpi-cancelled" class="text-red-600">0</b></div></div>
+              <div id="kpi-status-bar" class="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex mt-4"><div class="h-full bg-emerald-600" style="width:0%"></div><div class="h-full bg-amber-400" style="width:0%"></div><div class="h-full bg-red-500" style="width:0%"></div></div>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-right border-collapse">
-                <thead>
-                  <tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
-                    <th class="py-3 px-3 rounded-r-2xl">العميل</th>
-                    <th class="py-3 px-3">المنتجات</th>
-                    <th class="py-3 px-3">الإجمالي</th>
-                    <th class="py-3 px-3">الحالة</th>
-                    <th class="py-3 px-3 text-center rounded-l-2xl">إجراء</th>
-                  </tr>
-                </thead>
-                <tbody id="recent-orders-body" class="divide-y divide-border-subtle/50 font-body-sm text-body-sm text-on-surface">
-                  <tr><td colspan="5" class="text-center py-12 text-gray-300 animate-pulse">جاري تحميل الطلبات...</td></tr>
-                </tbody>
-              </table>
-            </div>
+            <div class="ef-card p-5"><div class="flex items-center justify-between mb-3"><div><h3 class="ef-title text-base">طرق الدفع</h3><p class="text-xs ef-muted mt-1">من الطلبات المدفوعة فقط</p></div><span class="material-symbols-outlined text-emerald-700">account_balance_wallet</span></div><div id="payment-channels-list" class="space-y-2"><div class="text-center py-5 text-xs ef-muted">جاري التحميل...</div></div></div>
+            <div class="ef-card p-5"><div class="flex items-center justify-between"><div><h3 class="ef-title text-base">الأكثر مبيعاً</h3><p class="text-xs ef-muted mt-1">حسب الطلبات المكتملة</p></div><span class="material-symbols-outlined text-amber-600">workspace_premium</span></div><p id="insight-top-product" class="text-sm font-bold mt-4">أكثر منتج مبيعاً: —</p></div>
           </div>
-          <!-- Sidebar: Gifts + Quick Links -->
-          <div id="sidebar-sections" class="lg:col-span-4 flex flex-col gap-6">
-            <!-- Gifts -->
-            <div id="gifts-section" class="rounded-2xl bg-surface-container-lowest p-6 shadow-sm flex flex-col border border-border-subtle/70">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
-                  <span class="material-symbols-outlined text-primary text-xl">card_giftcard</span>الهدايا
-                </h3>
-                <button onclick="openGiftModal()" class="px-3 py-1.5 rounded-full btn-brand-gradient font-label-sm text-label-sm">+ هدية</button>
-              </div>
-              <div id="gifts-mini-list" class="space-y-2 max-h-48 overflow-y-auto">
-                <p class="text-gray-300 text-xs text-center py-4">جاري التحميل...</p>
-              </div>
-            </div>
-            <!-- Quick Links -->
-            <div class="rounded-2xl bg-surface-container-lowest p-6 shadow-sm border border-border-subtle/70 space-y-3">
-              <a href="sales-report.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary-surface transition-colors">
-                <span class="material-symbols-outlined text-primary">monitoring</span>
-                <span class="font-label-lg text-label-lg text-on-surface">تقرير المبيعات</span>
-              </a>
-              <a href="coupons.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary-surface transition-colors">
-                <span class="material-symbols-outlined text-primary">confirmation_number</span>
-                <span class="font-label-lg text-label-lg text-on-surface">إدارة الكوبونات</span>
-              </a>
-              <a href="messages.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary-surface transition-colors">
-                <span class="material-symbols-outlined text-primary">chat</span>
-                <span class="font-label-lg text-label-lg text-on-surface">رسائل العملاء</span>
-              </a>
-              <a href="settings.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary-surface transition-colors">
-                <span class="material-symbols-outlined text-primary">settings</span>
-                <span class="font-label-lg text-label-lg text-on-surface">إعدادات المتجر</span>
-              </a>
-            </div>
-          </div>
-        </div>
+        </section>
+
+        <section class="ef-card p-4 md:p-5">
+          <div class="flex items-center justify-between mb-4"><div><h2 class="ef-title text-lg">أحدث الطلبات</h2><p class="text-xs ef-muted mt-1">آخر 5 طلبات وصلت للمتجر</p></div><div class="flex items-center gap-2"><span id="new-orders-badge" class="ef-pill px-3 py-1 rounded-full text-xs font-bold">0 طلبات جديدة</span><a href="orders.html" class="text-xs font-bold text-emerald-700 hover:underline">عرض الكل ←</a></div></div>
+          <div class="ef-table-wrap overflow-x-auto"><table class="ef-table w-full text-right"><thead><tr><th class="py-3 px-3 rounded-r-xl">العميل</th><th class="py-3 px-3">المنتجات</th><th class="py-3 px-3">الإجمالي</th><th class="py-3 px-3">الحالة</th><th class="py-3 px-3 text-center rounded-l-xl">إجراء</th></tr></thead><tbody id="recent-orders-body"><tr><td colspan="5" class="text-center py-12 text-slate-300">جاري تحميل الطلبات...</td></tr></tbody></table></div>
+        </section>
+
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <a href="products.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">add_box</span></span><span class="text-sm font-bold">إضافة منتج</span></a>
+          <a href="orders.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">shopping_bag</span></span><span class="text-sm font-bold">إدارة الطلبات</span></a>
+          <a href="coupons.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">confirmation_number</span></span><span class="text-sm font-bold">الكوبونات</span></a>
+          <a href="sales-report.html" class="ef-card p-4 flex items-center gap-3 hover:border-emerald-200 transition"><span class="ef-kpi-icon"><span class="material-symbols-outlined">monitoring</span></span><span class="text-sm font-bold">تقرير المبيعات</span></a>
+        </section>
+
+        <section id="sidebar-sections" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div id="gifts-section" class="ef-card p-5"><div class="flex items-center justify-between mb-4"><h3 class="ef-title text-base flex items-center gap-2"><span class="material-symbols-outlined text-emerald-700">card_giftcard</span>الهدايا</h3><button onclick="openGiftModal()" class="ef-btn px-3 py-2 text-xs font-bold">+ هدية</button></div><div id="gifts-mini-list" class="space-y-2"><p class="text-xs text-center py-4 ef-muted">جاري التحميل...</p></div></div>
+          <div class="ef-card p-5"><h3 class="ef-title text-base mb-3">معلومات سريعة</h3><div class="grid grid-cols-2 gap-2 text-xs"><a href="messages.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">رسائل العملاء</a><a href="settings.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">إعدادات المتجر</a><a href="inventory.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">المخزون</a><a href="customers.html" class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 font-bold">العملاء</a></div></div>
+        </section>
       </div>
     </main>
+    <nav class="ef-mobile-nav">
+      <a href="admin.html" class="active"><span class="material-symbols-outlined">dashboard</span>الرئيسية</a>
+      <a href="orders.html"><span class="material-symbols-outlined">shopping_bag</span>الطلبات</a>
+      <a href="inventory.html"><span class="material-symbols-outlined">inventory_2</span>المخزون</a>
+      <a href="coupons.html"><span class="material-symbols-outlined">confirmation_number</span>الكوبونات</a>
+      <a href="settings.html"><span class="material-symbols-outlined">settings</span>الإعدادات</a>
+    </nav>
   </div>
 </div>
 

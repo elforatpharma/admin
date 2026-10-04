@@ -19,7 +19,16 @@
     .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
     .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
     .font-display{font-family:'Cairo',sans-serif;}
-  </style>
+  /* Mobile UX */
+@media(max-width:1023.98px){
+  body{overflow-x:hidden!important}
+  main{min-width:0!important;padding-bottom:88px!important}
+  table{min-width:720px}
+  .overflow-x-auto{-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  input,select,textarea,button{max-width:100%}
+  .modal,.fixed.inset-0>div{max-width:calc(100vw - 24px)!important}
+}
+</style>
 </head>
 <body class="text-gray-900 antialiased">
 <div class="flex h-screen overflow-hidden">
@@ -309,5 +318,11 @@ window.onload = async function(){
   }
 };
 </script>
-</body>
+<nav class="mobile-bottom-nav" aria-label="التنقل السريع">
+<a href="admin.html"><span class="material-symbols-outlined">dashboard</span><span>الرئيسية</span></a>
+<a href="orders.html"><span class="material-symbols-outlined">receipt_long</span><span>الطلبات</span></a>
+<a href="inventory.html"><span class="material-symbols-outlined">inventory_2</span><span>المنتجات</span></a>
+<a href="customers.html"><span class="material-symbols-outlined">group</span><span>العملاء</span></a>
+<a href="settings.html"><span class="material-symbols-outlined">settings</span><span>الإعدادات</span></a>
+</nav></body>
 </html>

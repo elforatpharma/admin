@@ -531,11 +531,6 @@ async function fetchStats(){
       n(stats.total_products).toLocaleString('en')+
       ' <span class="font-label-md text-label-md font-normal text-on-surface-variant">صنف</span>';
 
-    document.getElementById('kpi-sales-trend').innerHTML=
-      '<span class="material-symbols-outlined text-xs">payments</span>'+
-      '<span>'+n(stats.paid_orders).toLocaleString('en')+' طلب مدفوع / '+
-      n(stats.coupon_orders).toLocaleString('en')+' بكوبون</span>';
-
     document.getElementById('kpi-direct-orders').textContent=
       n(stats.direct_orders).toLocaleString('en')+' طلب';
 
@@ -584,16 +579,6 @@ async function fetchStats(){
     document.getElementById('kpi-pending').textContent=n(stats.pending_orders);
     document.getElementById('kpi-delivered').textContent=n(stats.delivered_orders);
     document.getElementById('kpi-cancelled').textContent=n(stats.cancelled_orders);
-
-    const totalAll=Math.max(n(stats.total_orders),1);
-    const dPct=Math.round((n(stats.delivered_orders)/totalAll)*100);
-    const cPct=Math.round((n(stats.cancelled_orders)/totalAll)*100);
-    const pPct=Math.max(0,Math.min(100-dPct-cPct,Math.round((n(stats.pending_orders)/totalAll)*100)));
-    const bar=document.getElementById('kpi-status-bar');
-    bar.innerHTML=
-      '<div class="bg-emerald-600 h-full" style="width:'+dPct+'%"></div>'+
-      '<div class="bg-amber-400 h-full" style="width:'+pPct+'%"></div>'+
-      '<div class="bg-red-500 h-full" style="width:'+cPct+'%"></div>';
 
     document.getElementById('new-orders-badge').textContent=
       n(stats.pending_orders).toLocaleString('en')+' طلبات قيد المتابعة';

@@ -50,6 +50,19 @@ async function deleteStorageFile(publicUrl) {
   }
 }
 
+async function deleteStorageFiles(publicUrls){
+  const urls=Array.isArray(publicUrls)?publicUrls.filter(Boolean):[];
+  const paths=[...new Set(urls.map(getStorageObjectFromUrl).filter(Boolean))];
+  if(!paths.length)return {ok:true,deleted:0,failed:0};
+  let failed=0;
+  for(let i=0;i<paths.length;i+=1000){
+    const batch=paths.slice(i,i+1000);
+    const{error}=await _supabase.storage.from('products').remove(batch);
+    if(error){console.error('Failed to delete storage files:',error.message);failed+=batch.length;}
+  }
+  return {ok:failed===0,deleted:paths.length-failed,failed};
+}
+
 function sanitizeFileName(name) {
   const ext = (name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;

@@ -303,7 +303,7 @@
 
 <script src="layout.js"></script>
 <script>
-let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20;
+let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20,refreshTimer=null,fetchInProgress=false;
 const ORDER_COLUMNS='id,customerName,phone,address,total,status,status_code,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
 // ════════════════════════════════════════════════════════════════════
 // حالات الطلب — المصدر: status_code، مش النص العربي
@@ -400,21 +400,54 @@ function itemStats(o){
 }
 
 async function fetchOrders(){
+  if(fetchInProgress)return;
+  fetchInProgress=true;
   try{
-    let{data,error}=await _supabase.from('orders').select(ORDER_COLUMNS).order('created_at',{ascending:false}).limit(1000);
-    if(error){
-      console.warn('Optimized orders query failed, falling back to full order rows:',error.message);
-      ({data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false}).limit(1000));
+    // تحميل الطلبات على صفحات 1000 سجل بدلاً من وضع حد ثابت لأول 1000 فقط.
+    // هذا يحافظ على صحة البحث والعدادات والتصدير حتى بعد تجاوز 1000 طلب.
+    const pageSize=1000;
+    const rows=[];
+    let offset=0;
+    let firstError=null;
+
+    while(true){
+      let{data,error}=await _supabase
+        .from('orders')
+        .select(ORDER_COLUMNS)
+        .order('created_at',{ascending:false})
+        .range(offset,offset+pageSize-1);
+
+      if(error){
+        if(offset===0){
+          console.warn('Optimized orders query failed, falling back to full order rows:',error.message);
+          ({data,error}=await _supabase
+            .from('orders')
+            .select('*')
+            .order('created_at',{ascending:false})
+            .range(offset,offset+pageSize-1));
+        }
+        if(error){firstError=error;break;}
+      }
+
+      const batch=data||[];
+      rows.push(...batch);
+      if(batch.length<pageSize)break;
+      offset+=pageSize;
     }
-    if(error)throw error;
-    allOrders=data||[];
+
+    if(firstError)throw firstError;
+    allOrders=rows;
     renderKPIs();
     renderOrders();
     if(selectedId){
       try { renderDetail(); } catch(_) {}
     }
   }catch(e){
+    console.error('fetchOrders failed:',e);
     document.getElementById('orders-body').innerHTML=`<tr><td colspan="7" class="text-center py-16 text-error font-bold">فشل جلب الطلبات.</td></tr>`;
+    toast('فشل جلب الطلبات','error');
+  }finally{
+    fetchInProgress=false;
   }
 }
 
@@ -875,14 +908,32 @@ async function editOrder(id){
       </div>
       <div class="efp-field-group">
         <label class="efp-label">الإجمالي (ج.م)</label>
-        <input id="swal-total" class="swal2-input efp-input" type="number" inputmode="numeric" value="${Number(o.total)||0}">
+        <input id="swal-total" class="swal2-input efp-input" type="number" inputmode="numeric" min="0" step="0.01" value="${Number(o.total)||0}">
       </div>`,
-    showCancelButton:true,confirmButtonText:'حفظ',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',focusConfirm:false,preConfirm:()=>({
-      customerName:document.getElementById('swal-name').value.trim(),
-      phone:document.getElementById('swal-phone').value.trim(),
-      items:textToItems(document.getElementById('swal-items').value),
-      total:Number(document.getElementById('swal-total').value)||0
-    })
+    showCancelButton:true,confirmButtonText:'حفظ',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',focusConfirm:false,
+    preConfirm:()=>{
+      const customerName=document.getElementById('swal-name').value.trim();
+      const phone=document.getElementById('swal-phone').value.trim();
+      const items=textToItems(document.getElementById('swal-items').value);
+      const totalRaw=document.getElementById('swal-total').value;
+      const total=Number(totalRaw);
+      if(!customerName||!phone){Swal.showValidationMessage('اسم العميل والهاتف مطلوبان');return false;}
+      if(totalRaw===''||!Number.isFinite(total)||total<0){Swal.showValidationMessage('الإجمالي يجب أن يكون رقماً صالحاً وغير سالب');return false;}
+      for(const item of items){
+        const qty=Number(item.qty)||0;
+        const price=Number(item.price)||0;
+        if(qty<=0||price<0){Swal.showValidationMessage('تأكد أن الكمية أكبر من صفر والسعر غير سالب لكل صنف');return false;}
+      }
+      const itemSubtotal=items.reduce((sum,item)=>sum+(item.isGift?0:(Number(item.price)||0)*(Number(item.qty)||1)),0);
+      const discount=Number(o.discount_amount)||0;
+      const shipping=o.shipping!=null?Number(o.shipping):0;
+      const expectedTotal=Math.max(0,itemSubtotal-discount+shipping);
+      if(items.length&&Math.abs(expectedTotal-total)>0.01){
+        Swal.showValidationMessage('الإجمالي لا يطابق الأصناف والخصم والشحن المسجلين في الطلب');
+        return false;
+      }
+      return{customerName,phone,items,total};
+    }
   });
   if(formValues){
     try{
@@ -927,32 +978,89 @@ async function newOrderModal(){
         <input id="swal-phone" class="swal2-input efp-input" placeholder="01xxxxxxxxx" dir="ltr">
       </div>
       <div class="efp-field-group">
+        <label class="efp-label">العنوان بالتفصيل</label>
+        <input id="swal-address" class="swal2-input efp-input" placeholder="المحافظة - المنطقة - الشارع - رقم المنزل">
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">طريقة الدفع</label>
+        <select id="swal-payment" class="swal2-input efp-input">
+          <option value="cod">الدفع عند الاستلام (COD)</option>
+          <option value="instapay">InstaPay</option>
+          <option value="wallet">فودافون كاش</option>
+          <option value="card">بطاقة</option>
+        </select>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">حالة الدفع</label>
+        <select id="swal-payment-status" class="swal2-input efp-input">
+          <option value="pending">بانتظار الدفع</option>
+          <option value="paid">مدفوع</option>
+        </select>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">مصاريف الشحن</label>
+        <input id="swal-shipping" class="swal2-input efp-input" type="number" inputmode="decimal" min="0" step="0.01" value="0">
+      </div>
+      <div class="efp-field-group">
         <label class="efp-label">الإجمالي (ج.م) *</label>
-        <input id="swal-total" class="swal2-input efp-input" type="number" inputmode="numeric" placeholder="0">
+        <input id="swal-total" class="swal2-input efp-input" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0">
       </div>
       <div class="efp-field-group">
         <label class="efp-label">الأصناف (اختياري: سطر لكل منتج)</label>
         <textarea id="swal-items" class="swal2-textarea efp-input" placeholder="مثال: سيروم جوزيل - 1 - 450"></textarea>
+      </div>
+      <div class="efp-field-group">
+        <label class="efp-label">ملاحظات</label>
+        <textarea id="swal-notes" class="swal2-textarea efp-input" placeholder="أي ملاحظة خاصة بالطلب أو التوصيل"></textarea>
       </div>`,
     showCancelButton:true,confirmButtonText:'إنشاء الطلب',cancelButtonText:'إلغاء',confirmButtonColor:'#4d3ceb',focusConfirm:false,
     preConfirm:()=>{
       const customerName=document.getElementById('swal-name').value.trim();
       const phone=document.getElementById('swal-phone').value.trim();
-      if(!customerName||!phone){Swal.showValidationMessage('اسم العميل والهاتف مطلوبان');return false;}
+      const address=document.getElementById('swal-address').value.trim();
+      const paymentMethod=document.getElementById('swal-payment').value;
+      const payment_status=document.getElementById('swal-payment-status').value;
+      const shipping=Number(document.getElementById('swal-shipping').value)||0;
       const totalRaw=document.getElementById('swal-total').value;
-      if(totalRaw===''){Swal.showValidationMessage('الإجمالي مطلوب — اكتب رقم حقيقي');return false;}
       const total=Number(totalRaw);
-      if(!(total>0)){Swal.showValidationMessage('الإجمالي لازم يكون أكبر من صفر');return false;}
-      return{customerName,phone,total,items:textToItems(document.getElementById('swal-items').value)};
+      const items=textToItems(document.getElementById('swal-items').value);
+      const notes=document.getElementById('swal-notes').value.trim();
+      if(!customerName||!phone){Swal.showValidationMessage('اسم العميل والهاتف مطلوبان');return false;}
+      if(totalRaw===''||!Number.isFinite(total)||total<=0){Swal.showValidationMessage('الإجمالي لازم يكون أكبر من صفر');return false;}
+      if(shipping<0){Swal.showValidationMessage('مصاريف الشحن لا يمكن أن تكون سالبة');return false;}
+      for(const item of items){
+        if((Number(item.qty)||0)<=0||(Number(item.price)||0)<0){Swal.showValidationMessage('تأكد من الكمية والسعر لكل صنف');return false;}
+      }
+      if(paymentMethod==='cod'&&payment_status==='paid'){
+        Swal.showValidationMessage('طلب COD لا يمكن اعتباره مدفوعاً إلا بعد تأكيد الاستلام');
+        return false;
+      }
+      return{customerName,phone,address,paymentMethod,payment_status,shipping,total,items,notes};
     }
   });
   if(!fv)return;
   try{
-    const{error}=await _supabase.from('orders').insert({customerName:fv.customerName,phone:fv.phone,total:fv.total,items:fv.items,status:'جديد',status_code:'pending'});
+    const payload={
+      customerName:fv.customerName,
+      phone:fv.phone,
+      address:fv.address,
+      paymentMethod:fv.paymentMethod,
+      payment_status:fv.payment_status,
+      shipping:fv.shipping,
+      total:fv.total,
+      items:fv.items,
+      notes:fv.notes,
+      status:'جديد',
+      status_code:'pending'
+    };
+    const{error}=await _supabase.from('orders').insert(payload);
     if(error)throw error;
     toast('تم إنشاء الطلب','success');
     fetchOrders();
-  }catch(e){toast('فشل إنشاء الطلب','error');}
+  }catch(e){
+    console.error(e);
+    toast('فشل إنشاء الطلب: '+(e.message||'تحقق من البيانات'),'error');
+  }
 }
 
 // ============================================================
@@ -1457,7 +1565,8 @@ window.onload=async function(){
         .channel('orders-live-channel')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
           console.log('تحديث لحظي لجدول الطلبات:', payload);
-          fetchOrders();
+          clearTimeout(refreshTimer);
+          refreshTimer=setTimeout(()=>fetchOrders(),800);
         })
         .subscribe((status) => {
           console.warn('Orders page realtime status:', status);

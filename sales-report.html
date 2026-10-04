@@ -20,7 +20,10 @@
     .btn-brand-gradient{background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;color:#ffffff!important;box-shadow:0 8px 20px rgba(77,60,235,0.3)!important;}
     .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
     .font-display{font-family:'Cairo',sans-serif;}
-    .kpi-card{transition:transform .2s ease,box-shadow .2s ease;} .kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.06);}
+    .kpi-card{background:#fff;border:1px solid #e2e8f0;border-radius:24px;box-shadow:0 8px 30px rgba(51,18,213,.045);transition:transform .2s ease,box-shadow .2s ease;} .kpi-card:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(51,18,213,.09);}
+.efp-panel{background:#fff;border:1px solid #e2e8f0;border-radius:24px;box-shadow:0 8px 30px rgba(51,18,213,.045);}
+.page-header{background:rgba(255,255,255,.92);border-bottom:1px solid #e2e8f0;backdrop-filter:blur(14px);}
+@media(max-width:1023.98px){main{padding-bottom:80px!important}.page-content{padding:1rem!important}.efp-panel{border-radius:20px}}
   </style>
 </head>
 <body class="text-gray-900 antialiased">
@@ -29,7 +32,7 @@
   <div id="sidebar-placeholder"></div>
 
   <main class="flex-1 lg:mr-64 overflow-y-auto">
-    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 sm:px-8 py-4 flex items-center justify-between">
+    <header class="page-header sticky top-0 z-30 px-4 sm:px-8 py-4 flex items-center justify-between">
       <div>
         <h2 class="font-display text-xl font-black text-gray-900 tracking-tight">تقرير المبيعات</h2>
         <p class="text-xs text-gray-400 font-medium mt-0.5">متابعة الأداء المالي للمتجر</p>
@@ -41,10 +44,10 @@
       </div>
     </header>
 
-    <div class="p-8 space-y-6 max-w-[1400px] mx-auto">
+    <div class="page-content p-8 space-y-6 max-w-[1400px] mx-auto">
 
       <!-- Period Tabs -->
-      <div class="flex items-center gap-2 overflow-x-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-2">
+      <div class="flex items-center gap-2 overflow-x-auto efp-panel p-2">
         <button onclick="setPeriod('day')" id="tab-day" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">اليوم</button>
         <button onclick="setPeriod('week')" id="tab-week" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">آخر 7 أيام</button>
         <button onclick="setPeriod('month')" id="tab-month" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all">هذا الشهر</button>
@@ -84,7 +87,7 @@
       </div>
 
       <!-- Main Chart -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div class="efp-panel p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-base font-black text-gray-900 flex items-center gap-2">
             <span class="material-symbols-outlined text-primary text-[20px]">monitoring</span>المبيعات عبر الفترة
@@ -95,7 +98,7 @@
       </div>
 
       <!-- Top Products -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div class="efp-panel p-6">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-base font-black text-gray-900 flex items-center gap-2">
             <span class="material-symbols-outlined text-amber-500 text-[20px]">leaderboard</span>المنتجات الأكثر مبيعاً

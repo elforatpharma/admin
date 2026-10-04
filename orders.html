@@ -357,7 +357,8 @@ function paymentKind(o){
 }
 
 function statusInfo(s){
-  s=normStatus(s);
+  const code=STATUS_CODES.includes(String(s||'').trim())?String(s).trim():deriveStatusCode(s);
+  s=code;
   if(DELIVERED.includes(s))return{label:'تم التسليم',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200',ico:'check_circle'};
   if(CANCELLED.includes(s))return{label:'ملغية',cls:'bg-red-50 text-red-600 border border-red-200',ico:'cancel'};
   if(PROCESSING.includes(s))return{label:'قيد التجهيز',cls:'bg-amber-50 text-amber-800 border border-amber-200',ico:'sync'};
@@ -407,7 +408,7 @@ async function fetchOrders(){
     if(error)throw error;
     allOrders=(data||[]).map(o=>({
       ...o,
-      customerName:o.customerName||o.customer_name||'',
+      customerName:o.customerName||o.customername||o.customer_name||'',
       phone:o.phone||o.customer_phone||'',
       paymentMethod:o.paymentMethod||o.payment_method||'',
       couponCode:o.couponCode||o.coupon_code||'',

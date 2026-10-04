@@ -417,7 +417,7 @@
   // ===================== State & Helpers =====================
   let coupons=[], orders=[], query='', filter='all', tab='coupons';
   const COUPON_COLUMNS='id,code,discount_percentage,expiry_date,description,is_active,created_at,min_amount,max_uses,used_count';
-  const COUPON_ORDER_COLUMNS='id,status,total,items,phone,coupon,couponCode,coupon_code,discount_amount,created_at';
+  const COUPON_ORDER_COLUMNS='id,status,status_code,total,items,phone,customer_phone,coupon_code,discount_amount,created_at';
 
   function money(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}

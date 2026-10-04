@@ -304,7 +304,7 @@
 <script src="layout.js"></script>
 <script>
 let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20;
-const ORDER_COLUMNS='id,customerName,phone,address,total,status,status_code,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
+const ORDER_COLUMNS='id,order_number,customer_name,customer_phone,address,total,status,status_code,items,payment_method,payment_status,merchant_order_id,notes,coupon_code,discount_amount,shipping_fee,created_at,updated_at,governorate,governate';
 // ════════════════════════════════════════════════════════════════════
 // حالات الطلب — المصدر: status_code، مش النص العربي
 // ════════════════════════════════════════════════════════════════════
@@ -405,7 +405,15 @@ async function fetchOrders(){
       ({data,error}=await _supabase.from('orders').select('*').order('created_at',{ascending:false}).limit(1000));
     }
     if(error)throw error;
-    allOrders=data||[];
+    allOrders=(data||[]).map(o=>({
+      ...o,
+      customerName:o.customerName||o.customer_name||'',
+      phone:o.phone||o.customer_phone||'',
+      paymentMethod:o.paymentMethod||o.payment_method||'',
+      couponCode:o.couponCode||o.coupon_code||'',
+      shipping:o.shipping??o.shipping_fee??0,
+      note:o.note||o.notes||''
+    }));
     renderKPIs();
     renderOrders();
     if(selectedId){

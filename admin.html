@@ -303,13 +303,13 @@ function renderSalesChart(labels,curSeries,prevSeries,curLabel='الفترة ا�
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
   const gradient=ctx.createLinearGradient(0,0,0,220);
-  gradient.addColorStop(0,'rgba(77,60,235,.28)');
-  gradient.addColorStop(1,'rgba(77,60,235,0)');
+  gradient.addColorStop(0,'rgba(8,127,91,.24)');
+  gradient.addColorStop(1,'rgba(8,127,91,0)');
   if(salesChart)salesChart.destroy();
   salesChart=new Chart(ctx,{
     type:'line',
     data:{labels,datasets:[
-      {label:curLabel,data:curSeries,borderColor:'#4d3ceb',backgroundColor:gradient,fill:true,tension:.35,pointRadius:0,borderWidth:2.5,spanGaps:false},
+      {label:curLabel,data:curSeries,borderColor:'#087f5b',backgroundColor:gradient,fill:true,tension:.35,pointRadius:0,borderWidth:2.5,spanGaps:false},
       {label:prevLabel,data:prevSeries,borderColor:'#94a3b8',borderDash:[5,5],backgroundColor:'transparent',fill:false,tension:.35,pointRadius:0,borderWidth:2,spanGaps:false}
     ]},
     options:{
@@ -402,9 +402,14 @@ function setChartInterval(interval){
   currentChartInterval=interval;
   document.querySelectorAll('.chart-interval-btn').forEach(btn=>{
     const active=btn.dataset.interval===interval;
-    btn.className='chart-interval-btn px-3 py-1 rounded-full '+(active?'btn-brand-gradient text-white font-bold shadow-xs':'hover:text-primary transition-colors');
+    btn.className='chart-interval-btn px-3 py-1 rounded-full '+(active?'ef-btn text-white font-bold shadow-xs':'hover:text-emerald-700 transition-colors');
   });
-  renderChartForInterval(interval);
+  if(window.dashboardChartData){
+    const built=window.dashboardChartData[interval]||window.dashboardChartData.daily;
+    renderSalesChart(built.labels,built.cur,built.prev,built.curLabel,built.prevLabel);
+  }else{
+    renderChartForInterval(interval);
+  }
 }
 
 // روابط إضافية في السايدبار (الصفحة الرئيسية)
@@ -525,167 +530,233 @@ const STATUS_BADGE={
 // ====== DYNAMIC DATA ======
 async function fetchStats(){
   try{
-    const today=new Date();today.setHours(0,0,0,0);const todayISO=today.toISOString();
-    const[ordersSnap,productsSnap,visitorEventsSnap,pageLoadsSnap]=await Promise.all([
-      _supabase.from('orders').select('id,total,status,status_code,customerName,phone,created_at,items,payment_method,payment_status,coupon_code,discount_amount,order_source,delivered_at').order('created_at',{ascending:false}).limit(1000),
-      _supabase.from('products').select('id,name,stock', {count:'exact'}).limit(1000),
-      _supabase.from('visitor_events').select('session_id,created_at').gte('created_at',todayISO).limit(5000),
-      _supabase.from('visitors').select('count')
+    // كل الإحصائيات الثقيلة أصبحت تُحسب داخل PostgreSQL مرة واحدة.
+    // الصفحة تجلب فقط Snapshot للإحصائيات + آخر 5 طلبات + تنبيهات المخزون.
+    const[statsSnap,recentSnap,lowStockSnap]=await Promise.all([
+      _supabase.rpc('admin_dashboard_stats'),
+      _supabase.from('orders')
+        .select('id,total,status,status_code,customerName,customer_name,phone,customer_phone,created_at,items')
+        .order('created_at',{ascending:false})
+        .limit(5),
+      _supabase.from('products')
+        .select('id,name,stock')
+        .lte('stock',5)
+        .gte('stock',0)
+        .order('stock',{ascending:true})
+        .limit(100)
     ]);
-    const allOrders=ordersSnap.data||[];const allProducts=productsSnap.data||[];
-    const totalProducts=productsSnap.count||0;
 
-    // Unique customers
-    const customerSet=new Set();allOrders.forEach(o=>{if(o.customerName)customerSet.add(o.customerName.toLowerCase().trim());});
-    document.getElementById('kpi-customers').innerHTML=`${customerSet.size||0} <span class="font-label-md text-label-md font-normal text-on-surface-variant">عميل</span>`;
+    if(statsSnap.error) throw statsSnap.error;
+    if(recentSnap.error) throw recentSnap.error;
+    const stats=statsSnap.data||{};
+    const recent=recentSnap.data||[];
+    const lowStock=lowStockSnap.error?[]:(lowStockSnap.data||[]);
+    const lowStockProducts=lowStock.filter(p=>p.stock!=null&&p.stock>0);
+    const outOfStock=lowStock.filter(p=>p.stock===0);
 
-    // Delivered
-    const delivered=allOrders.filter(o=>statusCodeOf(o)==='delivered');
-    const totalSales=delivered.reduce((s,o)=>s+(parseFloat(o.total)||0),0);
-    const OPEN_CODES=['pending','paid','processing'];           // لسه محتاجة تجهيز
-    const open=allOrders.filter(o=>OPEN_CODES.includes(statusCodeOf(o)));
-    const shipped=allOrders.filter(o=>statusCodeOf(o)==='shipped');
-    const pending=open.concat(shipped);                          // كل اللي لسه ماوصلش ومش ملغي
-    const cancelled=allOrders.filter(o=>statusCodeOf(o)==='cancelled');
-    const totalAll=allOrders.length||1;
-    const paid=allOrders.filter(o=>String(o.payment_status||'').toLowerCase()==='paid');
-    const withCoupon=allOrders.filter(o=>o.coupon_code||Number(o.discount_amount)>0);
+    const n=(value)=>Number(value||0);
+    const money=(value)=>Math.round(n(value)).toLocaleString('en');
 
-    document.getElementById('kpi-sales').innerHTML=`${Math.round(totalSales).toLocaleString('en')} <span class="font-label-md text-label-md font-normal text-on-surface-variant">ج.م</span>`;
-    document.getElementById('kpi-orders').innerHTML=`${allOrders.length} <span class="font-label-md text-label-md font-normal text-on-surface-variant">طلب</span>`;
-    document.getElementById('kpi-aov').innerHTML=`${delivered.length?Math.round(totalSales/delivered.length).toLocaleString('en'):0} <span class="font-label-md text-label-md font-normal text-on-surface-variant">ج.م</span>`;
-    document.getElementById('kpi-products').innerHTML=`${totalProducts} <span class="font-label-md text-label-md font-normal text-on-surface-variant">صنف</span>`;
-    document.getElementById('kpi-sales-trend').innerHTML=`<span class="material-symbols-outlined text-xs">payments</span><span>${paid.length} طلب مدفوع / ${withCoupon.length} بكوبون</span>`;
+    document.getElementById('kpi-customers').innerHTML=
+      n(stats.customer_count).toLocaleString('en')+
+      ' <span class="font-label-md text-label-md font-normal text-on-surface-variant">عميل</span>';
 
-    // مصدر الطلب: موقع مباشر مقابل واتساب/هاتف (عمود order_source)
-    const directOrders=allOrders.filter(o=>(o.order_source||'website')==='website');
-    const contactOrders=allOrders.filter(o=>['whatsapp','phone'].includes(o.order_source));
-    document.getElementById('kpi-direct-orders').textContent=`${directOrders.length.toLocaleString('en')} طلب`;
-    document.getElementById('kpi-contact-orders').textContent=`${contactOrders.length.toLocaleString('en')} طلب`;
+    document.getElementById('kpi-sales').innerHTML=
+      money(stats.total_sales)+
+      ' <span class="font-label-md text-label-md font-normal text-on-surface-variant">ج.م</span>';
 
-    // متوسط سرعة التوصيل من created_at إلى delivered_at (بالساعات)
-    const deliveredWithTime=delivered.filter(o=>o.delivered_at);
-    if(deliveredWithTime.length){
-      const totalHours=deliveredWithTime.reduce((s,o)=>s+((new Date(o.delivered_at)-new Date(o.created_at))/36e5),0);
-      const avgHours=totalHours/deliveredWithTime.length;
-      document.getElementById('kpi-avg-delivery').textContent=`${avgHours.toFixed(1)} ساعات`;
-    }else{
-      document.getElementById('kpi-avg-delivery').textContent='لا توجد بيانات بعد';
-    }
+    document.getElementById('kpi-orders').innerHTML=
+      n(stats.total_orders).toLocaleString('en')+
+      ' <span class="font-label-md text-label-md font-normal text-on-surface-variant">طلب</span>';
 
-    // رضا العملاء: لسه مفيش نظام تقييمات مربوط (جدول reviews)
+    document.getElementById('kpi-aov').innerHTML=
+      money(stats.aov)+
+      ' <span class="font-label-md text-label-md font-normal text-on-surface-variant">ج.م</span>';
+
+    document.getElementById('kpi-products').innerHTML=
+      n(stats.total_products).toLocaleString('en')+
+      ' <span class="font-label-md text-label-md font-normal text-on-surface-variant">صنف</span>';
+
+    document.getElementById('kpi-sales-trend').innerHTML=
+      '<span class="material-symbols-outlined text-xs">payments</span>'+
+      '<span>'+n(stats.paid_orders).toLocaleString('en')+' طلب مدفوع / '+
+      n(stats.coupon_orders).toLocaleString('en')+' بكوبون</span>';
+
+    document.getElementById('kpi-direct-orders').textContent=
+      n(stats.direct_orders).toLocaleString('en')+' طلب';
+
+    document.getElementById('kpi-contact-orders').textContent=
+      n(stats.contact_orders).toLocaleString('en')+' طلب';
+
+    document.getElementById('kpi-avg-delivery').textContent=
+      n(stats.avg_delivery_hours)>0
+        ? n(stats.avg_delivery_hours).toFixed(1)+' ساعات'
+        : 'لا توجد بيانات بعد';
+
     document.getElementById('kpi-satisfaction').textContent='قريباً';
 
-    // طرق الدفع: نسب حقيقية من الطلبات المدفوعة فقط (payment_status = paid)
-    renderPaymentChannels(paid);
+    const paidPayments=Array.isArray(stats.payments)?stats.payments:[];
+    renderPaymentChannelsFromStats(paidPayments);
 
-    // Today stats
-    const todayOrders=allOrders.filter(o=>{const d=new Date(o.created_at);return d>=today;});
-    const todaySales=todayOrders.filter(o=>statusCodeOf(o)==='delivered').reduce((s,o)=>s+(parseFloat(o.total)||0),0);
-    document.getElementById('kpi-today-sales').textContent=Math.round(todaySales).toLocaleString('en')+' ج.م';
-    document.getElementById('kpi-today-orders').textContent=todayOrders.length+' طلب';
-    // الزوار (جلسات فريدة اليوم) وتحميلات الصفحات (عداد visitors.count) رقمين منفصلين
-    const sessEl=document.getElementById('kpi-today-sessions'),loadsEl=document.getElementById('kpi-page-loads');
-    if(!visitorEventsSnap.error&&visitorEventsSnap.data){
-      const sessions=new Set(visitorEventsSnap.data.map(v=>v.session_id).filter(Boolean));
-      const conversion=sessions.size?Math.round(todayOrders.length/sessions.size*1000)/10:0;
-      document.getElementById('kpi-today-orders').textContent=todayOrders.length+' طلب / '+conversion+'% تحويل';
-      if(sessEl)sessEl.textContent=sessions.size.toLocaleString('en')+' زائر';
-    }else if(sessEl)sessEl.textContent='—';
-    if(loadsEl){
-      if(!pageLoadsSnap.error&&Array.isArray(pageLoadsSnap.data)){
-        const loads=pageLoadsSnap.data.reduce((sum,r)=>sum+(Number(r.count)||0),0);
-        loadsEl.textContent=loads.toLocaleString('en')+' تحميل';
-      }else loadsEl.textContent='—';
-    }
-    const monthStart=new Date(today.getFullYear(),today.getMonth(),1);
-    const prevMonthStart=new Date(today.getFullYear(),today.getMonth()-1,1);
-    const curMonthSales=delivered.filter(o=>new Date(o.created_at)>=monthStart).reduce((s,o)=>s+(parseFloat(o.total)||0),0);
-    const prevMonthSales=delivered.filter(o=>{const d=new Date(o.created_at);return d>=prevMonthStart&&d<monthStart;}).reduce((s,o)=>s+(parseFloat(o.total)||0),0);
-    document.getElementById('insight-month-sales').textContent='مبيعات الشهر الحالي ('+Math.round(curMonthSales).toLocaleString('en')+' ج.م)';
-    document.getElementById('insight-prev-sales').textContent='الشهر السابق ('+Math.round(prevMonthSales).toLocaleString('en')+' ج.م)';
+    const todayOrders=n(stats.today_orders);
+    const todaySessions=n(stats.today_sessions);
+    const conversion=todaySessions?Math.round(todayOrders/todaySessions*1000)/10:0;
 
-    // Daily/Weekly/Monthly chart data (real data) — يُعاد بناؤها عند تغيير الفترة من setChartInterval
-    deliveredOrdersCache=delivered;
-    renderChartForInterval(currentChartInterval);
+    document.getElementById('kpi-today-sales').textContent=
+      money(stats.today_delivered_sales)+' ج.م';
 
-    const productMap=new Map();
-    delivered.forEach(o=>(Array.isArray(o.items)?o.items:[]).forEach(it=>{if(!it.isGift&&it.name)productMap.set(it.name,(productMap.get(it.name)||0)+(Number(it.qty)||1));}));
-    const topProduct=[...productMap.entries()].sort((a,b)=>b[1]-a[1])[0];
-    document.getElementById('insight-top-product').textContent=topProduct?`أكثر منتج مبيعاً: ${topProduct[0]} (${topProduct[1]} قطعة)`:'أكثر منتج مبيعاً: لا توجد مبيعات مكتملة';
+    document.getElementById('kpi-today-orders').textContent=
+      todayOrders+' طلب / '+conversion+'% تحويل';
 
-    // Order status
-    document.getElementById('kpi-pending').textContent=pending.length;
-    document.getElementById('kpi-delivered').textContent=delivered.length;
-    document.getElementById('kpi-cancelled').textContent=cancelled.length;
-    const dPct=Math.round((delivered.length/totalAll)*100);
-    const cPct=Math.round((cancelled.length/totalAll)*100);
-    const pPct=Math.max(0,Math.min(100-dPct-cPct,Math.round((pending.length/totalAll)*100)));
+    const sessEl=document.getElementById('kpi-today-sessions');
+    const loadsEl=document.getElementById('kpi-page-loads');
+    if(sessEl)sessEl.textContent=todaySessions.toLocaleString('en')+' زائر';
+    if(loadsEl)loadsEl.textContent=n(stats.page_loads).toLocaleString('en')+' تحميل';
+
+    document.getElementById('insight-month-sales').textContent=
+      'مبيعات الشهر الحالي ('+money(stats.current_month_sales)+' ج.م)';
+    document.getElementById('insight-prev-sales').textContent=
+      'الشهر السابق ('+money(stats.previous_month_sales)+' ج.م)';
+
+    const topProduct=stats.top_product&&stats.top_product.name
+      ?stats.top_product
+      :null;
+    document.getElementById('insight-top-product').textContent=
+      topProduct
+        ? 'أكثر منتج مبيعاً: '+escapeHtml(String(topProduct.name))+
+          ' ('+n(topProduct.qty).toLocaleString('en')+' قطعة)'
+        : 'أكثر منتج مبيعاً: لا توجد مبيعات مكتملة';
+
+    document.getElementById('kpi-pending').textContent=n(stats.pending_orders);
+    document.getElementById('kpi-delivered').textContent=n(stats.delivered_orders);
+    document.getElementById('kpi-cancelled').textContent=n(stats.cancelled_orders);
+
+    const totalAll=Math.max(n(stats.total_orders),1);
+    const dPct=Math.round((n(stats.delivered_orders)/totalAll)*100);
+    const cPct=Math.round((n(stats.cancelled_orders)/totalAll)*100);
+    const pPct=Math.max(0,Math.min(100-dPct-cPct,Math.round((n(stats.pending_orders)/totalAll)*100)));
     const bar=document.getElementById('kpi-status-bar');
-    bar.innerHTML=`<div class="bg-primary h-full" style="width:${dPct}%"></div><div class="bg-secondary-container h-full" style="width:${pPct}%"></div><div class="bg-error h-full" style="width:${cPct}%"></div>`;
+    bar.innerHTML=
+      '<div class="bg-emerald-600 h-full" style="width:'+dPct+'%"></div>'+
+      '<div class="bg-amber-400 h-full" style="width:'+pPct+'%"></div>'+
+      '<div class="bg-red-500 h-full" style="width:'+cPct+'%"></div>';
 
-    // Badge
-    document.getElementById('new-orders-badge').textContent=open.length+' طلبات جديدة';
+    document.getElementById('new-orders-badge').textContent=
+      n(stats.pending_orders).toLocaleString('en')+' طلبات قيد المتابعة';
 
-    // Low stock
-    const lowStockProducts=allProducts.filter(p=>p.stock!=null&&p.stock<=5&&p.stock>0);
-    const outOfStock=allProducts.filter(p=>p.stock===0);
-    document.getElementById('kpi-low-stock-count').textContent=lowStockProducts.length+' منتجات قرب النفاد';
+    document.getElementById('kpi-low-stock-count').textContent=
+      lowStockProducts.length.toLocaleString('en')+' منتجات قرب النفاد';
+
     const banner=document.getElementById('low-stock-banner');
     if(lowStockProducts.length>0||outOfStock.length>0){
       banner.classList.remove('hidden');
-      const names=lowStockProducts.slice(0,2).map(p=>`${escapeHtml(p.name)} (متبقي ${p.stock})`).join('، ');
-      document.getElementById('low-stock-text').innerHTML=`${names||''} ${outOfStock.length?`+ ${outOfStock.length} منتج نفد تماماً`:''}`;
+      const names=lowStockProducts.slice(0,2)
+        .map(p=>escapeHtml(p.name)+' (متبقي '+n(p.stock)+')')
+        .join('، ');
+      document.getElementById('low-stock-text').innerHTML=
+        (names||'')+
+        (outOfStock.length?' + '+outOfStock.length+' منتج نفد تماماً':'');
+    }else{
+      banner.classList.add('hidden');
+      document.getElementById('low-stock-text').textContent='';
     }
 
-    // Recent orders table
-    const recent=allOrders.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5);
+    // الرسم البياني يستخدم البيانات المجمعة من قاعدة البيانات، وليس أول 1000 طلب.
+    const daily=Array.isArray(stats.daily_chart)?stats.daily_chart:[];
+    const weekly=Array.isArray(stats.weekly_chart)?stats.weekly_chart:[];
+    const monthly=Array.isArray(stats.monthly_chart)?stats.monthly_chart:[];
+    const chartData={
+      daily:{
+        labels:daily.map(x=>String(x.day)),
+        cur:daily.map(x=>n(x.cur)),
+        prev:daily.map(x=>n(x.prev)),
+        curLabel:'الشهر الحالي',
+        prevLabel:'الشهر السابق'
+      },
+      weekly:{
+        labels:weekly.map((x,i)=>'أسبوع '+(i+1)),
+        cur:weekly.map(x=>n(x.cur)),
+        prev:weekly.map(x=>n(x.prev)),
+        curLabel:'آخر 8 أسابيع',
+        prevLabel:'الـ8 أسابيع السابقة'
+      },
+      monthly:{
+        labels:monthly.map(x=>['ينا','فبر','مار','أبر','ماي','يون','يول','أغس','سبت','أكت','نوف','ديس'][n(x.month)-1]||''),
+        cur:monthly.map(x=>n(x.cur)),
+        prev:monthly.map(x=>n(x.prev)),
+        curLabel:new Date().getFullYear()+' (السنة الحالية)',
+        prevLabel:(new Date().getFullYear()-1)+' (السنة السابقة)'
+      }
+    };
+    renderDashboardChartData(chartData);
+
+    // آخر 5 طلبات فقط؛ لا يوجد تحميل شامل للطلبات.
     const tbody=document.getElementById('recent-orders-body');
-    if(recent.length===0){tbody.innerHTML='<tr><td colspan="5" class="text-center py-12 text-gray-300">لا توجد طلبات مسجلة حتى الآن.</td></tr>';return;}
-    tbody.innerHTML=recent.map(o=>{
-      const badge=STATUS_BADGE[statusCodeOf(o)]||STATUS_BADGE.pending;
-      const st=badge.label,badgeCls=badge.cls;
-      const date=o.created_at?new Date(o.created_at).toLocaleDateString('ar-EG',{day:'numeric',month:'short'}):'';
-      const items=o.items?o.items.filter(i=>!i.isGift).map(i=>escapeHtml(i.name)).join(' + '):'';
-      const itemsCount=o.items?o.items.filter(i=>!i.isGift).reduce((s,i)=>s+(i.qty||1),0):0;
-      return `<tr class="hover:bg-primary-surface/40 transition-colors">
-        <td class="py-3 px-3"><div class="flex flex-col"><span class="font-bold">${escapeHtml(o.customerName||'عميل')}</span><span class="text-on-surface-variant text-[11px]" dir="ltr">${escapeHtml(o.phone||'')}</span></div></td>
-        <td class="py-3 px-3"><div class="flex items-center gap-2"><span class="truncate max-w-[160px] text-xs">${items||'—'}</span>${itemsCount?`<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[10px]">${itemsCount} قطعة</span>`:''}</div></td>
-        <td class="py-3 px-3 font-bold text-on-surface">${escapeHtml(String(o.total||0))} ج.م</td>
-        <td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-sm text-label-sm font-bold ${badgeCls}"><span class="w-1.5 h-1.5 rounded-full bg-current"></span>${escapeHtml(st)}</span></td>
-        <td class="py-3 px-3 text-center">
-          <div class="flex items-center justify-center gap-1">
-            <a href="orders.html" class="p-1.5 rounded-full text-on-surface-variant hover:text-primary hover:bg-primary-surface transition-colors inline-flex" title="عرض الطلب"><span class="material-symbols-outlined text-lg">visibility</span></a>
-            <button onclick="deleteCustomerByPhone('${String(o.phone||'').replace(/'/g,"\\'")}','${escapeHtml(o.customerName||'عميل').replace(/'/g,"\\'")}')" class="p-1.5 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors inline-flex" title="حذف العميل نهائياً"><span class="material-symbols-outlined text-lg">delete</span></button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
+    if(recent.length===0){
+      tbody.innerHTML='<tr><td colspan="5" class="text-center py-12 text-gray-300">لا توجد طلبات مسجلة حتى الآن.</td></tr>';
+    }else{
+      tbody.innerHTML=recent.map(o=>{
+        const badge=STATUS_BADGE[statusCodeOf(o)]||STATUS_BADGE.pending;
+        const st=badge.label,badgeCls=badge.cls;
+        const customerName=o.customerName||o.customer_name||'عميل';
+        const phone=o.phone||o.customer_phone||'';
+        const items=Array.isArray(o.items)
+          ?o.items.filter(i=>!i.isGift).map(i=>escapeHtml(i.name)).join(' + ')
+          :'';
+        const itemsCount=Array.isArray(o.items)
+          ?o.items.filter(i=>!i.isGift).reduce((sum,i)=>sum+(Number(i.qty)||1),0)
+          :0;
+        return '<tr class="hover:bg-primary-surface/40 transition-colors">'+
+          '<td class="py-3 px-3"><div class="flex flex-col">'+
+          '<span class="font-bold">'+escapeHtml(customerName)+'</span>'+
+          '<span class="text-on-surface-variant text-[11px]" dir="ltr">'+escapeHtml(phone)+'</span>'+
+          '</div></td>'+
+          '<td class="py-3 px-3"><div class="flex items-center gap-2">'+
+          '<span class="truncate max-w-[160px] text-xs">'+(items||'—')+'</span>'+
+          (itemsCount?'<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[10px]">'+itemsCount+' قطعة</span>':'')+
+          '</div></td>'+
+          '<td class="py-3 px-3 font-bold text-on-surface">'+escapeHtml(String(o.total||0))+' ج.م</td>'+
+          '<td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-sm text-label-sm font-bold '+badgeCls+'">'+
+          '<span class="w-1.5 h-1.5 rounded-full bg-current"></span>'+escapeHtml(st)+
+          '</span></td>'+
+          '<td class="py-3 px-3 text-center">'+
+          '<a href="orders.html" class="p-1.5 rounded-full text-on-surface-variant hover:text-primary hover:bg-primary-surface transition-colors inline-flex" title="عرض الطلب">'+
+          '<span class="material-symbols-outlined text-lg">visibility</span></a>'+
+          '</td></tr>';
+      }).join('');
+    }
 
-    // Timestamp
-    document.getElementById('last-update-time').textContent='تم التحديث: '+new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
-
-  }catch(e){console.error('fetchStats error:',e);}
+    document.getElementById('last-update-time').textContent=
+      'تم التحديث: '+new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    console.error('fetchStats error:',e);
+    toast('error','تعذر تحديث إحصائيات لوحة التحكم');
+  }
 }
 
-// ====== Delete Customer (home page recent-orders table) ======
-async function deleteCustomerByPhone(phone,name){
-  if(!phone){toast('error','رقم الهاتف غير متاح لهذا الطلب');return;}
-  const{data:ordersForPhone,error:qErr}=await _supabase.from('orders').select('id,total').eq('phone',phone);
-  if(qErr){toast('error','فشل جلب طلبات العميل: '+(qErr.message||''));return;}
-  if(!ordersForPhone||!ordersForPhone.length){toast('error','لا توجد طلبات مرتبطة بهذا الرقم');return;}
-  const totalSpent=ordersForPhone.reduce((s,o)=>s+(parseFloat(o.total)||0),0);
-  const ok=await confirmDialog(
-    'حذف العميل نهائياً',
-    'هيتم حذف "'+(name||'العميل')+'" وكل طلباته ('+ordersForPhone.length+' طلب بإجمالي '+Math.round(totalSpent).toLocaleString('en')+' ج.م) نهائياً من قاعدة البيانات. الإجراء ده لا يمكن التراجع عنه إطلاقاً!',
-    'نعم، احذف العميل وكل طلباته'
-  );
-  if(!ok)return;
-  const ids=ordersForPhone.map(o=>o.id);
-  const{error:delErr}=await _supabase.from('orders').delete().in('id',ids);
-  if(delErr){toast('error','فشل حذف العميل: '+(delErr.message||''));return;}
-  toast('success','تم حذف العميل وكل طلباته نهائياً');
-  fetchStats();
+function renderPaymentChannelsFromStats(payments){
+  const el=document.getElementById('payment-channels-list');
+  if(!el)return;
+  if(!payments.length){
+    el.innerHTML='<div class="text-center py-5 text-xs ef-muted">لا توجد طلبات مدفوعة بعد</div>';
+    return;
+  }
+  const total=payments.reduce((sum,p)=>sum+nNumber(p.count),0);
+  el.innerHTML=payments.slice(0,4).map(p=>{
+    const count=nNumber(p.count);
+    const pct=total?Math.round(count/total*100):0;
+    return '<div class="flex items-center justify-between gap-3 text-xs">'+
+      '<span class="font-bold">'+escapeHtml(String(p.method||'غير محدد'))+'</span>'+
+      '<span class="ef-muted">'+count.toLocaleString('en')+' ('+pct+'%)</span></div>';
+  }).join('');
+}
+
+function nNumber(v){return Number(v||0);}
+
+function renderDashboardChartData(chartData){
+  const built=chartData[currentChartInterval]||chartData.daily;
+  renderSalesChart(built.labels,built.cur,built.prev,built.curLabel,built.prevLabel);
+  window.dashboardChartData=chartData;
 }
 
 // ====== Gifts (mini list) ======
@@ -726,13 +797,15 @@ window.onload=async function(){
     fetchStats();
     fetchGifts();
 
-    // تفعيل التحديث اللحظي المباشر لجميع إحصائيات وطلبات الرئيسية فوراً بدون ريفريش
+    // Realtime: لا نعيد تحميل لوحة التحكم مع كل حدث متتابع.
+    // ننتظر 800ms بعد آخر تغيير ثم نجلب Snapshot واحداً.
     try {
+      let refreshTimer=null;
       _supabase
         .channel('admin-home-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-          console.log('تحديث لحظي وارد للطلبات في الرئيسية:', payload);
-          fetchStats();
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+          clearTimeout(refreshTimer);
+          refreshTimer=setTimeout(()=>fetchStats(),800);
         })
         .subscribe((status) => {
           console.warn('Realtime subscription status (admin.html):', status);

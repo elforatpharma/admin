@@ -304,9 +304,46 @@
 <script src="layout.js"></script>
 <script>
 let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20;
-const ORDER_COLUMNS='id,customerName,phone,address,total,status,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
-const PENDING=new Set(['جديد','قيد التنفيذ']);
-const PROCESSING=['قيد التجهيز'],DELIVERED=['تم التوصيل'],CANCELLED=['ملغي'];
+const ORDER_COLUMNS='id,customerName,phone,address,total,status,status_code,items,paymentMethod,payment,payment_method,payment_status,merchant_order_id,notes,note,coupon,couponCode,coupon_code,discount_amount,shipping,created_at';
+// ════════════════════════════════════════════════════════════════════
+// حالات الطلب — المصدر: status_code، مش النص العربي
+// ════════════════════════════════════════════════════════════════════
+// ليه؟ النص العربي بيتكتب من 3 أماكن، وكل واحد بيستخدم صياغة مختلفة:
+//   "تم التوصيل" (الداشبورد) | "تم التوصيل بنجاح ✅" (بوت التليجرام)
+//   | "طلب ملغي ❌" (البوت) | "مع المندوب للشحن 🚚" (البوت)
+// فالمطابقة التامة (trim) كانت بتضيّع 4 من 6 حالات: الفلترة والألوان
+// والعدادات وبطاقة الطلب كانت كلها بتوقف. دلوقتي status_code بقى
+// مضمون صح في الداتابيز بفضل trigger في migration.sql، فبنستخدمه هو
+// ونسيب النص العربي مجرد عرض — مش منطق.
+// الكود ده نسخة مطابقة لـ public.derive_order_status_code في
+// migration.sql (نفس الترتيب: الأدق → الأعم) وبتوافق مع order-status.js.
+const STATUS_CODES=['pending','paid','processing','shipped','delivered','cancelled'];
+function deriveStatusCode(text){
+  const s=String(text||'').toLowerCase();
+  if(!s)return'pending';
+  if(/ملغي|ملغى|إلغاء|الغاء|مرتجع|returned|refund|رفض/.test(s))return'cancelled';
+  if(/تم التوصيل|تم التسليم|تسليم|توصيل|deliver/.test(s))return'delivered';
+  if(/مع المندوب|المندوب|تم الشحن|shipped|خرج للشحن/.test(s))return'shipped';
+  if(/مدفوع|تم الدفع|دفع تم|تم السداد|paid/.test(s))return'paid';
+  if(/بانتظار|انتظار|جديد|قيد التنفيذ|قيد المتابعة|في الانتظار|pending/.test(s))return'pending';
+  if(/قيد التجهيز|التجهيز|تجهيز|processing/.test(s))return'processing';
+  return'pending';
+}
+// العمود المضمون أول، والنص شبكة أمان للطلبات القديمة اللي لسه مالهاش status_code.
+function statusCodeOf(o){
+  const c=String((o&&o.status_code)||'').trim();
+  return STATUS_CODES.includes(c)?c:deriveStatusCode(o&&o.status);
+}
+
+const PENDING=new Set(['pending']);
+const PAID=['paid'],PROCESSING=['processing'],SHIPPED=['shipped'],
+      DELIVERED=['delivered'],CANCELLED=['cancelled'];
+
+// وسوم أزرار الفلترة في الـ HTML لسه عربية — بنترجمها هنا مرة واحدة
+const TAG_TO_CODE={'جديد':'pending','قيد التنفيذ':'pending','قيد التجهيز':'processing',
+                   'تم الشحن':'shipped','تم التوصيل':'delivered','ملغي':'cancelled'};
+
+function statusTextToCode(s){return deriveStatusCode(s);}
 
 function payOf(o){return o.paymentMethod||o.payment||o.payment_method||'';}
 function paymentStatusOf(o){return String(o.payment_status||'').toLowerCase();}
@@ -423,7 +460,7 @@ function getFiltered(){
   const now=new Date();
   return allOrders.filter(o=>{
     if(quickTag!=='all'){
-      const s=normStatus(o.status);
+      const s=statusCodeOf(o);
       if(quickTag==='new'){if(!(o.status==='جديد'||PENDING.has(s)))return false;}
       else if(PENDING.has(quickTag)){if(!PENDING.has(s))return false;}
       else if(s!==quickTag)return false;
@@ -568,7 +605,7 @@ async function updateStatus(id,newStatus){
   if(!id)return;
   try{
     const o=allOrders.find(x=>String(x.id)===String(id));
-    const patch={status:newStatus};
+    const patch={status:newStatus,status_code:statusTextToCode(newStatus)};
     if(newStatus==='تم التوصيل'){
       if(o&&paymentStatusOf(o)==='paid')patch.payment_status='paid';
       patch.delivered_at=new Date().toISOString();
@@ -629,6 +666,42 @@ function openWhatsApp(id){
   window.open(url,'_blank');
 }
 
+function isManualPay(o){
+  const p=String(payOf(o)).toLowerCase();
+  return /instapay|insta pay|إنستا|انستا|vodafone|فودافون/.test(p);
+}
+function payConfirmBtn(o,s){
+  if(CANCELLED.includes(s)||paymentStatusOf(o)==='paid')return '';
+  const manual=isManualPay(o);
+  const label=manual?('تأكيد استلام الدفع — '+escapeHtml(String(payOf(o)))):'تأكيد الدفع';
+  const cls=manual?'btn-brand-gradient':'bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200';
+  return `<button id="confirm-pay-btn" onclick="confirmPayment('${o.id}')" class="w-full h-11 ${cls} font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 transition-all mb-1"><span class="material-symbols-outlined text-lg">paid</span><span>${label}</span></button>`;
+}
+async function confirmPayment(id){
+  const o=allOrders.find(x=>String(x.id)===String(id));
+  if(!o||paymentStatusOf(o)==='paid')return;
+  const r=await confirmDialog('تأكيد استلام الدفع',`تأكدي إن مبلغ ${money(o.total)} ج.م وصل فعلاً (${payOf(o)||'—'}) قبل التأكيد. سيتم تحديث حالة الدفع إلى "مدفوع".`,'warning');
+  if(!r)return;
+  const btn=document.getElementById('confirm-pay-btn');
+  if(btn){btn.disabled=true;btn.classList.add('opacity-60');}
+  try{
+    const patch={payment_status:'paid'};
+    // لو الطلب لسه في مرحلة الانتظار: ننقله لـ "تم الدفع". لو اتجهز/اتشحن/اتسلم بالفعل منلمسش حالته.
+    if(statusCodeOf(o)==='pending'){patch.status='تم الدفع';patch.status_code='paid';}
+    const{error}=await _supabase.from('orders').update(patch).eq('id',id);
+    if(error)throw error;
+    const i=allOrders.findIndex(x=>String(x.id)===String(id));
+    if(i!==-1)Object.assign(allOrders[i],patch);
+    renderKPIs();renderOrders();
+    if(String(selectedId)===String(id))renderDetail();
+    toast('تم تأكيد الدفع','success');
+  }catch(e){
+    console.error(e);
+    if(btn){btn.disabled=false;btn.classList.remove('opacity-60');}
+    toast('فشل تأكيد الدفع','error');
+  }
+}
+
 function detailPrimaryBtn(o,s){
   if(CANCELLED.includes(s))return '';
   if(DELIVERED.includes(s))return `<button onclick="printOrder('${o.id}')" class="w-full h-11 btn-brand-gradient font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 transition-all"><span class="material-symbols-outlined text-lg">print</span><span>طباعة فاتورة الطلب</span></button>`;
@@ -657,8 +730,8 @@ function renderDetail(){
     box.innerHTML=`<div class="text-center py-10 text-outline"><span class="material-symbols-outlined text-4xl block mx-auto mb-2 opacity-40">receipt_long</span><span class="font-body-sm text-body-sm">اختر طلباً لعرض مراحل التنفيذ والعميل والفاتورة</span></div>`;
     return;
   }
-  const s=normStatus(o.status);
-  const info=statusInfo(o.status);
+  const s=statusCodeOf(o);
+  const info=statusInfo(s);
   title.textContent='طلب #ORD-'+o.id;
   badge.textContent=info.label;
   badge.className='px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-bold '+info.cls;
@@ -748,6 +821,7 @@ function renderDetail(){
     <span class="font-data-tabular text-headline-xl font-bold text-brand-gradient">${money(o.total)} ج.م</span></div></div>`;
 
   const actions=`<div class="flex flex-col gap-1 pt-1">
+    ${payConfirmBtn(o,s)}
     ${detailPrimaryBtn(o,s)}
     <div class="grid grid-cols-2 gap-1.5">
       <button onclick="printWaybill('${o.id}')" class="h-10 rounded-full bg-surface-container hover:bg-surface-container-high text-primary font-label-md text-label-md flex items-center justify-center gap-1.5 transition-all font-bold border border-primary/20 hover:border-primary" title="بوليصة شحن للطرد (طابعة حرارية 80mm أو لاصقة)">

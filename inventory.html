@@ -730,9 +730,10 @@ async function newProductModal(){
           let upFile=imgFileEl.files[0];
           if(window.resizeImage){const dUrl=await resizeImage(await blobToDataUrl(upFile),1200,1200);upFile=await dataUrlToBlob(dUrl,'image/jpeg');}
           const fn=sanitizeFileName(imgFileEl.files[0].name);
-          const{error:upErr}=await _supabase.storage.from('products').upload(`uploads/${fn}`,upFile,{contentType:upFile.type||'image/jpeg'});
+          const storagePath=uniqueStorageImagePath(fn,'uploads');
+          const{error:upErr}=await _supabase.storage.from('products').upload(storagePath,upFile,{contentType:upFile.type||'image/jpeg'});
           if(upErr)throw upErr;
-          const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fn}`);
+          const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(storagePath);
           imgUrl=publicUrl;
         }catch(err){Swal.showValidationMessage('فشل رفع الصورة: '+(err.message||''));return false;}
       }
@@ -773,6 +774,17 @@ async function newProductModal(){
       },600);
     }
   }catch(e){toast('error','فشل الإضافة: '+(e.message||''));}
+}
+
+
+function uniqueStorageImagePath(fileName,prefix='uploads'){
+  const safeName=sanitizeFileName(fileName||'image.jpg');
+  const extMatch=safeName.match(/\\.[^.]+$/);
+  const ext=extMatch?extMatch[0]:'.jpg';
+  const base=safeName.replace(/\\.[^.]+$/,'')||'image';
+  const stamp=Date.now().toString(36);
+  const random=(window.crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,'').slice(0,12):Math.random().toString(36).slice(2,14);
+  return `${prefix}/${stamp}-${random}-${base}${ext}`;
 }
 
 function setupGalleryHandlers(productId,initialGallery){
@@ -927,9 +939,10 @@ async function editProduct(id){
             upFile=await dataUrlToBlob(dataUrl,'image/jpeg');
           }
           const fileName=sanitizeFileName(file.name);
-          const{error:upErr}=await _supabase.storage.from('products').upload(`uploads/${fileName}`,upFile,{contentType:upFile.type||'image/jpeg'});
+          const storagePath=uniqueStorageImagePath(fileName,'uploads');
+          const{error:upErr}=await _supabase.storage.from('products').upload(storagePath,upFile,{contentType:upFile.type||'image/jpeg'});
           if(upErr)throw upErr;
-          const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
+          const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(storagePath);
           img=publicUrl;
         }catch(err){
           Swal.showValidationMessage('فشل رفع الصورة: '+(err.message||''));

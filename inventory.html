@@ -385,7 +385,7 @@ async function detectColumns(){
 }
 
 function productSelectColumns(){
-  const cols=['id','name','category','price','oldPrice','discount','img','image','brand','science_name','desc','ingredients','created_at','reorder_level','images'];
+  const cols=['id','name','category','price','oldPrice','badge','description','ingredients','img','priority','desc','created_at','images','size','gallery'];
   if(HAS_STOCK)cols.push('stock');
   if(HAS_ACTIVE)cols.push('is_active');
   if(HAS_BARCODE)cols.push('barcode','sku');

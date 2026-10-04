@@ -718,10 +718,14 @@ function detailPrimaryBtn(o,s){
 async function completeOrder(id){
   const o=allOrders.find(x=>String(x.id)===String(id));
   if(!o)return;
-  const s=normStatus(o.status);
-  const next=PROCESSING.includes(s)?'تم التوصيل':'قيد التجهيز';
-  const r=await confirmDialog(next==='تم التوصيل'?'تأكيد تسليم الطلب':`اعتماد الطلب #ORD-${id}`,'سيتم تحديث حالة الطلب إلى: '+next,'warning');
-  if(r)updateStatus(id,next);
+  const s=statusCodeOf(o);
+  const next=s==='processing'?'تم التوصيل':'قيد التجهيز';
+  const r=await confirmDialog(
+    next==='تم التوصيل'?'تأكيد تسليم الطلب':'اعتماد الطلب #ORD-'+id,
+    'سيتم تحديث حالة الطلب إلى: '+next,
+    'warning'
+  );
+  if(r)await updateStatus(id,next);
 }
 
 function renderDetail(){

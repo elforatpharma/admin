@@ -22,7 +22,16 @@
     .font-display{font-family:'Cairo',sans-serif;}
     .input{width:100%;border:1px solid #e5e7eb;border-radius:14px;padding:12px 16px;font-size:14px;font-weight:700;background:#f9fafb;outline:none;transition:all .15s;}
     .input:focus{border-color:rgba(77,60,235,.5);background:#fff;box-shadow:0 0 0 3px rgba(77,60,235,.08);}
-  </style>
+  /* Mobile UX */
+@media(max-width:1023.98px){
+  body{overflow-x:hidden!important}
+  main{min-width:0!important;padding-bottom:88px!important}
+  table{min-width:720px}
+  .overflow-x-auto{-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  input,select,textarea,button{max-width:100%}
+  .modal,.fixed.inset-0>div{max-width:calc(100vw - 24px)!important}
+}
+</style>
 </head>
 <body class="text-gray-900 antialiased">
 <div class="flex h-screen overflow-hidden">

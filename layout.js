@@ -1,31 +1,5 @@
 
-/* Material Symbols FOUT guard: hide ligature text until the icon font is ready */
-(function(){
-  const iconSelector='.material-symbols-outlined';
-  function markIcons(){
-    document.querySelectorAll(iconSelector).forEach(el=>el.classList.add('efp-icon-loading'));
-  }
-  function revealIcons(){
-    document.documentElement.classList.add('efp-icons-ready');
-    document.querySelectorAll(iconSelector).forEach(el=>el.classList.remove('efp-icon-loading'));
-  }
-  const style=document.createElement('style');
-  style.id='efp-icon-fout-guard';
-  style.textContent=`
-    .material-symbols-outlined.efp-icon-loading{display:inline-flex!important;align-items:center;justify-content:center;font-size:0!important;color:transparent!important;min-width:1em;min-height:1em;border-radius:6px;background:linear-gradient(90deg,#eef0ff 25%,#f7f6ff 50%,#eef0ff 75%);background-size:200% 100%;animation:efpIconSkeleton 1.15s ease-in-out infinite;}
-    @keyframes efpIconSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
-    .efp-icons-ready .material-symbols-outlined{background:none;animation:none;}
-  `;
-  document.head.appendChild(style);
-  markIcons();
-  if(document.fonts&&document.fonts.load){
-    Promise.all([document.fonts.load('24px "Material Symbols Outlined"')]).then(revealIcons).catch(revealIcons);
-  }else{
-    window.addEventListener('load',revealIcons,{once:true});
-  }
-  const observer=new MutationObserver(markIcons);
-  observer.observe(document.documentElement,{childList:true,subtree:true});
-})();
+
 // ===== layout.js =====
 // مكونات واجهة مشتركة (Sidebar + Auth) لجميع صفحات لوحة التحكم
 

@@ -34,6 +34,11 @@
   .modal,.fixed.inset-0>div{max-width:calc(100vw - 24px)!important}
 }
 </style>
+<style id="efp-loading-skeleton">
+.efp-loading-skeleton{display:inline-block;width:78px;height:1.05em;border-radius:8px;background:linear-gradient(90deg,#eef0ff 25%,#f7f6ff 50%,#eef0ff 75%);background-size:200% 100%;animation:efpSkeleton 1.15s ease-in-out infinite;vertical-align:middle;color:transparent!important}
+.efp-loading-skeleton *{visibility:hidden!important}
+@keyframes efpSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
 </head>
 <body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
 <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
@@ -102,7 +107,7 @@
           <div class="flex items-start justify-between">
             <div class="flex flex-col">
               <span class="font-label-md text-label-md text-text-secondary mb-1">إجمالي الأصناف بالكتالوج</span>
-              <span class="font-display-lg text-display-lg text-on-surface" id="kpi-total">0</span>
+              <span class="font-display-lg text-display-lg text-on-surface" id="kpi-total"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-primary-surface flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-[26px]">category</span>
@@ -124,7 +129,7 @@
                 <span class="w-2 h-2 rounded-full bg-warning animate-ping"></span>
                 أصناف قاربت على النفاد
               </span>
-              <span class="font-display-lg text-display-lg text-on-surface"><span id="kpi-low">0</span> <span class="font-headline-sm text-headline-sm text-text-secondary">صنف</span></span>
+              <span class="font-display-lg text-display-lg text-on-surface"><span id="kpi-low"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> <span class="font-headline-sm text-headline-sm text-text-secondary">صنف</span></span>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-warning-surface flex items-center justify-center text-warning group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-[26px]">warning</span>
@@ -144,7 +149,7 @@
                 <span class="w-2 h-2 rounded-full bg-danger"></span>
                 صلاحيات وشيكة (&lt; 90 يوم)
               </span>
-              <span class="font-display-lg text-display-lg text-danger"><span id="kpi-expiring">0</span> <span class="font-headline-sm text-headline-sm text-text-secondary">صنف</span></span>
+              <span class="font-display-lg text-display-lg text-danger"><span id="kpi-expiring"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> <span class="font-headline-sm text-headline-sm text-text-secondary">صنف</span></span>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-danger-surface flex items-center justify-center text-danger group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-[26px]">event_busy</span>
@@ -161,7 +166,7 @@
           <div class="flex items-start justify-between">
             <div class="flex flex-col">
               <span class="font-label-md text-label-md text-text-secondary mb-1">القيمة المالية للمخزون</span>
-              <span class="font-display-lg text-display-lg text-on-surface"><span id="kpi-value">0</span> <span class="font-headline-sm text-headline-sm text-primary">ج.م</span></span>
+              <span class="font-display-lg text-display-lg text-on-surface"><span id="kpi-value"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> <span class="font-headline-sm text-headline-sm text-primary">ج.م</span></span>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-success-surface flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
               <span class="material-symbols-outlined text-[26px]">account_balance_wallet</span>

@@ -49,6 +49,11 @@ body{background:#f8fafc!important}
 }
 
 </style>
+<style id="efp-loading-skeleton">
+.efp-loading-skeleton{display:inline-block;width:78px;height:1.05em;border-radius:8px;background:linear-gradient(90deg,#eef0ff 25%,#f7f6ff 50%,#eef0ff 75%);background-size:200% 100%;animation:efpSkeleton 1.15s ease-in-out infinite;vertical-align:middle;color:transparent!important}
+.efp-loading-skeleton *{visibility:hidden!important}
+@keyframes efpSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
 </head>
 <body class="text-gray-900 antialiased">
 <div class="flex h-screen overflow-hidden">
@@ -87,19 +92,19 @@ body{background:#f8fafc!important}
             <span id="kpi-compare" class="text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-0.5"></span>
           </div>
           <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider">المبيعات المكتملة</p>
-          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-revenue">0 <small class="text-sm font-medium text-gray-400">ج.م</small></p>
+          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-revenue"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span> <small class="text-sm font-medium text-gray-400">ج.م</small></p>
           <p id="kpi-compare-note" class="text-[10px] text-gray-400 mt-1 font-medium">مقارنة بالفترة السابقة</p>
         </div>
         <div class="kpi-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <div class="p-2.5 bg-blue-50 rounded-xl inline-flex mb-4"><span class="material-symbols-outlined text-blue-500 text-[22px]">local_mall</span></div>
           <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider">إجمالي الطلبات</p>
-          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-orders">0</p>
+          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-orders"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></p>
           <p class="text-[10px] text-gray-400 mt-1 font-medium">كل الحالات في الفترة</p>
         </div>
         <div class="kpi-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <div class="p-2.5 bg-violet-50 rounded-xl inline-flex mb-4"><span class="material-symbols-outlined text-violet-500 text-[22px]">verified</span></div>
           <p class="text-[10px] text-gray-400 font-black uppercase tracking-wider">متوسط قيمة الطلب (AOV)</p>
-          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-aov">0 <small class="text-sm font-medium text-gray-400">ج.م</small></p>
+          <p class="text-2xl font-black mt-1 text-gray-900" id="kpi-aov"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span> <small class="text-sm font-medium text-gray-400">ج.م</small></p>
           <p class="text-[10px] text-gray-400 mt-1 font-medium">للطلبات المكتملة فقط</p>
         </div>
         <div class="kpi-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">

@@ -1,7 +1,7 @@
 /* El-Forat Admin — Uiverse component layer
    Visual-only layer inspired by Uiverse card/button/input patterns.
    Store/admin data logic is intentionally untouched. */
-body.efp-uiverse-ui{
+body.efp-uiverse-ui:not(.efp-inventory-page){
   --efp-ui-bg:#f8fafc;
   --efp-ui-primary:#4d3ceb;
   --efp-ui-primary-2:#8536ff;
@@ -10,85 +10,85 @@ body.efp-uiverse-ui{
   --efp-ui-muted:#64748b;
   background:var(--efp-ui-bg)!important;
 }
-body.efp-uiverse-ui main{background:var(--efp-ui-bg)!important;}
-body.efp-uiverse-ui main .uiverse-card,
-body.efp-uiverse-ui main .kpi-card,
-body.efp-uiverse-ui main .efp-panel,
-body.efp-uiverse-ui main .bg-surface-card,
-body.efp-uiverse-ui main .bg-surface-container-lowest{
+body.efp-uiverse-ui:not(.efp-inventory-page) main{background:var(--efp-ui-bg)!important;}
+body.efp-uiverse-ui:not(.efp-inventory-page) main .uiverse-card,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .kpi-card,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .efp-panel,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .bg-surface-card,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .bg-surface-container-lowest{
   border:1px solid var(--efp-ui-border)!important;
   border-radius:24px!important;
   background:#fff!important;
   box-shadow:0 4px 18px rgba(15,23,42,.045)!important;
   transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important;
 }
-body.efp-uiverse-ui main .kpi-card:hover,
-body.efp-uiverse-ui main .uiverse-card:hover{
+body.efp-uiverse-ui:not(.efp-inventory-page) main .kpi-card:hover,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .uiverse-card:hover{
   transform:translateY(-3px);
   border-color:#d9d4ff!important;
   box-shadow:0 14px 30px rgba(77,60,235,.10)!important;
 }
-body.efp-uiverse-ui main input:not([type="checkbox"]):not([type="radio"]),
-body.efp-uiverse-ui main select,
-body.efp-uiverse-ui main textarea{
+body.efp-uiverse-ui:not(.efp-inventory-page) main input:not([type="checkbox"]):not([type="radio"]),
+body.efp-uiverse-ui:not(.efp-inventory-page) main select,
+body.efp-uiverse-ui:not(.efp-inventory-page) main textarea{
   border:1px solid #e2e8f0!important;
   border-radius:14px!important;
   background:#fff!important;
   transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease!important;
 }
-body.efp-uiverse-ui main input:not([type="checkbox"]):not([type="radio"]):focus,
-body.efp-uiverse-ui main select:focus,
-body.efp-uiverse-ui main textarea:focus{
+body.efp-uiverse-ui:not(.efp-inventory-page) main input:not([type="checkbox"]):not([type="radio"]):focus,
+body.efp-uiverse-ui:not(.efp-inventory-page) main select:focus,
+body.efp-uiverse-ui:not(.efp-inventory-page) main textarea:focus{
   outline:none!important;
   border-color:#b9b2ff!important;
   box-shadow:0 0 0 4px rgba(77,60,235,.09)!important;
 }
-body.efp-uiverse-ui main button.btn-brand-gradient,
-body.efp-uiverse-ui main .btn-brand-gradient{
+body.efp-uiverse-ui:not(.efp-inventory-page) main button.btn-brand-gradient,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .btn-brand-gradient{
   border-radius:14px!important;
   background:linear-gradient(135deg,var(--efp-ui-primary),var(--efp-ui-primary-2))!important;
   box-shadow:0 9px 22px rgba(77,60,235,.24)!important;
   transition:transform .18s ease,box-shadow .18s ease,filter .18s ease!important;
 }
-body.efp-uiverse-ui main button.btn-brand-gradient:hover,
-body.efp-uiverse-ui main .btn-brand-gradient:hover{
+body.efp-uiverse-ui:not(.efp-inventory-page) main button.btn-brand-gradient:hover,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .btn-brand-gradient:hover{
   transform:translateY(-2px);
   filter:saturate(1.06);
   box-shadow:0 14px 28px rgba(77,60,235,.30)!important;
 }
-body.efp-uiverse-ui main table thead{
+body.efp-uiverse-ui:not(.efp-inventory-page) main table thead{
   background:#faf9ff!important;
 }
-body.efp-uiverse-ui main table tbody tr{
+body.efp-uiverse-ui:not(.efp-inventory-page) main table tbody tr{
   transition:background .15s ease,transform .15s ease!important;
 }
-body.efp-uiverse-ui main table tbody tr:hover{
+body.efp-uiverse-ui:not(.efp-inventory-page) main table tbody tr:hover{
   background:#faf9ff!important;
 }
-body.efp-uiverse-ui main .rounded-xl,
-body.efp-uiverse-ui main .rounded-2xl{
+body.efp-uiverse-ui:not(.efp-inventory-page) main .rounded-xl,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .rounded-2xl{
   border-radius:20px;
 }
-body.efp-uiverse-ui #app-sidebar{
+body.efp-uiverse-ui:not(.efp-inventory-page) #app-sidebar{
   background:rgba(255,255,255,.96)!important;
   border-color:#eceafb!important;
   box-shadow:-10px 0 32px rgba(15,23,42,.06)!important;
 }
-body.efp-uiverse-ui #app-sidebar a{
+body.efp-uiverse-ui:not(.efp-inventory-page) #app-sidebar a{
   transition:background .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease!important;
 }
-body.efp-uiverse-ui #app-sidebar a:hover{
+body.efp-uiverse-ui:not(.efp-inventory-page) #app-sidebar a:hover{
   transform:translateX(-2px);
 }
-body.efp-uiverse-ui #app-sidebar .nav-active{
+body.efp-uiverse-ui:not(.efp-inventory-page) #app-sidebar .nav-active{
   background:linear-gradient(135deg,rgba(77,60,235,.11),rgba(133,54,255,.08))!important;
   color:#4d3ceb!important;
   box-shadow:inset 3px 0 0 #4d3ceb,0 5px 14px rgba(77,60,235,.06);
 }
-body.efp-uiverse-ui #mobile-menu-btn{
+body.efp-uiverse-ui:not(.efp-inventory-page) #mobile-menu-btn{
   border-radius:16px!important;
 }
-body.efp-uiverse-ui .efp-uiverse-toggle{
+body.efp-uiverse-ui:not(.efp-inventory-page) .efp-uiverse-toggle{
   margin-bottom:6px;
   width:100%;
   min-height:40px;
@@ -102,15 +102,31 @@ body.efp-uiverse-ui .efp-uiverse-toggle{
   cursor:pointer;
   transition:.18s ease;
 }
-body.efp-uiverse-ui .efp-uiverse-toggle:hover{
+body.efp-uiverse-ui:not(.efp-inventory-page) .efp-uiverse-toggle:hover{
   background:#f3f1ff;
   transform:translateY(-1px);
 }
 @media(max-width:1023.98px){
-  body.efp-uiverse-ui main .kpi-card,
-  body.efp-uiverse-ui main .efp-panel,
-  body.efp-uiverse-ui main .bg-surface-card,
-  body.efp-uiverse-ui main .bg-surface-container-lowest{
+  body.efp-uiverse-ui:not(.efp-inventory-page) main .kpi-card,
+  body.efp-uiverse-ui:not(.efp-inventory-page) main .efp-panel,
+  body.efp-uiverse-ui:not(.efp-inventory-page) main .bg-surface-card,
+  body.efp-uiverse-ui:not(.efp-inventory-page) main .bg-surface-container-lowest{
     border-radius:20px!important;
   }
+}
+
+/* UIverse-inspired finishing layer — all admin pages except Inventory reference */
+body.efp-uiverse-ui:not(.efp-inventory-page) main{color:#0f172a;}
+body.efp-uiverse-ui:not(.efp-inventory-page) main .shadow,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .shadow-sm{box-shadow:0 4px 16px rgba(15,23,42,.045)!important;}
+body.efp-uiverse-ui:not(.efp-inventory-page) main button:not(.swal2-close):not(.efp-uiverse-toggle){transition:transform .16s ease,box-shadow .16s ease,filter .16s ease,background .16s ease!important;}
+body.efp-uiverse-ui:not(.efp-inventory-page) main button:not(:disabled):hover{transform:translateY(-1px);}
+body.efp-uiverse-ui:not(.efp-inventory-page) main .overflow-hidden.rounded-xl,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .overflow-hidden.rounded-2xl{border-radius:24px!important;}
+body.efp-uiverse-ui:not(.efp-inventory-page) main .border-gray-100,
+body.efp-uiverse-ui:not(.efp-inventory-page) main .border-gray-200{border-color:#eceafb!important;}
+body.efp-uiverse-ui:not(.efp-inventory-page) main .bg-gray-50{background:#faf9ff!important;}
+@media(max-width:1023.98px){
+  body.efp-uiverse-ui:not(.efp-inventory-page) main .overflow-hidden.rounded-xl,
+  body.efp-uiverse-ui:not(.efp-inventory-page) main .overflow-hidden.rounded-2xl{border-radius:20px!important;}
 }

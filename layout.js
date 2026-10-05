@@ -305,7 +305,7 @@ patchSwalIdentity();
 (function(){
   const style=document.createElement('style');
   style.id='efp-material-icons-loading';
-  style.textContent='
+  style.textContent=`
     html:not(.efp-material-icons-ready) .material-symbols-outlined{
       color:transparent!important;
       position:relative;
@@ -334,8 +334,7 @@ patchSwalIdentity();
       color:inherit!important;
       min-width:0;
       min-height:0;
-    }';
-  document.head.appendChild(style);
+`;
 
   function markReady(){
     document.documentElement.classList.add('efp-material-icons-ready');

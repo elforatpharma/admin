@@ -126,6 +126,11 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
   main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 .text-headline-xl{font-size:21px!important;line-height:28px!important;}
 }
 </style>
+<style id="efp-loading-skeleton">
+.efp-loading-skeleton{display:inline-block;width:78px;height:1.05em;border-radius:8px;background:linear-gradient(90deg,#eef0ff 25%,#f7f6ff 50%,#eef0ff 75%);background-size:200% 100%;animation:efpSkeleton 1.15s ease-in-out infinite;vertical-align:middle;color:transparent!important}
+.efp-loading-skeleton *{visibility:hidden!important}
+@keyframes efpSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
 </head>
 <body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
 <div class="flex h-screen overflow-hidden">
@@ -196,7 +201,7 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
                 <span class="material-symbols-outlined text-outline text-lg">view_stream</span>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="font-headline-xl text-headline-xl text-on-surface" id="kpi-all">0</span>
+                <span class="font-headline-xl text-headline-xl text-on-surface" id="kpi-all"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
                 <span class="font-label-sm text-label-sm text-secondary font-bold">إجمالي</span>
               </div>
             </div>
@@ -208,7 +213,7 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
                 <span class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="font-headline-xl text-headline-xl text-primary font-bold" id="kpi-new">0</span>
+                <span class="font-headline-xl text-headline-xl text-primary font-bold" id="kpi-new"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
                 <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-surface text-primary font-bold">يحتاج مراجعة</span>
               </div>
             </div>
@@ -219,7 +224,7 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
                 <span class="material-symbols-outlined text-tertiary text-lg">sync</span>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="font-headline-xl text-headline-xl text-tertiary" id="kpi-processing">0</span>
+                <span class="font-headline-xl text-headline-xl text-tertiary" id="kpi-processing"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
                 <span class="font-label-sm text-label-sm text-outline">بالمستودع</span>
               </div>
             </div>
@@ -230,7 +235,7 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
                 <span class="material-symbols-outlined text-outline text-lg">schedule</span>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="font-headline-xl text-headline-xl text-on-surface" id="kpi-pending">0</span>
+                <span class="font-headline-xl text-headline-xl text-on-surface" id="kpi-pending"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
                 <span class="font-label-sm text-label-sm text-outline">في الاستعلام</span>
               </div>
             </div>
@@ -241,7 +246,7 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
                 <span class="material-symbols-outlined text-emerald-600 text-lg">check_circle</span>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="font-headline-xl text-headline-xl text-emerald-600" id="kpi-delivered">0</span>
+                <span class="font-headline-xl text-headline-xl text-emerald-600" id="kpi-delivered"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
                 <span class="font-label-sm text-label-sm text-emerald-600" id="kpi-delivered-rate"></span>
               </div>
             </div>
@@ -252,7 +257,7 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
                 <span class="material-symbols-outlined text-error text-lg">cancel</span>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="font-headline-xl text-headline-xl text-error" id="kpi-cancelled">0</span>
+                <span class="font-headline-xl text-headline-xl text-error" id="kpi-cancelled"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
                 <span class="font-label-sm text-label-sm text-outline" id="kpi-cancelled-rate"></span>
               </div>
             </div>

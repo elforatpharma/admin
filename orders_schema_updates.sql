@@ -50,6 +50,9 @@ CREATE TABLE IF NOT EXISTS public.order_notification_log (
 CREATE INDEX IF NOT EXISTS idx_order_notification_log_order
   ON public.order_notification_log(order_id, created_at DESC);
 
+CREATE INDEX IF NOT EXISTS idx_order_notification_log_status
+  ON public.order_notification_log(status, updated_at DESC);
+
 ALTER TABLE public.order_status_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_notification_log ENABLE ROW LEVEL SECURITY;
 
@@ -63,6 +66,181 @@ CREATE POLICY order_notification_log_admin_read
   ON public.order_notification_log FOR SELECT TO authenticated
   USING ((SELECT public.is_admin()));
 
--- Realtime is used by the admin order screen for instant timeline/notification updates.
-ALTER PUBLICATION supabase_realtime ADD TABLE public.order_status_history;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.order_notification_log;
+-- Defense in depth: the browser only needs SELECT on these operational log tables.
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  ON public.order_status_history, public.order_notification_log
+  FROM anon, authenticated;
+
+GRANT SELECT
+  ON public.order_status_history, public.order_notification_log
+  TO authenticated;
+
+
+-- ==========================================
+-- Automatic order timeline
+-- ==========================================
+
+CREATE OR REPLACE FUNCTION public.record_order_status_history()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'pg_catalog', 'public'
+AS $function$
+declare
+  actor text;
+begin
+  actor := coalesce(
+    current_setting('request.jwt.claim.email', true),
+    case when auth.uid() is null then 'store/system' else auth.uid()::text end
+  );
+
+  if tg_op = 'INSERT' then
+    insert into public.order_status_history(
+      order_id, old_status, new_status, old_status_code, new_status_code, changed_by
+    )
+    values (
+      new.id, null, coalesce(new.status,'جديد'), null, new.status_code, actor
+    );
+    return new;
+  end if;
+
+  if new.status is distinct from old.status
+     or new.status_code is distinct from old.status_code then
+    insert into public.order_status_history(
+      order_id, old_status, new_status, old_status_code, new_status_code, changed_by
+    )
+    values (
+      new.id, old.status, coalesce(new.status,'جديد'),
+      old.status_code, new.status_code, actor
+    );
+  end if;
+
+  return new;
+end;
+$function$;
+
+REVOKE ALL ON FUNCTION public.record_order_status_history() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS trg_record_order_status_history ON public.orders;
+CREATE TRIGGER trg_record_order_status_history
+AFTER INSERT OR UPDATE OF status, status_code ON public.orders
+FOR EACH ROW
+EXECUTE FUNCTION public.record_order_status_history();
+
+
+-- ==========================================
+-- Automatic Telegram notification queue
+-- ==========================================
+
+CREATE OR REPLACE FUNCTION public.queue_order_notification()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'pg_catalog', 'public'
+AS $function$
+begin
+  if tg_op = 'INSERT' then
+    insert into public.order_notification_log(order_id,event_type,status,attempts)
+    values (new.id,'INSERT','pending',0);
+  end if;
+  return new;
+end;
+$function$;
+
+REVOKE ALL ON FUNCTION public.queue_order_notification() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS trg_queue_order_notification ON public.orders;
+CREATE TRIGGER trg_queue_order_notification
+AFTER INSERT ON public.orders
+FOR EACH ROW
+EXECUTE FUNCTION public.queue_order_notification();
+
+
+-- ==========================================
+-- Secure Telegram notification retry
+-- ==========================================
+
+CREATE OR REPLACE FUNCTION public.retry_order_telegram_notification(p_order_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'pg_catalog', 'public', 'net'
+AS $function$
+declare
+  target_order jsonb;
+  secret text;
+  req_id bigint;
+  log_id bigint;
+begin
+  if not public.is_admin() then
+    raise exception 'not authorized';
+  end if;
+
+  select to_jsonb(o) into target_order
+  from public.orders o
+  where o.id=p_order_id;
+
+  if target_order is null then
+    raise exception 'order not found';
+  end if;
+
+  secret := public.get_order_notify_secret();
+  if coalesce(secret,'') = '' then
+    raise exception 'order notification secret is not configured';
+  end if;
+
+  insert into public.order_notification_log(order_id,event_type,status,attempts)
+  values (p_order_id,'RETRY','pending',0)
+  returning id into log_id;
+
+  select net.http_post(
+    url := 'https://sidtdxchiqiogfkwbdui.supabase.co/functions/v1/telegram-order-notify',
+    body := jsonb_build_object(
+      'record', target_order,
+      'type', 'RETRY_ORDER_NOTIFICATION',
+      'notification_log_id', log_id
+    ),
+    headers := jsonb_build_object(
+      'Content-Type','application/json',
+      'x-store-secret',secret
+    )
+  ) into req_id;
+
+  return jsonb_build_object(
+    'ok',true,
+    'log_id',log_id,
+    'request_id',req_id
+  );
+end;
+$function$;
+
+REVOKE ALL ON FUNCTION public.retry_order_telegram_notification(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.retry_order_telegram_notification(uuid) TO authenticated;
+
+
+-- ==========================================
+-- Realtime
+-- ==========================================
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname='supabase_realtime'
+      AND schemaname='public'
+      AND tablename='order_status_history'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.order_status_history;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname='supabase_realtime'
+      AND schemaname='public'
+      AND tablename='order_notification_log'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.order_notification_log;
+  END IF;
+END $$;

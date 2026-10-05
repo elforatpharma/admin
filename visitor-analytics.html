@@ -248,7 +248,7 @@ async function loadAnalytics(){
   const avgCustomerValue=customerRows.length?totalCustomerRevenue/customerRows.length:0;
   const repeatRate=customerRows.length?Math.round(repeatCustomers.length/customerRows.length*1000)/10:0;
   document.getElementById('customer-metrics').innerHTML=[
-    kpi('العملاء المشتركون',customerRows.length.toLocaleString('en'),'groups'),
+    kpi('إجمالي العملاء',customerRows.length.toLocaleString('en'),'groups'),
     kpi('نسبة العملاء المتكررين',repeatRate+'%','repeat'),
     kpi('متوسط قيمة العميل',Math.round(avgCustomerValue).toLocaleString('en')+' ج.م','account_balance')
   ].join('');

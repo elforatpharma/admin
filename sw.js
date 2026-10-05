@@ -6,7 +6,7 @@
  * - صفحات HTML (خصوصاً الأدمن) شبكة أولاً ومبتتخزنش
  */
 
-const CACHE_NAME = 'elforat-pharma-v2';
+const CACHE_NAME = 'elforat-pharma-v3';
 const STATIC_ASSETS = [
     './logo.png',
     './imageUploader.js',
@@ -40,32 +40,79 @@ self.addEventListener('fetch', (event) => {
 
     const url = new URL(req.url);
 
-    // أي طلب لبرّه موقعنا (Supabase API / Auth / CDN) → المتصفح يتعامل معاه عادي، من غير كاش
+    // أي طلب خارج نفس الموقع (Supabase / Auth / CDN وغيرها) يمر مباشرة للمتصفح.
     if (url.origin !== self.location.origin) return;
 
-    // صفحات HTML: شبكة أولاً، ومفيش تخزين (عشان بيانات الأدمن ونسخ الصفحات متتعلقش)
+    // صفحات HTML: الشبكة أولاً حتى لا نعرض نسخة قديمة من لوحة الإدارة.
     if (req.mode === 'navigate') {
-        event.respondWith(fetch(req).catch(() => caches.match(req)));
-        return;
-    }
-
-    // صور وملفات JS/CSS من نفس الموقع: كاش أولاً + تحديث في الخلفية
-    event.respondWith(
-        caches.match(req).then((cached) => {
-            const network = fetch(req)
+        event.respondWith(
+            fetch(req)
                 .then((res) => {
                     if (res && res.ok) {
                         const copy = res.clone();
-                        caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+                        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
                     }
                     return res;
                 })
-                .catch(() => cached);
-            return cached || network;
-        })
+                .catch(() => caches.match(req))
+        );
+        return;
+    }
+
+    const destination = req.destination;
+    const isImage = destination === 'image' || /\.(?:png|jpe?g|webp|gif|svg|ico)(?:\?.*)?$/i.test(url.pathname);
+    const isCodeOrStyle =
+        destination === 'script' ||
+        destination === 'style' ||
+        /\.(?:js|css)(?:\?.*)?$/i.test(url.pathname);
+
+    if (isImage) {
+        // الصور: اعرض الكاش فوراً، ثم حدّثه في الخلفية.
+        event.respondWith(
+            caches.match(req).then((cached) => {
+                const network = fetch(req).then((res) => {
+                    if (res && res.ok) {
+                        const copy = res.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+                    }
+                    return res;
+                }).catch(() => cached);
+                return cached || network;
+            })
+        );
+        return;
+    }
+
+    // JS/CSS وباقي الملفات النصية: الشبكة أولاً.
+    // هذا يمنع بقاء layout.js / uiverse-ui.css / الصفحات المساعدة على نسخة قديمة.
+    if (isCodeOrStyle || destination === 'font' || destination === 'empty') {
+        event.respondWith(
+            fetch(req)
+                .then((res) => {
+                    if (res && res.ok) {
+                        const copy = res.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+                    }
+                    return res;
+                })
+                .catch(() => caches.match(req))
+        );
+        return;
+    }
+
+    // أي أصل آخر: شبكة أولاً مع fallback للكاش.
+    event.respondWith(
+        fetch(req)
+            .then((res) => {
+                if (res && res.ok) {
+                    const copy = res.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+                }
+                return res;
+            })
+            .catch(() => caches.match(req))
     );
 });
-
 self.addEventListener('push', (event) => {
     let data = {};
     if (event.data) {

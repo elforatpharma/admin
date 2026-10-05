@@ -39,6 +39,17 @@
 .efp-loading-skeleton *{visibility:hidden!important}
 @keyframes efpSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+
+<style id="inventory-sidebar-active-fix">
+/* Keep Inventory reference sidebar active-state consistent with the rest of Admin */
+#app-sidebar .nav-active{
+  background:linear-gradient(135deg,rgba(77,60,235,.11),rgba(133,54,255,.07))!important;
+  color:#4d3ceb!important;
+  border-right:3px solid #4d3ceb!important;
+  box-shadow:0 5px 14px rgba(77,60,235,.06)!important;
+}
+#app-sidebar .nav-active .material-symbols-outlined{color:#4d3ceb!important;}
+</style>
 </head>
 <body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
 <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">

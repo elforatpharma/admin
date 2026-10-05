@@ -98,6 +98,17 @@ main>.max-w-7xl{width:100%!important;max-width:1400px!important;margin:0 auto!im
           <h2 class="font-[Cairo] font-bold mb-4">تنبيهات ذكية</h2>
           <div id="alerts" class="space-y-2"></div>
         </section>
+        <section class="lg:col-span-12 efp-panel p-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div>
+              <h2 class="font-[Cairo] font-bold">العملاء المتكررون وقيمة العميل</h2>
+              <p class="text-xs text-[#64748b] mt-1">محسوبة من الطلبات التي وصلت إلى «تم التوصيل» على مستوى كل البيانات المتاحة.</p>
+            </div>
+            <span class="text-xs font-bold text-[#64748b]">Customer Retention + CLV</span>
+          </div>
+          <div id="customer-metrics" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5"></div>
+          <div id="top-customers" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        </section>
       </div>
     </div>
   </main>
@@ -130,12 +141,13 @@ function bar(label,value,max){const pct=max?Math.round(value/max*100):0;return `
 async function loadAnalytics(){
   const since=new Date();since.setDate(since.getDate()-30);
   const sinceIso=since.toISOString();
-  let events,visits,orders,loadsRes;
+  let events,visits,orders,allOrders,loadsRes;
   try{
-    [events,visits,orders,loadsRes]=await Promise.all([
+    [events,visits,orders,allOrders,loadsRes]=await Promise.all([
       fetchAll(()=>_supabase.from('store_events').select('event_name,session_id,product_id,product_name,coupon_code,source,campaign,device_type,created_at').gte('created_at',sinceIso).order('id')),
       fetchAll(()=>_supabase.from('visitor_events').select('session_id,source,device_type,created_at').gte('created_at',sinceIso).order('id')),
-      fetchAll(()=>_supabase.from('orders').select('id,total,status,status_code,session_id,traffic_source,traffic_campaign,address,created_at').gte('created_at',sinceIso).order('created_at',{ascending:false}).order('id')),
+      fetchAll(()=>_supabase.from('orders').select('id,total,status,status_code,session_id,traffic_source,traffic_campaign,address,created_at,items,customer_name,customer_phone,phone').gte('created_at',sinceIso).order('created_at',{ascending:false}).order('id')),
+      fetchAll(()=>_supabase.from('orders').select('id,total,status,status_code,customer_name,customer_phone,phone,created_at').order('created_at',{ascending:false}).order('id')),
       _supabase.from('visitors').select('count')
     ]);
   }catch(e){
@@ -160,28 +172,88 @@ async function loadAnalytics(){
     kpi('مبيعات مكتملة',Math.round(revenue).toLocaleString('en')+' ج.م','payments')
   ].join('');
   const counts=Object.fromEntries(groupBy(events,x=>x.event_name));
-  const funnel=[['زيارة',sessions],['مشاهدة منتج',counts.product_view||0],['إضافة للسلة',counts.add_to_cart||0],['بدء الدفع',counts.checkout_started||0],['بدء الدفع الإلكتروني',counts.payment_started||0],['طلب مكتمل',validOrders.length]];
+  const uniqueEventSessions=(name)=>unique(events.filter(e=>e.event_name===name),x=>x.session_id);
+  const funnel=[
+    ['زيارة',sessions],
+    ['مشاهدة منتج',uniqueEventSessions('product_view')],
+    ['إضافة للسلة',uniqueEventSessions('add_to_cart')],
+    ['بدء الدفع',uniqueEventSessions('checkout_started')],
+    ['إنشاء طلب',uniqueEventSessions('order_created')]
+  ];
   const max=Math.max(...funnel.map(x=>x[1]),1);
-  document.getElementById('funnel').innerHTML=funnel.map(x=>bar(x[0],x[1],max)).join('');
+  document.getElementById('funnel').innerHTML=funnel.map((x,i)=>{
+    const rate=sessions?Math.round(x[1]/sessions*1000)/10:0;
+    return `<div><div class="flex justify-between text-sm mb-1"><span class="font-bold">${esc(x[0])}</span><span class="text-[#64748b]">${x[1].toLocaleString('en')} <b class="text-[#4d3ceb]">(${rate}%)</b></span></div><div class="h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-[#4d3ceb]" style="width:${Math.min(100,Math.round(x[1]/max*100))}%"></div></div></div>`;
+  }).join('');
   const sourceSessionMap=new Map();
   (visits.length?visits:events).forEach(x=>{const sid=String(x.session_id||'').trim();if(sid&&!sourceSessionMap.has(sid))sourceSessionMap.set(sid,x.source||'direct');});
   const sourceCounts=new Map();sourceSessionMap.forEach(src=>sourceCounts.set(src,(sourceCounts.get(src)||0)+1));
   const sourceRows=[...sourceCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
   document.getElementById('sources').innerHTML=sourceRows.length?sourceRows.map(x=>bar(x[0],x[1],sourceRows[0][1])).join(''):'<p class="text-sm text-[#94a3b8]">لا توجد مصادر بعد.</p>';
   const prod=new Map();
-  events.filter(e=>e.product_name).forEach(e=>{const cur=prod.get(e.product_name)||{views:0,carts:0,viewers:new Set()}; if(e.event_name==='product_view'){cur.views++;if(e.session_id)cur.viewers.add(e.session_id);} if(e.event_name==='add_to_cart')cur.carts++; prod.set(e.product_name,cur);});
+  events.filter(e=>e.product_name).forEach(e=>{
+    const key=String(e.product_id||e.product_name);
+    const cur=prod.get(key)||{name:e.product_name,views:0,carts:0,viewers:new Set(),purchasedQty:0,purchaseOrders:0};
+    if(e.event_name==='product_view'){cur.views++;if(e.session_id)cur.viewers.add(e.session_id);}
+    if(e.event_name==='add_to_cart')cur.carts++;
+    prod.set(key,cur);
+  });
+  orders.filter(o=>statusCodeOf(o)==='delivered').forEach(o=>{
+    const seen=new Set();
+    (Array.isArray(o.items)?o.items:[]).forEach(item=>{
+      const key=String(item.id??item.product_id??item.name??'');
+      if(!key)return;
+      const cur=prod.get(key);
+      if(cur){
+        cur.purchasedQty += Number(item.qty??item.quantity??1)||0;
+        if(!seen.has(key)){cur.purchaseOrders++;seen.add(key);}
+      }
+    });
+  });
   const prodRows=[...prod.entries()].sort((a,b)=>b[1].views-a[1].views).slice(0,8);
-  document.getElementById('products').innerHTML=prodRows.length?prodRows.map(([name,v])=>`<div class="flex items-center justify-between py-2 border-b border-[#e2e8f0]"><span class="font-bold">${esc(name)}</span><span class="text-xs text-[#64748b]">${v.views} مشاهدة / ${v.viewers.size} زائر / ${v.carts} سلة</span></div>`).join(''):'<p class="text-sm text-[#94a3b8]">لا توجد أحداث منتجات بعد.</p>';
+  document.getElementById('products').innerHTML=prodRows.length?prodRows.map(([_,v])=>{
+    const cartRate=v.views?Math.round(v.carts/v.views*1000)/10:0;
+    const buyRate=v.views?Math.round(v.purchaseOrders/v.views*1000)/10:0;
+    return `<div class="py-2.5 border-b border-[#e2e8f0]">
+      <div class="flex items-center justify-between gap-2"><span class="font-bold truncate">${esc(v.name)}</span><span class="text-xs font-bold text-[#4d3ceb]">${buyRate}% شراء</span></div>
+      <div class="text-xs text-[#64748b] mt-1">${v.views} مشاهدة · ${v.viewers.size} زائر · ${v.carts} سلة · ${cartRate}% إضافة · ${v.purchasedQty} وحدة مباعة</div>
+    </div>`;
+  }).join(''):'<p class="text-sm text-[#94a3b8]">لا توجد أحداث منتجات بعد.</p>';
   const knownRegions=['القاهرة','الجيزة','الإسكندرية','الدقهلية','الشرقية','الغربية','المنوفية','البحيرة','القليوبية','الفيوم','بني سويف','المنيا','أسيوط','سوهاج','قنا','الأقصر','أسوان','دمياط','بورسعيد','الإسماعيلية','السويس','كفر الشيخ','مطروح','البحر الأحمر','الوادي الجديد','شمال سيناء','جنوب سيناء'];
   const regions=groupBy(orders,x=>knownRegions.find(r=>String(x.address||'').includes(r))||'غير محدد').slice(0,8);
   document.getElementById('regions').innerHTML=regions.length?regions.map(x=>bar(x[0],x[1],regions[0][1])).join(''):'<p class="text-sm text-[#94a3b8]">لا توجد عناوين كافية بعد.</p>';
   const failed=(counts.payment_failed||0), started=(counts.payment_started||0);
-  const lowCartProducts=prodRows.filter(([_,v])=>v.views>=5&&v.carts===0).slice(0,3).map(([name])=>name);
+  const lowCartProducts=prodRows.filter(([_,v])=>v.views>=5&&v.carts===0).slice(0,3).map(([_,v])=>v.name);
   const alerts=[];
   if(started&&failed/started>.2)alerts.push('معدل فشل الدفع أعلى من 20%.');
   if(conversion&&conversion<2)alerts.push('معدل التحويل أقل من 2%.');
   lowCartProducts.forEach(p=>alerts.push('منتج عليه مشاهدات بدون إضافات للسلة: '+p));
   document.getElementById('alerts').innerHTML=alerts.length?alerts.map(a=>`<div class="p-3 rounded-xl bg-amber-50 text-amber-800 text-sm font-bold">${esc(a)}</div>`).join(''):'<div class="p-3 rounded-xl bg-emerald-50 text-emerald-800 text-sm font-bold">لا توجد تنبيهات حرجة حالياً.</div>';
+
+  // Repeat customers + customer lifetime value (all-time delivered orders).
+  const deliveredAll=allOrders.filter(o=>statusCodeOf(o)==='delivered');
+  const customerMap=new Map();
+  deliveredAll.forEach(o=>{
+    const phone=String(o.customer_phone||o.phone||'').replace(/\D/g,'');
+    if(!phone)return;
+    const cur=customerMap.get(phone)||{name:o.customer_name||'عميل',orders:0,spent:0,lastOrder:o.created_at};
+    cur.orders++;
+    cur.spent+=n(o.total);
+    if(new Date(o.created_at)>new Date(cur.lastOrder))cur.lastOrder=o.created_at;
+    customerMap.set(phone,cur);
+  });
+  const customerRows=[...customerMap.entries()].map(([phone,v])=>({phone,...v}));
+  const repeatCustomers=customerRows.filter(x=>x.orders>=2);
+  const totalCustomerRevenue=customerRows.reduce((s,x)=>s+x.spent,0);
+  const avgCustomerValue=customerRows.length?totalCustomerRevenue/customerRows.length:0;
+  const repeatRate=customerRows.length?Math.round(repeatCustomers.length/customerRows.length*1000)/10:0;
+  document.getElementById('customer-metrics').innerHTML=[
+    kpi('العملاء المشتركون',customerRows.length.toLocaleString('en'),'groups'),
+    kpi('نسبة العملاء المتكررين',repeatRate+'%','repeat'),
+    kpi('متوسط قيمة العميل',Math.round(avgCustomerValue).toLocaleString('en')+' ج.م','account_balance')
+  ].join('');
+  const topCustomers=customerRows.sort((a,b)=>b.spent-a.spent).slice(0,8);
+  document.getElementById('top-customers').innerHTML=topCustomers.length?topCustomers.map((x,i)=>`<div class="rounded-2xl border border-[#e2e8f0] bg-slate-50/60 p-4"><div class="flex items-center justify-between gap-2"><span class="font-black">${esc(x.name||'عميل')}</span><span class="text-xs font-bold text-[#64748b]">#${i+1}</span></div><div class="text-sm font-bold text-[#4d3ceb] mt-2">${Math.round(x.spent).toLocaleString('en')} ج.م</div><div class="text-xs text-[#64748b] mt-1">${x.orders} طلب مكتمل</div></div>`).join(''):'<p class="text-sm text-[#94a3b8]">لا توجد طلبات مكتملة كافية لحساب قيمة العملاء.</p>';
 }
 window.onload=async function(){renderSidebar('visitor-analytics.html');const ok=await requireAdmin();if(ok)loadAnalytics();};
 </script>

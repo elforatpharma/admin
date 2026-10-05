@@ -45,6 +45,11 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
 @media(max-width:767.98px){main{padding-left:16px!important;padding-right:16px!important}main .grid.grid-cols-1.md\\:grid-cols-2.xl\\:grid-cols-4{gap:12px!important}main .grid.grid-cols-1.md\\:grid-cols-2.xl\\:grid-cols-4>div{min-height:132px!important;padding:16px!important}main .grid.grid-cols-1.md\\:grid-cols-2.xl\\:grid-cols-4 .text-display-lg{font-size:24px!important;line-height:32px!important}}
 @media(max-width:420px){main{padding-left:12px!important;padding-right:12px!important}main .grid.grid-cols-1.md\\:grid-cols-2.xl\\:grid-cols-4{gap:10px!important}main .grid.grid-cols-1.md\\:grid-cols-2.xl\\:grid-cols-4>div{padding:14px!important;min-height:124px!important}main .grid.grid-cols-1.md\\:grid-cols-2.xl\\:grid-cols-4 .text-display-lg{font-size:21px!important;line-height:28px!important}}
 </style>
+<style id="efp-loading-skeleton">
+.efp-loading-skeleton{display:inline-block;width:78px;height:1.05em;border-radius:8px;background:linear-gradient(90deg,#eef0ff 25%,#f7f6ff 50%,#eef0ff 75%);background-size:200% 100%;animation:efpSkeleton 1.15s ease-in-out infinite;vertical-align:middle;color:transparent!important}
+.efp-loading-skeleton *{visibility:hidden!important}
+@keyframes efpSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
 </head>
 <body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
 <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
@@ -117,7 +122,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
           <div class="flex items-start justify-between">
             <div class="flex flex-col">
               <span class="font-label-md text-label-md text-text-secondary">الكوبونات النشطة حالياً</span>
-              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-active">0</span> <span class="font-label-md text-label-md text-text-secondary">كود فعال</span></span>
+              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-active"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> <span class="font-label-md text-label-md text-text-secondary">كود فعال</span></span>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-primary-surface flex items-center justify-center text-primary shadow-sm">
               <span class="material-symbols-outlined text-[26px]">confirmation_number</span>
@@ -125,7 +130,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
           </div>
           <div class="flex items-center gap-space-xs mt-4">
             <span class="bg-success-surface text-tertiary font-label-sm text-label-sm px-2 py-0.5 rounded-full flex items-center gap-0.5">
-              <span class="material-symbols-outlined text-[14px]">trending_up</span> <span id="kpi-new">0</span> أكواد
+              <span class="material-symbols-outlined text-[14px]">trending_up</span> <span id="kpi-new"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> أكواد
             </span>
             <span class="font-label-sm text-label-sm text-text-secondary">مقارنة بالمجمل</span>
           </div>
@@ -136,7 +141,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
           <div class="flex items-start justify-between">
             <div class="flex flex-col">
               <span class="font-label-md text-label-md text-text-secondary">إجمالي الخصومات الممنوحة</span>
-              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-discounts">0</span> <span class="font-headline-sm text-headline-sm text-primary">ج.م</span></span>
+              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-discounts"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> <span class="font-headline-sm text-headline-sm text-primary">ج.م</span></span>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center text-secondary shadow-sm">
               <span class="material-symbols-outlined text-[26px]">savings</span>
@@ -144,7 +149,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
           </div>
           <div class="flex items-center gap-space-xs mt-4">
             <span class="bg-primary-surface text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full flex items-center gap-0.5">
-              <span class="material-symbols-outlined text-[14px]">insights</span> <span id="kpi-usages">0</span> استخدام
+              <span class="material-symbols-outlined text-[14px]">insights</span> <span id="kpi-usages"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> استخدام
             </span>
             <span class="font-label-sm text-label-sm text-text-secondary">إجمالي مرات التطبيق الفعلية</span>
           </div>
@@ -155,7 +160,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
           <div class="flex items-start justify-between">
             <div class="flex flex-col">
               <span class="font-label-md text-label-md text-text-secondary">معدل استخدام العروض</span>
-              <span class="font-display-lg text-display-lg text-tertiary mt-1"><span id="kpi-rate">0</span>% <span class="font-label-md text-label-md text-text-secondary">من الطلبات</span></span>
+              <span class="font-display-lg text-display-lg text-tertiary mt-1"><span id="kpi-rate"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>% <span class="font-label-md text-label-md text-text-secondary">من الطلبات</span></span>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-success-surface flex items-center justify-center text-tertiary shadow-sm">
               <span class="material-symbols-outlined text-[26px]">percent</span>
@@ -165,7 +170,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
             <span class="bg-success-surface text-tertiary font-label-sm text-label-sm px-2 py-0.5 rounded-full flex items-center gap-0.5">
               <span class="material-symbols-outlined text-[14px]">arrow_upward</span> مباشر
             </span>
-            <span class="font-label-sm text-label-sm text-text-secondary"><span id="kpi-orders">0</span> إجمالي الطلبات</span>
+            <span class="font-label-sm text-label-sm text-text-secondary"><span id="kpi-orders"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> إجمالي الطلبات</span>
           </div>
         </div>
         <!-- Card 4 -->
@@ -174,7 +179,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
           <div class="flex items-start justify-between">
             <div class="flex flex-col">
               <span class="font-label-md text-label-md text-text-secondary">المبيعات المحققة عبر الحملات</span>
-              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-sales">0</span> <span class="font-headline-sm text-headline-sm text-secondary">ج.م</span></span>
+              <span class="font-display-lg text-display-lg text-on-surface mt-1"><span id="kpi-sales"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span> <span class="font-headline-sm text-headline-sm text-secondary">ج.م</span></span>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-primary-surface flex items-center justify-center text-primary-container shadow-sm">
               <span class="material-symbols-outlined text-[26px]">point_of_sale</span>
@@ -226,17 +231,17 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
           <button id="tab-coupons" onclick="setTab('coupons')" class="bg-primary-container text-on-primary px-5 py-2 rounded-full font-label-lg text-label-lg shadow-sm transition-all flex items-center gap-2">
             <span class="material-symbols-outlined text-[18px]">confirmation_number</span>
             <span>أكواد الخصم</span>
-            <span class="bg-on-primary/20 text-on-primary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-coupons">0</span>
+            <span class="bg-on-primary/20 text-on-primary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-coupons"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
           </button>
           <button id="tab-bogo" onclick="setTab('bogo')" class="text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2">
             <span class="material-symbols-outlined text-[18px]">inventory_2</span>
             <span>عروض الحزم والـ BOGO</span>
-            <span class="bg-surface-container text-text-secondary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-bogo">0</span>
+            <span class="bg-surface-container text-text-secondary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-bogo"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
           </button>
           <button id="tab-ship" onclick="setTab('ship')" class="text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2">
             <span class="material-symbols-outlined text-[18px]">local_shipping</span>
             <span>الشحن المجاني</span>
-            <span class="bg-surface-container text-text-secondary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-ship">0</span>
+            <span class="bg-surface-container text-text-secondary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-ship"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
           </button>
         </div>
         <!-- Quick Search and Filter Bar -->

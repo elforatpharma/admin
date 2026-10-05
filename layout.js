@@ -56,9 +56,9 @@ function injectLayoutStyles() {
     .efp-click-lock{pointer-events:none;}
     html.efp-menu-open,body.efp-menu-open{overflow:hidden;overscroll-behavior:none;}
     @media (max-width:1023.98px){
-      #app-sidebar{width:min(82vw,320px);transform:translateX(108%);transition:transform .28s cubic-bezier(.22,.8,.25,1);box-shadow:-14px 0 36px rgba(15,23,42,.16);will-change:transform;}
+      #app-sidebar{z-index:50;width:min(82vw,320px);transform:translateX(108%);transition:transform .28s cubic-bezier(.22,.8,.25,1);box-shadow:-14px 0 36px rgba(15,23,42,.16);will-change:transform;}
       #app-sidebar.open{transform:translateX(0);}
-      #sidebar-overlay{display:block;opacity:0;visibility:hidden;background:rgba(15,23,42,.28);transition:opacity .2s ease,visibility .2s;}
+      #sidebar-overlay{z-index:40;display:block;opacity:0;visibility:hidden;background:rgba(15,23,42,.30);backdrop-filter:blur(5px) saturate(115%);-webkit-backdrop-filter:blur(5px) saturate(115%);transition:opacity .2s ease,visibility .2s;}
       #sidebar-overlay.open{opacity:1;visibility:visible;}
       main{width:100%;padding-bottom:80px;}
     }
@@ -215,7 +215,7 @@ function renderSidebar(activePage) {
   }).join('');
 
   const sidebarHTML = `
-    <aside id="app-sidebar" class="w-64 h-screen fixed right-0 top-0 bg-white border-l border-gray-100/80 flex flex-col z-40" style="box-shadow:2px 0 24px rgba(0,0,0,.04)">
+    <aside id="app-sidebar" class="w-64 h-screen fixed right-0 top-0 bg-white border-l border-gray-100/80 flex flex-col z-50" style="box-shadow:2px 0 24px rgba(0,0,0,.04)">
       <div class="p-5 flex items-center gap-3 border-b border-gray-50">
         <div class="w-10 h-10 bg-gradient-to-br from-[#4d3ceb] to-[#8536ff] rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
           <span class="material-symbols-outlined text-[18px]" aria-hidden="true">clinical_notes</span>
@@ -250,7 +250,7 @@ function renderSidebar(activePage) {
     <button id="mobile-menu-btn" class="fixed bottom-6 right-4 z-[60] bg-primary text-white rounded-2xl shadow-xl shadow-primary/30 p-3 flex items-center justify-center transition-transform active:scale-90" aria-label="فتح القائمة">
       <span class="material-symbols-outlined text-[22px]">menu</span>
     </button>
-    <div id="sidebar-overlay" onclick="closeMobileMenu()" class="fixed inset-0 z-[45]" aria-hidden="true"></div>`;
+    <div id="sidebar-overlay" onclick="closeMobileMenu()" class="fixed inset-0 z-[40]" aria-hidden="true"></div>`;
 
   // حقن الـ Sidebar في الصفحة
   const placeholder = document.getElementById('sidebar-placeholder');

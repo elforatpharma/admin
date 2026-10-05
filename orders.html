@@ -30,6 +30,74 @@
   input,select,textarea,button{max-width:100%}
   .modal,.fixed.inset-0>div{max-width:calc(100vw - 24px)!important}
 }
+<style id="inventory-ui-orders">
+/* ===== Inventory UI System — Orders ===== */
+body{background:#f8fafc!important;color:#0f172a;}
+header{box-shadow:0 1px 8px rgba(15,23,42,.04)!important;}
+main{background:#f8fafc!important;}
+/* page heading */
+main h1,main h2,main h3{font-family:'Cairo',sans-serif;}
+/* KPI cards */
+main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div{
+  border-radius:18px!important;
+  border:1px solid #eef0ff!important;
+  background:#fff!important;
+  box-shadow:0 2px 10px rgba(15,23,42,.035)!important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important;
+}
+main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(15,23,42,.07)!important;
+  border-color:#ddd6fe!important;
+}
+/* filter / workspace cards */
+main .rounded-xl.bg-surface-container-lowest{
+  border:1px solid #eef0ff!important;
+  box-shadow:0 2px 10px rgba(15,23,42,.035)!important;
+}
+main input,main select{
+  border-color:#eef0ff!important;
+  transition:border-color .2s,box-shadow .2s,background .2s!important;
+}
+main input:focus,main select:focus{
+  border-color:#c4c0ff!important;
+  box-shadow:0 0 0 4px rgba(77,60,235,.08)!important;
+}
+/* inventory-style action buttons */
+main button:not(.btn-brand-gradient){
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease!important;
+}
+main button:not(.btn-brand-gradient):hover{
+  box-shadow:0 5px 14px rgba(15,23,42,.06);
+}
+.btn-brand-gradient{
+  min-height:40px;
+  box-shadow:0 8px 20px rgba(77,60,235,.28)!important;
+}
+/* tables */
+main table thead th{
+  font-family:'Tajawal',sans-serif;
+  font-weight:800;
+}
+main table tbody tr{transition:background .15s ease;}
+main table tbody tr:hover{background:#f8f7ff!important;}
+/* selected/detail workspace */
+@media(min-width:1024px){
+  main{padding-left:24px!important;padding-right:24px!important;}
+}
+@media(max-width:1023.98px){
+  main{padding-left:16px!important;padding-right:16px!important;padding-top:18px!important;}
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6{gap:10px!important;}
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div{padding:14px!important;min-width:0;}
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 .text-headline-xl{font-size:21px!important;}
+  main .rounded-xl{border-radius:16px!important;}
+}
+@media(max-width:420px){
+  main{padding-left:12px!important;padding-right:12px!important;}
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div{padding:12px!important;}
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 .text-headline-xl{font-size:19px!important;}
+}
+</style>
 </style>
 </head>
 <body class="bg-background font-body-md text-on-surface antialiased min-h-screen">

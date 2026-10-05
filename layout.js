@@ -1,13 +1,4 @@
-/* Material Symbols loading guard: hide ligature text and show a tiny skeleton until the icon font is ready. */
-(function(){
-  const style=document.createElement('style');
-  style.id='efp-material-icons-loading';
-  style.textContent='html:not(.efp-material-icons-ready) .material-symbols-outlined{font-size:0!important;color:transparent!important;display:inline-flex!important;align-items:center;justify-content:center;min-width:1em;min-height:1em;border-radius:6px;background:linear-gradient(90deg,#eef0ff 25%,#f7f6ff 50%,#eef0ff 75%);background-size:200% 100%;animation:efpMaterialIconSkeleton 1.15s ease-in-out infinite;}@keyframes efpMaterialIconSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}html.efp-material-icons-ready .material-symbols-outlined{font-size:inherit!important;color:inherit!important;display:inline-block!important;min-width:0;min-height:0;background:none;animation:none;}';
-  document.head.appendChild(style);
-  function ready(){document.documentElement.classList.add('efp-material-icons-ready');}
-  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(ready).catch(ready);}
-  else window.addEventListener('load',ready,{once:true});
-})();
+
 
 
 
@@ -309,6 +300,16 @@ injectSwalIdentity();
 patchSwalIdentity();
 
 // ---- إنشاء الـ Sidebar ديناميكياً ----
+
+/* Preserve normal Material Symbols sizing while suppressing ligature text during font load. */
+(function(){
+  const style=document.createElement('style');
+  style.id='efp-material-icons-loading';
+  style.textContent='html:not(.efp-material-icons-ready) .material-symbols-outlined{color:transparent!important;position:relative;}html:not(.efp-material-icons-ready) .material-symbols-outlined::before{content:"";display:block;width:22px;height:22px;border-radius:7px;background:linear-gradient(90deg,#eef0ff 25%,#f7f6ff 50%,#eef0ff 75%);background-size:200% 100%;animation:efpMaterialIconSkeleton 1.15s ease-in-out infinite;}@keyframes efpMaterialIconSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}html.efp-material-icons-ready .material-symbols-outlined{color:inherit!important;}';
+  document.head.appendChild(style);
+  function ready(){document.documentElement.classList.add('efp-material-icons-ready');}
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(ready).catch(ready);}else window.addEventListener('load',ready,{once:true});
+})();
 function renderSidebar(activePage) {
   const navItems = [
     { href: 'admin.html',       icon: 'dashboard',    label: 'الرئيسية' },

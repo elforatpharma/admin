@@ -73,7 +73,83 @@ function injectLayoutStyles() {
         backdrop-filter:none!important;
       }
       #mobile-menu-btn .material-symbols-outlined{color:#fff!important;opacity:1!important;}
-      main{width:100%;padding-bottom:80px;}
+      main{width:100%;padding-bottom:80px;min-width:0;overflow-x:hidden;}
+      
+      /* ===== Mobile UI scale: typography + spacing + cards ===== */
+      main .max-w-7xl,main .max-w-6xl,main .max-w-5xl,main .max-w-4xl,main .max-w-3xl{
+        width:100%;
+        max-width:none;
+      }
+      main h1,main h2,main h3,main h4{
+        overflow-wrap:anywhere;
+        line-height:1.35;
+      }
+      main p,main label,main span{
+        overflow-wrap:anywhere;
+      }
+      main .text-2xl{font-size:1.35rem!important;line-height:1.4!important;}
+      main .text-xl{font-size:1.15rem!important;line-height:1.4!important;}
+      main .text-lg{font-size:1rem!important;line-height:1.45!important;}
+      main .text-sm{font-size:.84rem!important;line-height:1.55!important;}
+      main .text-xs{font-size:.72rem!important;line-height:1.5!important;}
+      main .space-y-6>*+*{margin-top:1rem!important;}
+      main .space-y-5>*+*{margin-top:.9rem!important;}
+      main .space-y-4>*+*{margin-top:.8rem!important;}
+      main .gap-6{gap:1rem!important;}
+      main .gap-5{gap:.9rem!important;}
+      main .gap-4{gap:.75rem!important;}
+      main .gap-3{gap:.65rem!important;}
+      
+      /* Cards/panels become compact without squeezing buttons or inputs */
+      main .efp-panel,
+      main .kpi-card,
+      main .bg-white.rounded-2xl.border,
+      main .bg-white.rounded-xl.border{
+        border-radius:18px!important;
+      }
+      main .efp-panel.p-6,
+      main .kpi-card.p-6,
+      main .bg-white.rounded-2xl.border.p-6,
+      main .bg-white.rounded-xl.border.p-6{
+        padding:1rem!important;
+      }
+      main .efp-panel.p-5,
+      main .bg-white.rounded-2xl.border.p-5,
+      main .bg-white.rounded-xl.border.p-5{
+        padding:.9rem!important;
+      }
+      main .efp-panel.p-4,
+      main .bg-white.rounded-2xl.border.p-4,
+      main .bg-white.rounded-xl.border.p-4{
+        padding:.8rem!important;
+      }
+      
+      /* Keep action areas usable and prevent horizontal overflow */
+      main button,main a[role="button"]{
+        min-height:40px;
+        max-width:100%;
+      }
+      main input,main select,main textarea{
+        max-width:100%;
+        font-size:14px!important;
+      }
+      main .overflow-x-auto{
+        scrollbar-width:none;
+        -webkit-overflow-scrolling:touch;
+      }
+      main .overflow-x-auto::-webkit-scrollbar{display:none;}
+      
+      /* Very narrow phones: tighter gutters and larger touch targets */
+      @media (max-width:420px){
+        main{padding-left:12px!important;padding-right:12px!important;}
+        main .p-6{padding:.85rem!important;}
+        main .p-5{padding:.8rem!important;}
+        main .p-4{padding:.7rem!important;}
+        main .text-2xl{font-size:1.25rem!important;}
+        main .text-xl{font-size:1.08rem!important;}
+        main .text-sm{font-size:.82rem!important;}
+        main button,main a[role="button"]{min-height:42px;}
+      }
     }
     @media (min-width:1024px){
       #sidebar-overlay{display:none;}

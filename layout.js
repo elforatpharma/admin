@@ -35,7 +35,9 @@ async function logout() {
 // ---- Uiverse UI layer (reversible) ----
 function applyUiMode() {
   const enabled = localStorage.getItem('efp_ui_mode') !== 'classic';
-  document.body.classList.toggle('efp-uiverse-ui', enabled);
+  const isInventoryPage = /(^|\/)inventory\.html$/i.test(window.location.pathname);
+  document.body.classList.toggle('efp-inventory-page', isInventoryPage);
+  document.body.classList.toggle('efp-uiverse-ui', enabled && !isInventoryPage);
 }
 function loadUiverseUiLayer() {
   if (document.getElementById('efp-uiverse-ui-css')) {
@@ -45,7 +47,7 @@ function loadUiverseUiLayer() {
   const link = document.createElement('link');
   link.id = 'efp-uiverse-ui-css';
   link.rel = 'stylesheet';
-  link.href = 'uiverse-ui.css?v=1';
+  link.href = 'uiverse-ui.css?v=2';
   link.onload = applyUiMode;
   link.onerror = applyUiMode;
   document.head.appendChild(link);

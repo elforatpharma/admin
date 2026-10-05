@@ -55,8 +55,9 @@
           <button onclick="newOrderModal()" class="flex items-center gap-2 px-4 h-10 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02]">
             <span class="material-symbols-outlined text-lg">add</span><span>إجراء سريع</span>
           </button>
-          <button class="relative p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" title="إشعارات">
+          <button id="admin-notification-btn" onclick="clearAdminNotifications()" class="relative p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" title="إشعارات الطلبات الجديدة">
             <span class="material-symbols-outlined text-2xl">notifications</span>
+            <span id="admin-notification-badge" class="hidden absolute -top-0.5 -left-0.5 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[10px] font-bold items-center justify-center ring-2 ring-surface">0</span>
           </button>
         </div>
       </div>
@@ -313,6 +314,8 @@
 <script src="layout.js"></script>
 <script>
 let allOrders=[],selectedId=null,quickTag='all',page=1,perPage=20;
+let adminRealtimeChannels=[];
+const ADMIN_NOTIFICATION_KEY='elforat_admin_new_orders_count';
 const ORDER_COLUMNS='id,order_number,customer_name,customer_phone,address,total,status,status_code,items,payment_method,payment_status,merchant_order_id,notes,coupon_code,discount_amount,shipping_fee,created_at,updated_at,governorate,governate';
 // ════════════════════════════════════════════════════════════════════
 // حالات الطلب — المصدر: status_code، مش النص العربي
@@ -651,6 +654,83 @@ async function updateStatus(id,newStatus){
   }catch(e){toast('فشل تحديث الحالة','error');}
 }
 
+async function loadOrderActivity(orderId){
+  const historyBox=document.getElementById('order-real-timeline');
+  const notifyBox=document.getElementById('order-notification-status');
+  if(!historyBox && !notifyBox)return;
+  try{
+    const results=await Promise.all([
+      _supabase.from('order_status_history').select('id,old_status,new_status,old_status_code,new_status_code,changed_by,changed_at').eq('order_id',orderId).order('changed_at',{ascending:true}),
+      _supabase.from('order_notification_log').select('id,event_type,status,attempts,last_error,telegram_message_id,created_at,sent_at,updated_at').eq('order_id',orderId).order('created_at',{ascending:false}).limit(5)
+    ]);
+    const historyResult=results[0], logsResult=results[1];
+    if(historyResult.error)throw historyResult.error;
+    const history=historyResult.data||[], logs=logsResult.data||[];
+    if(historyBox){
+      historyBox.innerHTML=history.length ? history.map(function(h,idx){
+        const old=h.old_status ? 'من '+escapeHtml(h.old_status)+' → ' : '';
+        return '<div class="flex items-start gap-3 relative"><span class="w-3 h-3 mt-1 rounded-full '+(idx===0?'bg-primary':'bg-success')+' ring-4 ring-surface-container-lowest z-10 shrink-0"></span><div class="flex-1 min-w-0"><div class="flex flex-wrap items-center justify-between gap-2"><span class="font-label-md text-label-md font-bold text-on-surface">'+old+escapeHtml(h.new_status||'—')+'</span><span class="text-[10px] text-outline whitespace-nowrap">'+fmtDate(h.changed_at)+'</span></div><div class="text-[11px] text-outline mt-0.5">'+escapeHtml(h.changed_by||'system')+'</div></div></div>';
+      }).join('<div class="h-3"></div>') : '<div class="text-[11px] text-outline">لا يوجد سجل تغييرات لهذا الطلب حتى الآن.</div>';
+    }
+    if(notifyBox){
+      const latest=logs[0];
+      if(!latest){
+        notifyBox.innerHTML='<div class="flex items-center gap-2 text-outline text-[11px]"><span class="material-symbols-outlined text-base">help_outline</span><span>لا يوجد سجل لإشعار Telegram لهذا الطلب.</span></div>';
+      }else if(latest.status==='sent'){
+        notifyBox.innerHTML='<div class="flex items-center justify-between gap-3"><div class="flex items-center gap-2 text-emerald-700"><span class="material-symbols-outlined text-base">check_circle</span><span class="font-semibold text-[12px]">إشعار Telegram وصل بنجاح</span></div><span class="text-[10px] text-outline">'+fmtDate(latest.sent_at||latest.updated_at)+'</span></div>';
+      }else if(latest.status==='failed'){
+        notifyBox.innerHTML='<div class="flex flex-col gap-2"><div class="flex items-center justify-between gap-2"><span class="flex items-center gap-2 text-error font-semibold text-[12px]"><span class="material-symbols-outlined text-base">error</span>فشل إرسال إشعار Telegram</span><span class="text-[10px] text-outline">المحاولات: '+(Number(latest.attempts)||0)+'</span></div><div class="text-[10px] text-error/80">'+escapeHtml(latest.last_error||'خطأ غير معروف')+'</div><button onclick="retryTelegramNotification(\''+escapeHtml(String(orderId))+'\')" class="w-full h-9 rounded-full btn-brand-gradient text-[12px] font-bold flex items-center justify-center gap-1.5"><span class="material-symbols-outlined text-base">refresh</span>إعادة إرسال إشعار Telegram</button></div>';
+      }else{
+        notifyBox.innerHTML='<div class="flex items-center gap-2 text-amber-700 text-[12px] font-semibold"><span class="material-symbols-outlined text-base animate-spin">sync</span>إشعار Telegram قيد الإرسال…</div>';
+      }
+    }
+  }catch(e){
+    console.warn('Order activity load failed:',e);
+    if(historyBox)historyBox.innerHTML='<div class="text-[11px] text-error">تعذر تحميل السجل الزمني.</div>';
+    if(notifyBox)notifyBox.innerHTML='<div class="text-[11px] text-error">تعذر قراءة حالة إشعار Telegram.</div>';
+  }
+}
+
+async function retryTelegramNotification(id){
+  try{
+    const r=await confirmDialog('إعادة إرسال إشعار Telegram','سيتم إرسال إشعار الطلب مرة أخرى إلى مسؤولي البوت.','warning');
+    if(!r)return;
+    const result=await _supabase.rpc('retry_order_telegram_notification',{p_order_id:id});
+    if(result.error)throw result.error;
+    toast('تم بدء إعادة إرسال إشعار Telegram','success');
+    setTimeout(function(){loadOrderActivity(id);},1800);
+  }catch(e){
+    console.error(e);
+    toast('فشل بدء إعادة إرسال الإشعار','error');
+  }
+}
+
+function getAdminNotificationCount(){
+  try{return Number(localStorage.getItem(ADMIN_NOTIFICATION_KEY)||0)||0;}catch(_){return 0;}
+}
+function renderAdminNotificationBadge(){
+  const el=document.getElementById('admin-notification-badge');
+  if(!el)return;
+  const n=getAdminNotificationCount();
+  el.textContent=n>99?'99+':String(n);
+  el.classList.toggle('hidden',n===0);
+  el.classList.toggle('flex',n>0);
+}
+function bumpAdminNotification(){
+  try{localStorage.setItem(ADMIN_NOTIFICATION_KEY,String(getAdminNotificationCount()+1));}catch(_){}
+  renderAdminNotificationBadge();
+}
+function clearAdminNotifications(){
+  try{localStorage.setItem(ADMIN_NOTIFICATION_KEY,'0');}catch(_){}
+  renderAdminNotificationBadge();
+}
+function notifyNewOrder(order){
+  bumpAdminNotification();
+  const label=order?.customerName||order?.customer_name||'عميل جديد';
+  toast('🛎️ طلب جديد من '+label,'info');
+  try{if(document.hidden)document.title='🔴 طلب جديد — إدارة الطلبات';}catch(_){}
+}
+
 function selectOrder(id){
   id=String(id);
   selectedId=(selectedId===id)?id:id;
@@ -794,6 +874,8 @@ function renderDetail(){
   }
   timeline+='</div></div>';
 
+  const realActivity='<div class="p-4 rounded-xl bg-surface-container-lowest border border-outline-variant/50 flex flex-col gap-3"><div class="flex items-center justify-between gap-2"><span class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-base">history</span><span>السجل الفعلي لحالة الطلب</span></span><span class="text-[10px] text-outline">Realtime</span></div><div id="order-real-timeline" class="flex flex-col gap-1 border-r-2 border-primary/20 pr-3"></div></div><div class="p-4 rounded-xl bg-surface-container-lowest border border-outline-variant/50 flex flex-col gap-2"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-base">send</span><span class="font-label-lg text-label-lg text-on-surface font-semibold">حالة إشعار Telegram</span></div><div id="order-notification-status"><div class="text-[11px] text-outline">جارٍ التحقق…</div></div></div>';
+
   const customer=`<div class="p-4 rounded-xl bg-surface-container-low flex flex-col gap-1 border border-primary/10">
     <div class="flex items-center justify-between">
       <span class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-base">person_pin</span><span>بيانات العميل وعنوان الشحن</span></span>
@@ -877,7 +959,8 @@ function renderDetail(){
     ${CANCELLED.includes(s)?'':'<button onclick="cancelOrder(\''+o.id+'\')" class="w-full py-2 text-center text-error hover:bg-error-container/30 rounded-full font-label-sm text-label-sm font-semibold transition-all mt-1">إلغاء الطلب وتحديد السبب الطبي أو الإداري</button>'}
   </div>`;
 
-  box.innerHTML=timeline+customer+cart+fin+actions;
+  box.innerHTML=timeline+realActivity+customer+cart+fin+actions;
+  loadOrderActivity(o.id);
 }
 
 async function cancelOrder(id){
@@ -1487,24 +1570,34 @@ function confirmDialog(title,text,icon){
 
 window.onload=async function(){
   renderSidebar('orders.html');
+  renderAdminNotificationBadge();
   const ok=await requireAdmin();
   if(ok){
     fetchOrders();
     try{
-      _supabase
+      const ordersChannel=_supabase
         .channel('orders-live-channel')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
           console.log('تحديث لحظي لجدول الطلبات:', payload);
+          if(payload.eventType==='INSERT')notifyNewOrder(payload.new||{});
           fetchOrders();
         })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'order_status_history' }, (payload) => {
+          if(selectedId && String(payload.new?.order_id||payload.old?.order_id)===String(selectedId))loadOrderActivity(selectedId);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'order_notification_log' }, (payload) => {
+          if(selectedId && String(payload.new?.order_id||payload.old?.order_id)===String(selectedId))loadOrderActivity(selectedId);
+        })
         .subscribe((status) => {
-          console.log('Orders page realtime status:', status);
+          console.log('Orders realtime status:', status);
         });
+      adminRealtimeChannels.push(ordersChannel);
     }catch(e){
       console.warn('Realtime error on orders.html:', e);
     }
   }
 };
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)document.title='إدارة الطلبات - الفرات فارما';});
 document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){
     e.preventDefault();

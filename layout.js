@@ -334,7 +334,7 @@ patchSwalIdentity();
       color:inherit!important;
       min-width:0;
       min-height:0;
-`;
+    }`;
 
   function markReady(){
     document.documentElement.classList.add('efp-material-icons-ready');

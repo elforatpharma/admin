@@ -32,6 +32,30 @@ async function logout() {
   window.location.href = 'index.html';
 }
 
+// ---- Uiverse UI layer (reversible) ----
+function applyUiMode() {
+  const enabled = localStorage.getItem('efp_ui_mode') !== 'classic';
+  document.body.classList.toggle('efp-uiverse-ui', enabled);
+}
+function loadUiverseUiLayer() {
+  if (document.getElementById('efp-uiverse-ui-css')) {
+    applyUiMode();
+    return;
+  }
+  const link = document.createElement('link');
+  link.id = 'efp-uiverse-ui-css';
+  link.rel = 'stylesheet';
+  link.href = 'uiverse-ui.css?v=1';
+  link.onload = applyUiMode;
+  link.onerror = applyUiMode;
+  document.head.appendChild(link);
+}
+function toggleUiMode() {
+  const isClassic = localStorage.getItem('efp_ui_mode') === 'classic';
+  localStorage.setItem('efp_ui_mode', isClassic ? 'uiverse' : 'classic');
+  window.location.reload();
+}
+
 // ---- درج الموبايل ----
 function closeMobileMenu() {
   const sb = document.getElementById('app-sidebar');
@@ -325,6 +349,10 @@ function renderSidebar(activePage) {
           class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-400 hover:bg-gray-50 text-xs font-bold tracking-wider uppercase mb-1 transition-colors">
           <span class="material-symbols-outlined text-[16px]" aria-hidden="true">open_in_new</span>فتح المتجر
         </a>
+        <button type="button" onclick="toggleUiMode()" class="efp-uiverse-toggle" title="تبديل شكل الواجهة">
+          <span class="material-symbols-outlined text-[16px] align-middle ml-1">palette</span>
+          تبديل التصميم / استرجاع السابق
+        </button>
         <button onclick="logout()" aria-label="تسجيل الخروج"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 transition-all group text-right">
           <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black" aria-hidden="true">أ.ف</div>
@@ -439,10 +467,12 @@ function confirmDialog(title, text, confirmText = 'نعم، احذف') {
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
+    loadUiverseUiLayer();
     injectLayoutStyles();
     installFastControls();
   }, { once: true });
 } else {
+  loadUiverseUiLayer();
   injectLayoutStyles();
   installFastControls();
 }

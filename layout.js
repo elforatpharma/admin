@@ -60,6 +60,19 @@ function injectLayoutStyles() {
       #app-sidebar.open{transform:translateX(0);}
       #sidebar-overlay{z-index:40;display:block;opacity:0;visibility:hidden;background:rgba(15,23,42,.30);backdrop-filter:blur(5px) saturate(115%);-webkit-backdrop-filter:blur(5px) saturate(115%);transition:opacity .2s ease,visibility .2s;}
       #sidebar-overlay.open{opacity:1;visibility:visible;}
+      #mobile-menu-btn{
+        display:flex!important;
+        z-index:60!important;
+        background:linear-gradient(135deg,#4d3ceb 0%,#8536ff 100%)!important;
+        color:#fff!important;
+        box-shadow:0 12px 28px rgba(77,60,235,.32)!important;
+        border:0!important;
+        opacity:1!important;
+        visibility:visible!important;
+        -webkit-backdrop-filter:none!important;
+        backdrop-filter:none!important;
+      }
+      #mobile-menu-btn .material-symbols-outlined{color:#fff!important;opacity:1!important;}
       main{width:100%;padding-bottom:80px;}
     }
     @media (min-width:1024px){

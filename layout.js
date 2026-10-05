@@ -38,6 +38,8 @@ function closeMobileMenu() {
   const ov = document.getElementById('sidebar-overlay');
   if (sb) sb.classList.remove('open');
   if (ov) ov.classList.remove('open');
+  document.documentElement.classList.remove('efp-menu-open');
+  document.body.classList.remove('efp-menu-open');
 }
 
 // ---- حقن ستايل الموبايل مرة واحدة ----
@@ -52,10 +54,11 @@ function injectLayoutStyles() {
     button:not(:disabled).efp-pressed,a[href].efp-pressed,[role="button"].efp-pressed{transform:scale(.97)!important;filter:saturate(1.08);}
     button:disabled{cursor:not-allowed;opacity:.68;}
     .efp-click-lock{pointer-events:none;}
+    html.efp-menu-open,body.efp-menu-open{overflow:hidden;overscroll-behavior:none;}
     @media (max-width:1023.98px){
-      #app-sidebar{transform:translateX(108%);transition:transform .28s ease;box-shadow:2px 0 30px rgba(0,0,0,.1);}
+      #app-sidebar{width:min(82vw,320px);transform:translateX(108%);transition:transform .28s cubic-bezier(.22,.8,.25,1);box-shadow:-14px 0 36px rgba(15,23,42,.16);will-change:transform;}
       #app-sidebar.open{transform:translateX(0);}
-      #sidebar-overlay{display:block;opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s;}
+      #sidebar-overlay{display:block;opacity:0;visibility:hidden;background:rgba(15,23,42,.28);transition:opacity .2s ease,visibility .2s;}
       #sidebar-overlay.open{opacity:1;visibility:visible;}
       main{width:100%;padding-bottom:80px;}
     }
@@ -244,14 +247,27 @@ function renderSidebar(activePage) {
         </button>
       </div>
     </aside>
-    <button id="mobile-menu-btn" onclick="document.getElementById('app-sidebar').classList.add('open');document.getElementById('sidebar-overlay').classList.add('open')" class="fixed bottom-6 right-4 z-[60] bg-primary text-white rounded-2xl shadow-xl shadow-primary/30 p-3 flex items-center justify-center transition-transform active:scale-90" aria-label="فتح القائمة">
+    <button id="mobile-menu-btn" class="fixed bottom-6 right-4 z-[60] bg-primary text-white rounded-2xl shadow-xl shadow-primary/30 p-3 flex items-center justify-center transition-transform active:scale-90" aria-label="فتح القائمة">
       <span class="material-symbols-outlined text-[22px]">menu</span>
     </button>
-    <div id="sidebar-overlay" onclick="closeMobileMenu()" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[45]"></div>`;
+    <div id="sidebar-overlay" onclick="closeMobileMenu()" class="fixed inset-0 z-[45]" aria-hidden="true"></div>`;
 
   // حقن الـ Sidebar في الصفحة
   const placeholder = document.getElementById('sidebar-placeholder');
   if (placeholder) placeholder.outerHTML = sidebarHTML;
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  if (menuBtn) menuBtn.onclick = () => {
+    const sb = document.getElementById('app-sidebar');
+    const ov = document.getElementById('sidebar-overlay');
+    if (!sb || !ov) return;
+    sb.classList.add('open');
+    ov.classList.add('open');
+    document.documentElement.classList.add('efp-menu-open');
+    document.body.classList.add('efp-menu-open');
+  };
+  document.querySelectorAll('#app-sidebar a').forEach(link => {
+    link.addEventListener('click', closeMobileMenu, { passive: true });
+  });
   injectLayoutStyles();
   installFastControls();
 }
@@ -262,6 +278,10 @@ function installFastControls() {
 
   const clickableSelector = 'button,a[href],[role="button"]';
   const lockedUntil = new WeakMap();
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeMobileMenu();
+  });
 
   document.addEventListener('pointerdown', event => {
     const el = event.target.closest(clickableSelector);

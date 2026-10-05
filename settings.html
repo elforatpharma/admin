@@ -70,7 +70,27 @@
           </div>
         </div>
 
-        <!-- هوية المتجر: اللوجو وصورة الهيرو -->
+        <!-- طرق الدفع -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/40">
+    <h3 class="text-sm font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-emerald-600 text-[20px]">payments</span>طرق الدفع</h3>
+    <p class="text-[11px] text-gray-400 mt-1">بيانات التحويل التي يستخدمها المتجر عند تأكيد الطلب.</p>
+  </div>
+  <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div class="rounded-2xl border border-violet-100 bg-violet-50/40 p-5 space-y-4">
+      <div class="flex items-center justify-between"><span class="font-black text-sm text-violet-700">InstaPay</span><span class="material-symbols-outlined text-violet-500">account_balance</span></div>
+      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-500">رقم InstaPay</label><input type="text" id="s-instapay-phone" dir="ltr" inputmode="numeric" class="input text-right" placeholder="01065863803"/></div>
+      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-500">رابط InstaPay</label><input type="url" id="s-instapay-link" dir="ltr" class="input text-xs" placeholder="https://ipn.eg/S/.../instapay/..."/></div>
+      <p class="text-[11px] text-gray-400">حساب InstaPay: <span dir="ltr">m.salama.insta@instapay</span></p>
+    </div>
+    <div class="rounded-2xl border border-red-100 bg-red-50/40 p-5 space-y-4">
+      <div class="flex items-center justify-between"><span class="font-black text-sm text-red-600">Vodafone Cash</span><span class="material-symbols-outlined text-red-500">account_balance_wallet</span></div>
+      <div class="space-y-1.5"><label class="text-[10px] font-black text-gray-500">رقم محفظة Vodafone Cash</label><input type="text" id="s-vodafone-phone" dir="ltr" inputmode="numeric" class="input text-right" placeholder="01065863803"/></div>
+    </div>
+  </div>
+</div>
+
+<!-- هوية المتجر: اللوجو وصورة الهيرو -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/40 flex items-center justify-between">
             <h3 class="text-sm font-black text-gray-900 flex items-center gap-2"><span class="material-symbols-outlined text-rose-500 text-[20px]">image</span>هوية المتجر (اللوجو وصورة الواجهة)</h3>
@@ -151,7 +171,7 @@
 <script src="layout.js"></script>
 <script>
 const DEFAULTS={
-  store_name:'الفرات فارما',phone:'',whatsapp:'',email:'',address:'',
+  store_name:'الفرات فارما',phone:'',whatsapp:'',email:'',address:'',instapay_phone:'',instapay_link:'',vodafone_cash_phone:'',
   shipping_fee:60,free_shipping_threshold:500,delivery_areas:[],
   facebook:'',instagram:'',notes:'',logo_url:'',hero_image_url:''
 };
@@ -222,6 +242,9 @@ async function loadSettings(){
   document.getElementById('s-whatsapp').value=s.whatsapp||'';
   document.getElementById('s-email').value=s.email||'';
   document.getElementById('s-address').value=s.address||'';
+  document.getElementById('s-instapay-phone').value=s.instapay_phone||'';
+  document.getElementById('s-instapay-link').value=s.instapay_link||'';
+  document.getElementById('s-vodafone-phone').value=s.vodafone_cash_phone||'';
   document.getElementById('s-shipping').value=s.shipping_fee!=null?s.shipping_fee:'';
   document.getElementById('s-free-threshold').value=s.free_shipping_threshold!=null?s.free_shipping_threshold:'';
   document.getElementById('s-areas').value=areaString(s.delivery_areas);
@@ -237,6 +260,9 @@ async function loadSettings(){
   renderExistingImage(document.getElementById('logo-preview'),document.getElementById('logo-upload-hint'),currentLogoUrl);
   renderExistingImage(document.getElementById('hero-preview'),document.getElementById('hero-upload-hint'),currentHeroUrl);
 }
+
+function normalizeEgyptianPhone(v){let d=String(v||'').replace(/\D/g,'');if(d.startsWith('20')&&d.length===12)d='0'+d.slice(2);return /^01[0-9]{9}$/.test(d)?d:'';}
+function normalizeInstapayLink(v){const t=String(v||'').trim();return /^https:\/\/ipn\.eg\/S\/[A-Za-z0-9._-]+\/instapay\/[A-Za-z0-9]+$/.test(t)?t:'';}
 
 async function saveSettings(e){
   if(e)e.preventDefault();
@@ -255,6 +281,12 @@ async function saveSettings(e){
         return;
       }
     }
+    const instapayPhone=normalizeEgyptianPhone(document.getElementById('s-instapay-phone').value);
+    const vodafonePhone=normalizeEgyptianPhone(document.getElementById('s-vodafone-phone').value);
+    const instapayLink=normalizeInstapayLink(document.getElementById('s-instapay-link').value);
+    if(!instapayPhone){toast('error','أدخل رقم InstaPay مصري صحيحًا');return;}
+    if(!vodafonePhone){toast('error','أدخل رقم Vodafone Cash مصري صحيحًا');return;}
+    if(!instapayLink){toast('error','أدخل رابط InstaPay الرسمي الصحيح');return;}
     // رفع الصور الجديدة (لو اتختارت) قبل الحفظ
     let logo_url=currentLogoUrl;
     let hero_image_url=currentHeroUrl;
@@ -271,6 +303,9 @@ async function saveSettings(e){
       whatsapp:document.getElementById('s-whatsapp').value.trim().replace(/\D/g,''),
       email:document.getElementById('s-email').value.trim(),
       address:document.getElementById('s-address').value.trim(),
+      instapay_phone:instapayPhone,
+      instapay_link:instapayLink,
+      vodafone_cash_phone:vodafonePhone,
       shipping_fee:Number(document.getElementById('s-shipping').value)||0,
       free_shipping_threshold:Number(document.getElementById('s-free-threshold').value)||0,
       delivery_areas,
@@ -286,7 +321,7 @@ async function saveSettings(e){
     currentHeroUrl=hero_image_url;
     selectedLogoFile=null;
     selectedHeroFile=null;
-    toast('success','تم حفظ إعدادات المتجر بنجاح! المتجر هياخد الصور الجديدة تلقائياً.');
+    toast('success','تم حفظ بيانات الدفع وإعدادات المتجر بنجاح.');
   }catch(err){
     console.error(err);
     toast('error','حدث خطأ أثناء الحفظ: '+(err.message||'تأكد من جدول settings في قاعدة البيانات'));

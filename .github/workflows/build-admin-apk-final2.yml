@@ -297,6 +297,8 @@ jobs:
           </resources>
           EOF
 
+          mkdir -p app/src/main/res/values-v31
+
           cat > app/src/main/res/values-v31/styles.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "728029179074",
+    "project_id": "elforat-pharma-admin",
+    "storage_bucket": "elforat-pharma-admin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:728029179074:android:30298bf8f2d45abd691f5b",
+        "android_client_info": {
+          "package_name": "com.elforatpharma.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4JKvKRPTTcudAyptij6xtRLbUQXfphuQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

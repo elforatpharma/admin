@@ -1,4 +1,4 @@
-name: Build Elforat Admin APK Final
+name: Build Elforat Pharma Admin APK Final
 
 on:
   workflow_dispatch:

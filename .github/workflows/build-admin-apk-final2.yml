@@ -388,3 +388,5 @@ jobs:
           name: Elforat-Pharma-Admin-APK-v1.4.0
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
+
+# Firebase FCM integration build marker

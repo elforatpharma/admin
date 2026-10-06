@@ -10,8 +10,8 @@ android {
         applicationId = "com.elforatpharma.admin"
         minSdk = 23
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 5
+        versionName = "1.4.0"
     }
 
     buildTypes {
@@ -20,4 +20,12 @@ android {
             isMinifyEnabled = false
         }
     }
+}
+
+
+dependencies {
+    implementation("androidx.core:core:1.15.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }

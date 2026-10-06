@@ -1,102 +1,212 @@
-name: Build Elforat Admin APK Direct
+name: Build Elforat Admin APK
+
 on:
   workflow_dispatch:
   push:
     paths:
       - ".github/workflows/build-admin-apk-direct.yml"
       - "android-app/**"
+
 permissions:
   contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      - name: Prepare Android project
+
+      - name: Prepare stable Android launcher
         working-directory: android-app
+        shell: bash
         run: |
-          printf '%s\n' 'org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8' 'android.useAndroidX=true' > gradle.properties
-          mkdir -p app/src/main/java/com/elforatpharma/admin app/src/main/res/values app/src/main/res/layout app/src/main/res/drawable
+          set -euo pipefail
+
+          mkdir -p app/src/main/java/com/elforatpharma/admin
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/drawable
+
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
-              <application android:theme="@style/AppTheme" android:label="Elforat Admin"
-                  android:icon="@drawable/ic_launcher" android:roundIcon="@drawable/ic_launcher"
-                  android:usesCleartextTraffic="false" android:resizeableActivity="true">
-                  <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
+              <application
+                  android:allowBackup="false"
+                  android:hardwareAccelerated="true"
+                  android:icon="@drawable/ic_launcher"
+                  android:label="Elforat Admin"
+                  android:resizeableActivity="true"
+                  android:supportsRtl="true"
+                  android:theme="@style/AppTheme"
+                  android:usesCleartextTraffic="false">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="portrait">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
                   </activity>
               </application>
           </manifest>
           EOF
+
           cat > app/src/main/java/com/elforatpharma/admin/MainActivity.java <<'EOF'
           package com.elforatpharma.admin;
+
           import android.app.Activity;
-          import android.os.Bundle;
-          import android.os.Build;
           import android.graphics.Color;
+          import android.os.Bundle;
           import android.view.View;
-          import android.view.Window;
-          import android.view.WindowInsets;
-          import android.view.WindowInsetsController;
           import android.webkit.CookieManager;
           import android.webkit.WebChromeClient;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebResourceError;
+          import android.webkit.WebSettings;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
+          import android.widget.Toast;
+
           public class MainActivity extends Activity {
-           private WebView webView;
-           @Override public void onCreate(Bundle b) {
-            super.onCreate(b);
-            Window w=getWindow();
-            if(Build.VERSION.SDK_INT>=30){
-             w.setDecorFitsSystemWindows(false);
-             w.setStatusBarColor(Color.TRANSPARENT);
-             w.setNavigationBarColor(Color.TRANSPARENT);
-             WindowInsetsController c=w.getInsetsController();
-             if(c!=null)c.setSystemBarsAppearance(WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
-            } else {
-             w.setStatusBarColor(Color.WHITE);
-             w.setNavigationBarColor(Color.WHITE);
-             w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-            }
-            setContentView(R.layout.activity_main);
-            webView=findViewById(R.id.webview);
-            if(Build.VERSION.SDK_INT>=30){
-             webView.setOnApplyWindowInsetsListener((v,insets)->{
-              android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars());
-              v.setPadding(0,bars.top,0,bars.bottom);
-              return insets;
-             });
-            }
-            webView.getSettings().setJavaScriptEnabled(true);
-            webView.getSettings().setDomStorageEnabled(true);
-            CookieManager.getInstance().setAcceptCookie(true);
-            CookieManager.getInstance().setAcceptThirdPartyCookies(webView,true);
-            webView.setWebChromeClient(new WebChromeClient());
-            webView.setWebViewClient(new WebViewClient());
-            webView.loadUrl("https://elforatpharma.github.io/admin/");
-           }
-           @Override public void onBackPressed(){if(webView.canGoBack())webView.goBack();else super.onBackPressed();}
+              private static final String ADMIN_URL = "https://elforatpharma.github.io/admin/";
+              private WebView webView;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  getWindow().setStatusBarColor(Color.WHITE);
+                  getWindow().setNavigationBarColor(Color.WHITE);
+                  getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+
+                  setContentView(R.layout.activity_main);
+                  webView = findViewById(R.id.webview);
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
+                  settings.setMediaPlaybackRequiresUserGesture(false);
+                  settings.setLoadsImagesAutomatically(true);
+                  settings.setAllowFileAccess(false);
+                  settings.setAllowContentAccess(true);
+
+                  CookieManager cookies = CookieManager.getInstance();
+                  cookies.setAcceptCookie(true);
+                  cookies.setAcceptThirdPartyCookies(webView, true);
+
+                  webView.setWebChromeClient(new WebChromeClient());
+                  webView.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          return false;
+                      }
+
+                      @Override
+                      public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                          if (request.isForMainFrame()) {
+                              Toast.makeText(MainActivity.this, "Unable to load Elforat Admin. Check your internet connection.", Toast.LENGTH_LONG).show();
+                          }
+                      }
+                  });
+
+                  webView.loadUrl(ADMIN_URL);
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
+
+              @Override
+              protected void onDestroy() {
+                  if (webView != null) {
+                      webView.stopLoading();
+                      webView.destroy();
+                  }
+                  super.onDestroy();
+              }
           }
           EOF
-          printf '%s' 'PHJlc291cmNlcz48c3R5bGUgbmFtZT0iQXBwVGhlbWUiIHBhcmVudD0iYW5kcm9pZDpzdHlsZS9UaGVtZS5NYXRlcmlhbC5MaWdodC5Ob0FjdGlvbkJhciI+PGl0ZW0gbmFtZT0iYW5kcm9pZDpjb2xvckFjY2VudCI+IzREM0NFQjwvaXRlbT48aXRlbSBuYW1lPSJhbmRyb2lkOm5hdmlnYXRpb25CYXJDb2xvciI+I0ZGRkZGRjwvaXRlbT48aXRlbSBuYW1lPSJhbmRyb2lkOnN0YXR1c0JhckNvbG9yIj4jRkZGRkZGPC9pdGVtPjxpdGVtIG5hbWU9ImFuZHJvaWQ6d2luZG93TGlnaHRTdGF0dXNCYXIiPnRydWU8L2l0ZW0+PC9zdHlsZT48L3Jlc291cmNlcz4=' | base64 -d > app/src/main/res/values/styles.xml
-          printf '%s' 'PEZyYW1lTGF5b3V0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCIgYW5kcm9pZDpsYXlvdXRfd2lkdGg9Im1hdGNoX3BhcmVudCIgYW5kcm9pZDpsYXlvdXRfaGVpZ2h0PSJtYXRjaF9wYXJlbnQiPjxXZWJWaWV3IGFuZHJvaWQ6aWQ9IkAraWQvd2VidmlldyIgYW5kcm9pZDpsYXlvdXRfd2lkdGg9Im1hdGNoX3BhcmVudCIgYW5kcm9pZDpsYXlvdXRfaGVpZ2h0PSJtYXRjaF9wYXJlbnQiLz48L0ZyYW1lTGF5b3V0Pg==' | base64 -d > app/src/main/res/layout/activity_main.xml
-          printf '%s' 'PHZlY3RvciB4bWxuczphbmRyb2lkPSJodHRwOi8vc2NoZW1hcy5hbmRyb2lkLmNvbS9hcGsvcmVzL2FuZHJvaWQiIGFuZHJvaWQ6d2lkdGg9IjEwOGRwIiBhbmRyb2lkOmhlaWdodD0iMTA4ZHAiIGFuZHJvaWQ6dmlld3BvcnRXaWR0aD0iMTA4IiBhbmRyb2lkOnZpZXdwb3J0SGVpZ2h0PSIxMDgiPjxwYXRoIGFuZHJvaWQ6ZmlsbENvbG9yPSIjNEQzQ0VCIiBhbmRyb2lkOnBhdGhEYXRhPSJNMCwwaDEwOHYxMDhoLTEwOHoiLz48cGF0aCBhbmRyb2lkOmZpbGxDb2xvcj0iI0ZGRkZGRiIgYW5kcm9pZDpwYXRoRGF0YT0iTTI0LDMxaDYwdjhoLTYwek0yNCw1MGg2MHY4aC02MHpNMjQsNjloNDB2OGgtNDB6Ii8+PC92ZWN0b3I+' | base64 -d > app/src/main/res/drawable/ic_launcher.xml
-      - name: Build
+
+          cat > app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:windowActionModeOverlay">true</item>
+                  <item name="android:colorAccent">#4D3CEB</item>
+                  <item name="android:windowLightStatusBar">true</item>
+                  <item name="android:statusBarColor">#FFFFFF</item>
+                  <item name="android:navigationBarColor">#FFFFFF</item>
+              </style>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/layout/activity_main.xml <<'EOF'
+          <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#FFFFFF">
+
+              <WebView
+                  android:id="@+id/webview"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:background="#FFFFFF"
+                  android:overScrollMode="never" />
+          </FrameLayout>
+          EOF
+
+          cat > app/src/main/res/drawable/ic_launcher.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path
+                  android:fillColor="#4D3CEB"
+                  android:pathData="M0,0h108v108h-108z" />
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M24,31h60v8h-60zM24,50h60v8h-60zM24,69h40v8h-40z" />
+          </vector>
+          EOF
+
+          # Make this APK a new installable update.
+          sed -i 's/versionCode = [0-9][0-9]*/versionCode = 3/' app/build.gradle.kts
+          sed -i 's/versionName = ".*"/versionName = "1.2.0"/' app/build.gradle.kts
+
+      - name: Build release APK
         working-directory: android-app
-        run: gradle --no-daemon assembleRelease
+        run: gradle --no-daemon clean assembleRelease
+
+      - name: Verify APK exists
+        run: |
+          set -euo pipefail
+          test -s android-app/app/build/outputs/apk/release/app-release.apk
+          ls -lh android-app/app/build/outputs/apk/release/app-release.apk
+
       - uses: actions/upload-artifact@v4
         with:
-          name: Elforat-Admin-APK
+          name: Elforat-Admin-APK-v1.2.0
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30

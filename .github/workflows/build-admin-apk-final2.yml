@@ -1,0 +1,38 @@
+name: Build Elforat Admin APK Final 2
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build-admin-apk-final2.yml"
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Prepare Android project
+        working-directory: android-app
+        run: |
+          printf '%s\n' 'org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8' 'android.useAndroidX=true' > gradle.properties
+          mkdir -p app/src/main/java/com/elforatpharma/admin app/src/main/res/values app/src/main/res/layout app/src/main/res/drawable
+          printf '%s' 'PG1hbmlmZXN0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCI+PHVzZXMtcGVybWlzc2lvbiBhbmRyb2lkOm5hbWU9ImFuZHJvaWQucGVybWlzc2lvbi5JTlRFUk5FVCIvPjxhcHBsaWNhdGlvbiBhbmRyb2lkOnRoZW1lPSJAc3R5bGUvQXBwVGhlbWUiIGFuZHJvaWQ6bGFiZWw9IkVsZm9yYXQgQWRtaW4iIGFuZHJvaWQ6aWNvbj0iQGRyYXdhYmxlL2ljX2xhdW5jaGVyIj48YWN0aXZpdHkgYW5kcm9pZDpuYW1lPSIuTWFpbkFjdGl2aXR5IiBhbmRyb2lkOmV4cG9ydGVkPSJ0cnVlIj48aW50ZW50LWZpbHRlcj48YWN0aW9uIGFuZHJvaWQ6bmFtZT0iYW5kcm9pZC5pbnRlbnQuYWN0aW9uLk1BSU4iLz48Y2F0ZWdvcnkgYW5kcm9pZDpuYW1lPSJhbmRyb2lkLmludGVudC5jYXRlZ29yeS5MQVVOQ0hFUiIvPjwvaW50ZW50LWZpbHRlcj48L2FjdGl2aXR5PjwvYXBwbGljYXRpb24+PC9tYW5pZmVzdD4=' | base64 -d > app/src/main/AndroidManifest.xml
+          printf '%s' 'cGFja2FnZSBjb20uZWxmb3JhdHBoYXJtYS5hZG1pbjsKaW1wb3J0IGFuZHJvaWQuYXBwLkFjdGl2aXR5OwppbXBvcnQgYW5kcm9pZC5vcy5CdW5kbGU7CmltcG9ydCBhbmRyb2lkLndlYmtpdC5Db29raWVNYW5hZ2VyOwppbXBvcnQgYW5kcm9pZC53ZWJraXQuV2ViQ2hyb21lQ2xpZW50OwppbXBvcnQgYW5kcm9pZC53ZWJraXQuV2ViVmlldzsKaW1wb3J0IGFuZHJvaWQud2Via2l0LldlYlZpZXdDbGllbnQ7CnB1YmxpYyBjbGFzcyBNYWluQWN0aXZpdHkgZXh0ZW5kcyBBY3Rpdml0eSB7CiBwcml2YXRlIFdlYlZpZXcgd2ViVmlldzsKIEBPdmVycmlkZSBwdWJsaWMgdm9pZCBvbkNyZWF0ZShCdW5kbGUgYil7c3VwZXIub25DcmVhdGUoYik7c2V0Q29udGVudFZpZXcoUi5sYXlvdXQuYWN0aXZpdHlfbWFpbik7d2ViVmlldz1maW5kVmlld0J5SWQoUi5pZC53ZWJ2aWV3KTt3ZWJWaWV3LmdldFNldHRpbmdzKCkuc2V0SmF2YVNjcmlwdEVuYWJsZWR0cnVlKTt3ZWJWaWV3LmdldFNldHRpbmdzKCkuc2V0RG9tU3RvcmFnZUVuYWJsZWQodHJ1ZSk7Q29va2llTWFuYWdlci5nZXRJbnN0YW5jZSgpLnNldEFjY2VwdENvb2tpZSh0cnVlKTtDb29raWVNYW5hZ2VyLmdldEluc3RhbmNlKCkuc2V0QWNjZXB0VGhpcmRQYXJ0eUNvb2tpZXMod2ViVmlldyx0cnVlKTt3ZWJWaWV3LnNldFdlYkNocm9tZUNsaWVudChuZXcgV2ViQ2hyb21lQ2xpZW50KCkpO3dlYlZpZXcuc2V0V2ViVmlld0NsaWVudChuZXcgV2ViVmlld0NsaWVudCgpKTt3ZWJWaWV3LmxvYWRVcmwoImh0dHBzOi8vZWxmb3JhdHBoYXJtYS5naXRodWIuaW8vYWRtaW4vIik7fSBA T3ZlcnJpZGUgcHVibGljIHZvaWQgb25CYWNrUHJlc3NlZCgpe2lmKHdlYlZpZXcuY2FuR29CYWNrKCkpd2ViVmlldy5nb0JhY2soKTtlbHNlIHN1cGVyLm9uQmFja1ByZXNzZWQoKTt9fQ==' | tr -d ' ' | base64 -d > app/src/main/java/com/elforatpharma/admin/MainActivity.java
+          printf '%s' 'PHJlc291cmNlcz48c3R5bGUgbmFtZT0iQXBwVGhlbWUiIHBhcmVudD0iYW5kcm9pZDpzdHlsZS9UaGVtZS5NYXRlcmlhbC5MaWdodC5Ob0FjdGlvbkJhciI+PGl0ZW0gbmFtZT0iYW5kcm9pZDpjb2xvckFjY2VudCI+IzREM0NFQjwvaXRlbT48aXRlbSBuYW1lPSJhbmRyb2lkOm5hdmlnYXRpb25CYXJDb2xvciI+I0ZGRkZGRjwvaXRlbT48aXRlbSBuYW1lPSJhbmRyb2lkOnN0YXR1c0JhckNvbG9yIj4jRkZGRkZGPC9pdGVtPjxpdGVtIG5hbWU9ImFuZHJvaWQ6d2luZG93TGlnaHRTdGF0dXNCYXIiPnRydWU8L2l0ZW0+PC9zdHlsZT48L3Jlc291cmNlcz4=' | base64 -d > app/src/main/res/values/styles.xml
+          printf '%s' 'PEZyYW1lTGF5b3V0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCIgYW5kcm9pZDpsYXlvdXRfd2lkdGg9Im1hdGNoX3BhcmVudCIgYW5kcm9pZDpsYXlvdXRfaGVpZ2h0PSJtYXRjaF9wYXJlbnQiPjxXZWJWaWV3IGFuZHJvaWQ6aWQ9IkAraWQvd2VidmlldyIgYW5kcm9pZDpsYXlvdXRfd2lkdGg9Im1hdGNoX3BhcmVudCIgYW5kcm9pZDpsYXlvdXRfaGVpZ2h0PSJtYXRjaF9wYXJlbnQiLz48L0ZyYW1lTGF5b3V0Pg==' | base64 -d > app/src/main/res/layout/activity_main.xml
+          printf '%s' 'PHZlY3RvciB4bWxuczphbmRyb2lkPSJodHRwOi8vc2NoZW1hcy5hbmRyb2lkLmNvbS9hcGsvcmVzL2FuZHJvaWQiIGFuZHJvaWQ6d2lkdGg9IjEwOGRwIiBhbmRyb2lkOmhlaWdodD0iMTA4ZHAiIGFuZHJvaWQ6dmlld3BvcnRXaWR0aD0iMTA4IiBhbmRyb2lkOnZpZXdwb3J0SGVpZ2h0PSIxMDgiPjxwYXRoIGFuZHJvaWQ6ZmlsbENvbG9yPSIjNEQzQ0VCIiBhbmRyb2lkOnBhdGhEYXRhPSJNMCwwaDEwOHYxMDhoLTEwOHoiLz48cGF0aCBhbmRyb2lkOmZpbGxDb2xvcj0iI0ZGRkZGRiIgYW5kcm9pZDpwYXRoRGF0YT0iTTI0LDMxaDYwdjhoLTYwek0yNCw1MGg2MHY4aC02MHpNMjQsNjloNDB2OGgtNDB6Ii8+PC92ZWN0b3I+' | base64 -d > app/src/main/res/drawable/ic_launcher.xml
+      - name: Build
+        working-directory: android-app
+        run: gradle --no-daemon assembleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Elforat-Admin-APK
+          path: android-app/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30

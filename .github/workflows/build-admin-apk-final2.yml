@@ -39,7 +39,7 @@ jobs:
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/drawable
 
-          cp ../logo.png app/src/main/res/drawable/launcher_logo.png
+          convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
 
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>

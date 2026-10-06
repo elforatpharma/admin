@@ -116,7 +116,7 @@ jobs:
                   setContentView(root);
 
                   root.setOnApplyWindowInsetsListener((view, insets) -> {
-                      WindowInsets.Type.InsetsTypeMask typeMask =
+                      int typeMask =
                               WindowInsets.Type.statusBars()
                                       | WindowInsets.Type.navigationBars()
                                       | WindowInsets.Type.displayCutout();

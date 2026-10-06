@@ -32,6 +32,8 @@ jobs:
         shell: bash
         run: |
           set -e
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq imagemagick
           printf '%s\n' 'org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8' 'android.useAndroidX=true' > gradle.properties
 
           mkdir -p app/src/main/java/com/elforatpharma/admin

@@ -24,8 +24,72 @@ jobs:
         run: |
           printf '%s\n' 'org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8' 'android.useAndroidX=true' > gradle.properties
           mkdir -p app/src/main/java/com/elforatpharma/admin app/src/main/res/values app/src/main/res/layout app/src/main/res/drawable
-          printf '%s' 'PG1hbmlmZXN0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCI+PHVzZXMtcGVybWlzc2lvbiBhbmRyb2lkOm5hbWU9ImFuZHJvaWQucGVybWlzc2lvbi5JTlRFUk5FVCIvPjxhcHBsaWNhdGlvbiBhbmRyb2lkOnRoZW1lPSJAc3R5bGUvQXBwVGhlbWUiIGFuZHJvaWQ6bGFiZWw9IkVsZm9yYXQgQWRtaW4iIGFuZHJvaWQ6aWNvbj0iQGRyYXdhYmxlL2ljX2xhdW5jaGVyIj48YWN0aXZpdHkgYW5kcm9pZDpuYW1lPSIuTWFpbkFjdGl2aXR5IiBhbmRyb2lkOmV4cG9ydGVkPSJ0cnVlIj48aW50ZW50LWZpbHRlcj48YWN0aW9uIGFuZHJvaWQ6bmFtZT0iYW5kcm9pZC5pbnRlbnQuYWN0aW9uLk1BSU4iLz48Y2F0ZWdvcnkgYW5kcm9pZDpuYW1lPSJhbmRyb2lkLmludGVudC5jYXRlZ29yeS5MQVVOQ0hFUiIvPjwvaW50ZW50LWZpbHRlcj48L2FjdGl2aXR5PjwvYXBwbGljYXRpb24+PC9tYW5pZmVzdD4=' | base64 -d > app/src/main/AndroidManifest.xml
-          printf '%s' 'cGFja2FnZSBjb20uZWxmb3JhdHBoYXJtYS5hZG1pbjsKaW1wb3J0IGFuZHJvaWQuYXBwLkFjdGl2aXR5OwppbXBvcnQgYW5kcm9pZC5vcy5CdW5kbGU7CmltcG9ydCBhbmRyb2lkLndlYmtpdC5XZWJWaWV3OwppbXBvcnQgYW5kcm9pZC53ZWJraXQuV2ViVmlld0NsaWVudDsKcHVibGljIGNsYXNzIE1haW5BY3Rpdml0eSBleHRlbmRzIEFjdGl2aXR5IHsKIHByaXZhdGUgV2ViVmlldyB3ZWJWaWV3OwogQE92ZXJyaWRlIHB1YmxpYyB2b2lkIG9uQ3JlYXRlKEJ1bmRsZSBiKXtzdXBlci5vbkNyZWF0ZShiKTtzZXRDb250ZW50VmlldyhSLmxheW91dC5hY3Rpdml0eV9tYWluKTt3ZWJWaWV3PWZpbmRWaWV3QnlJZChSLmlkLndlYnZpZXcpO3dlYlZpZXcuZ2V0U2V0dGluZ3MoKS5zZXRKYXZhU2NyaXB0RW5hYmxlZCh0cnVlKTt3ZWJWaWV3LmdldFNldHRpbmdzKCkuc2V0RG9tU3RvcmFnZUVuYWJsZWQodHJ1ZSk7d2ViVmlldy5zZXRXZWJWaWV3Q2xpZW50KG5ldyBXZWJWaWV3Q2xpZW50KCkpO3dlYlZpZXcubG9hZFVybCgiaHR0cHM6Ly9lbGZvcmF0cGhhcm1hLmdpdGh1Yi5pby9hZG1pbi8iKTt9CiBAT3ZlcnJpZGUgcHVibGljIHZvaWQgb25CYWNrUHJlc3NlZCgpe2lmKHdlYlZpZXcuY2FuR29CYWNrKCkpd2ViVmlldy5nb0JhY2soKTtlbHNlIHN1cGVyLm9uQmFja1ByZXNzZWQoKTt9Cn0K' | base64 -d > app/src/main/java/com/elforatpharma/admin/MainActivity.java
+          cp ../logo.png app/src/main/res/drawable/elforat_logo.png
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application android:theme="@style/AppTheme" android:label="Elforat Admin"
+        android:icon="@drawable/elforat_logo" android:roundIcon="@drawable/elforat_logo"
+        android:usesCleartextTraffic="false" android:resizeableActivity="true">
+        <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+EOF
+          cat > app/src/main/java/com/elforatpharma/admin/MainActivity.java <<'EOF'
+package com.elforatpharma.admin;
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Build;
+import android.graphics.Color;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.webkit.CookieManager;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+public class MainActivity extends Activity {
+ private WebView webView;
+ @Override public void onCreate(Bundle b) {
+  super.onCreate(b);
+  Window w=getWindow();
+  if(Build.VERSION.SDK_INT>=30){
+   w.setDecorFitsSystemWindows(false);
+   w.setStatusBarColor(Color.TRANSPARENT);
+   w.setNavigationBarColor(Color.TRANSPARENT);
+   WindowInsetsController c=w.getInsetsController();
+   if(c!=null)c.setSystemBarsAppearance(WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+  } else {
+   w.setStatusBarColor(Color.WHITE);
+   w.setNavigationBarColor(Color.WHITE);
+   w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+  }
+  setContentView(R.layout.activity_main);
+  webView=findViewById(R.id.webview);
+  if(Build.VERSION.SDK_INT>=30){
+   webView.setOnApplyWindowInsetsListener((v,insets)->{
+    android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars());
+    v.setPadding(0,bars.top,0,bars.bottom);
+    return insets;
+   });
+  }
+  webView.getSettings().setJavaScriptEnabled(true);
+  webView.getSettings().setDomStorageEnabled(true);
+  CookieManager.getInstance().setAcceptCookie(true);
+  CookieManager.getInstance().setAcceptThirdPartyCookies(webView,true);
+  webView.setWebChromeClient(new WebChromeClient());
+  webView.setWebViewClient(new WebViewClient());
+  webView.loadUrl("https://elforatpharma.github.io/admin/");
+ }
+ @Override public void onBackPressed(){if(webView.canGoBack())webView.goBack();else super.onBackPressed();}
+}
+EOF
           printf '%s' 'PHJlc291cmNlcz48c3R5bGUgbmFtZT0iQXBwVGhlbWUiIHBhcmVudD0iYW5kcm9pZDpzdHlsZS9UaGVtZS5NYXRlcmlhbC5MaWdodC5Ob0FjdGlvbkJhciI+PGl0ZW0gbmFtZT0iYW5kcm9pZDpjb2xvckFjY2VudCI+IzREM0NFQjwvaXRlbT48aXRlbSBuYW1lPSJhbmRyb2lkOm5hdmlnYXRpb25CYXJDb2xvciI+I0ZGRkZGRjwvaXRlbT48aXRlbSBuYW1lPSJhbmRyb2lkOnN0YXR1c0JhckNvbG9yIj4jRkZGRkZGPC9pdGVtPjxpdGVtIG5hbWU9ImFuZHJvaWQ6d2luZG93TGlnaHRTdGF0dXNCYXIiPnRydWU8L2l0ZW0+PC9zdHlsZT48L3Jlc291cmNlcz4=' | base64 -d > app/src/main/res/values/styles.xml
           printf '%s' 'PEZyYW1lTGF5b3V0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCIgYW5kcm9pZDpsYXlvdXRfd2lkdGg9Im1hdGNoX3BhcmVudCIgYW5kcm9pZDpsYXlvdXRfaGVpZ2h0PSJtYXRjaF9wYXJlbnQiPjxXZWJWaWV3IGFuZHJvaWQ6aWQ9IkAraWQvd2VidmlldyIgYW5kcm9pZDpsYXlvdXRfd2lkdGg9Im1hdGNoX3BhcmVudCIgYW5kcm9pZDpsYXlvdXRfaGVpZ2h0PSJtYXRjaF9wYXJlbnQiLz48L0ZyYW1lTGF5b3V0Pg==' | base64 -d > app/src/main/res/layout/activity_main.xml
           printf '%s' 'PHZlY3RvciB4bWxuczphbmRyb2lkPSJodHRwOi8vc2NoZW1hcy5hbmRyb2lkLmNvbS9hcGsvcmVzL2FuZHJvaWQiIGFuZHJvaWQ6d2lkdGg9IjEwOGRwIiBhbmRyb2lkOmhlaWdodD0iMTA4ZHAiIGFuZHJvaWQ6dmlld3BvcnRXaWR0aD0iMTA4IiBhbmRyb2lkOnZpZXdwb3J0SGVpZ2h0PSIxMDgiPjxwYXRoIGFuZHJvaWQ6ZmlsbENvbG9yPSIjNEQzQ0VCIiBhbmRyb2lkOnBhdGhEYXRhPSJNMCwwaDEwOHYxMDhoLTEwOHoiLz48cGF0aCBhbmRyb2lkOmZpbGxDb2xvcj0iI0ZGRkZGRiIgYW5kcm9pZDpwYXRoRGF0YT0iTTI0LDMxaDYwdjhoLTYwek0yNCw1MGg2MHY4aC02MHpNMjQsNjloNDB2OGgtNDB6Ii8+PC92ZWN0b3I+' | base64 -d > app/src/main/res/drawable/ic_launcher.xml

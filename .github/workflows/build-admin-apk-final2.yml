@@ -45,6 +45,8 @@ jobs:
           sed -i -E 's/versionCode = [0-9]+/versionCode = 8/; s/versionName = "[^"]+"/versionName = "1.4.3"/' app/build.gradle.kts
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
+          # Create a separate tightly-cropped splash logo so the Android 12+ startup screen shows the real logo clearly.
+          convert ../logo.png -trim +repage -resize '460x460>' -background none -gravity center -extent 512x512 app/src/main/res/drawable/splash_logo.png
 
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
@@ -390,7 +392,7 @@ jobs:
                   <item name="android:statusBarColor">#FFFFFF</item>
                   <item name="android:navigationBarColor">#FFFFFF</item>
                   <item name="android:windowSplashScreenBackground">#FFFFFF</item>
-                  <item name="android:windowSplashScreenAnimatedIcon">@drawable/launcher_logo</item>
+                  <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
               </style>
           </resources>
           EOF

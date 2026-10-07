@@ -189,3 +189,47 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
     white-space:nowrap!important;
   }
 }
+
+/* Final mobile button hardening: icon+label stays intact; button-like links use the same horizontal/wrapping behavior. */
+@media(max-width:768px){
+  .flex.items-center.gap-1:has(>a.inline-flex),
+  .flex.items-center.gap-2:has(>a.inline-flex),
+  .flex.items-center.gap-3:has(>a.inline-flex),
+  .flex.items-center.gap-4:has(>a.inline-flex),
+  .flex.items-center.gap-5:has(>a.inline-flex),
+  .flex.items-center.gap-6:has(>a.inline-flex){
+    flex-direction:row!important;
+    align-items:center!important;
+    flex-wrap:wrap!important;
+    width:auto!important;
+    max-width:100%!important;
+    gap:8px!important;
+  }
+  .flex.items-center.gap-1:has(>a.inline-flex)>a.inline-flex,
+  .flex.items-center.gap-2:has(>a.inline-flex)>a.inline-flex,
+  .flex.items-center.gap-3:has(>a.inline-flex)>a.inline-flex,
+  .flex.items-center.gap-4:has(>a.inline-flex)>a.inline-flex,
+  .flex.items-center.gap-5:has(>a.inline-flex)>a.inline-flex,
+  .flex.items-center.gap-6:has(>a.inline-flex)>a.inline-flex{
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:42px!important;
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+    justify-content:center!important;
+  }
+  button .material-symbols-outlined,
+  a.inline-flex .material-symbols-outlined{
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+  }
+  button>span:not(.material-symbols-outlined),
+  a.inline-flex>span:not(.material-symbols-outlined){
+    white-space:nowrap!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+  }
+}

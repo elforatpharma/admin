@@ -40,33 +40,11 @@
 }
 </style>
 <style id="inventory-table-alignment-fix">
-#inventory-table{width:100%;table-layout:fixed;}
-#inventory-table thead th{ text-align:center!important; vertical-align:middle!important; }
-#inventory-table tbody td{ text-align:center!important; vertical-align:middle!important; }
-#inventory-table th:nth-child(1),#inventory-table td:nth-child(1){width:52px;min-width:52px;}
-#inventory-table th:nth-child(2),#inventory-table td:nth-child(2){width:72px;min-width:72px;}
-#inventory-table th:nth-child(3),#inventory-table td:nth-child(3){width:300px;min-width:300px;}
-#inventory-table th:nth-child(4),#inventory-table td:nth-child(4){width:145px;min-width:145px;}
-#inventory-table th:nth-child(5),#inventory-table td:nth-child(5){width:125px;min-width:125px;}
-#inventory-table th:nth-child(6),#inventory-table td:nth-child(6){width:165px;min-width:165px;}
-#inventory-table th:nth-child(7),#inventory-table td:nth-child(7){width:140px;min-width:140px;}
-#inventory-table th:nth-child(8),#inventory-table td:nth-child(8){width:105px;min-width:105px;}
-#inventory-table th:nth-child(9),#inventory-table td:nth-child(9){width:135px;min-width:135px;}
-#inventory-table tbody td.inventory-center-cell{ text-align:center!important; vertical-align:middle!important; }
-#inventory-table tbody td.inventory-center-cell > .flex.flex-col{ align-items:center!important; justify-content:center!important; width:100%; text-align:center!important; }
-#inventory-table tbody td.inventory-center-cell > .inline-flex{ margin-inline:auto; }
-#inventory-table tbody td.inventory-category-cell{ text-align:center!important; vertical-align:middle!important; }
-#inventory-table tbody td.inventory-category-cell > *{ margin-inline:auto; }
-#inventory-table tbody td.inventory-category-cell .flex{ align-items:center!important; justify-content:center!important; width:100%; text-align:center!important; }
-#inventory-table tbody td:nth-child(2){text-align:center!important;vertical-align:middle!important;}
-#inventory-table tbody td:nth-child(2) img{display:block;margin-inline:auto;width:44px;height:44px;object-fit:cover;}
-#inventory-table tbody td:nth-child(3)>div{justify-content:flex-start!important;align-items:flex-start!important;width:100%;text-align:right!important;}
-#inventory-table tbody td:nth-child(3) .flex.flex-col{min-width:0;align-items:flex-start!important;text-align:right!important;}
-#inventory-table tbody td:nth-child(3) .font-headline-sm,#inventory-table tbody td:nth-child(3) .scientific-name-cell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right!important;width:100%;}
-#inventory-table tbody td:nth-child(2)>div{justify-content:center!important;align-items:center!important;width:100%;}
-#inventory-table tbody td:nth-child(2) .flex.flex-col{min-width:0;align-items:center!important;text-align:center!important;}
-#inventory-table tbody td:nth-child(2) .font-headline-sm{white-space:nowrap;overflow:visible;text-overflow:clip;text-align:center!important;}
-#inventory-table tbody td:nth-child(3)>*,#inventory-table tbody td:nth-child(4)>*,#inventory-table tbody td:nth-child(5)>*,#inventory-table tbody td:nth-child(6)>*,#inventory-table tbody td:nth-child(7)>*,#inventory-table tbody td:nth-child(8)>*{margin-inline:auto;}
+#inventory-table tbody td.inventory-image-cell{text-align:center!important;vertical-align:middle!important;}
+#inventory-table tbody td.inventory-image-cell img{display:block;margin-inline:auto;width:44px;height:44px;object-fit:cover;}
+#inventory-table tbody td.inventory-product-cell{text-align:right!important;vertical-align:middle!important;}
+#inventory-table tbody td.inventory-product-cell>div{align-items:flex-start!important;justify-content:center!important;width:100%;text-align:right!important;}
+#inventory-table tbody td.inventory-product-cell .font-headline-sm,#inventory-table tbody td.inventory-product-cell .scientific-name-cell{text-align:right!important;width:100%;}
 </style>
 
 <style id="efp-loading-skeleton">

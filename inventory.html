@@ -563,7 +563,15 @@ function renderTable(){
       }
       return `
       <tr class="hover:bg-canvas-bg transition-colors group ${rowSel?'bg-primary/5':''}">
-        <td class="px-4 py-3 text-center inventory-center-cell"><input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" ${rowSel?'checked':''} onclick="toggleOne('${id}',this.checked)"/></td>
+        <td class="px-4 py-3 inventory-image-cell text-center">
+          <img class="w-11 h-11 rounded-lg object-cover shadow-sm bg-surface-container mx-auto" onerror="this.style.display=\"none\"" alt="" src="${escapeHtml(p.img||p.image)||\"\"}"/>
+        </td>
+        <td class="px-4 py-3">
+          <div class="flex flex-col min-w-0 items-start text-right w-full">
+            <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors text-right w-full">${escapeHtml(p.name)||\"منتج\"}</span>
+            <span class="font-label-sm text-label-sm text-text-secondary scientific-name-cell text-right w-full">${escapeHtml(p.science_name)||\"—\"}</span>
+          </div>
+        </td>
         <td class="px-4 py-3">
           <div class="flex items-center gap-2">
             <img class="w-10 h-10 rounded-lg object-cover shadow-sm bg-surface-container ${hideCols.has('img')?'hidden':''}" onerror="this.style.display='none'" alt="" src="${escapeHtml(p.img||p.image)||''}"/>

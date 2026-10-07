@@ -42,7 +42,7 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/java/com/elforatpharma/admin
           test -s app/google-services.json
-          sed -i -E 's/versionCode = [0-9]+/versionCode = 12/; s/versionName = "[^"]+"/versionName = "1.4.7"/' app/build.gradle.kts
+          sed -i -E 's/versionCode = [0-9]+/versionCode = 13/; s/versionName = "[^"]+"/versionName = "1.4.8"/' app/build.gradle.kts
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
           # Create a separate tightly-cropped splash logo so the Android 12+ startup screen shows the real logo clearly.
@@ -154,23 +154,57 @@ jobs:
 
           public class TopOnlySwipeRefreshLayout extends SwipeRefreshLayout {
               private boolean startedAtTop;
+              private float downY;
+              private int touchSlop;
 
-              public TopOnlySwipeRefreshLayout(Context context) { super(context); }
-              public TopOnlySwipeRefreshLayout(Context context, AttributeSet attrs) { super(context, attrs); }
+              public TopOnlySwipeRefreshLayout(Context context) {
+                  super(context);
+                  init();
+              }
+
+              public TopOnlySwipeRefreshLayout(Context context, AttributeSet attrs) {
+                  super(context, attrs);
+                  init();
+              }
+
+              private void init() {
+                  touchSlop = android.view.ViewConfiguration.get(getContext()).getScaledTouchSlop();
+              }
 
               @Override
               public boolean onInterceptTouchEvent(MotionEvent ev) {
-                  if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                  final int action = ev.getActionMasked();
+
+                  if (action == MotionEvent.ACTION_DOWN) {
+                      downY = ev.getY();
                       startedAtTop = !canChildScrollUp();
-                  } else if (ev.getActionMasked() == MotionEvent.ACTION_MOVE && !startedAtTop) {
-                      return false;
+                      // Never let SwipeRefreshLayout take a gesture that starts below page top.
+                      return super.onInterceptTouchEvent(ev);
                   }
+
+                  if (action == MotionEvent.ACTION_MOVE) {
+                      // If the gesture started while the page was scrolled, leave the whole
+                      // gesture to WebView. This prevents refresh from stealing upward scrolling.
+                      if (!startedAtTop) return false;
+
+                      float dy = ev.getY() - downY;
+
+                      // At the top, refresh is allowed only for a real downward pull.
+                      if (dy <= touchSlop) return false;
+                  }
+
+                  if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                      if (!startedAtTop) return false;
+                  }
+
                   return super.onInterceptTouchEvent(ev);
               }
 
               @Override
               public boolean canChildScrollUp() {
-                  return getChildCount() > 0 && getChildAt(0).canScrollVertically(-1);
+                  if (getChildCount() == 0) return false;
+                  android.view.View child = getChildAt(0);
+                  return child.canScrollVertically(-1);
               }
           }
           EOF
@@ -264,33 +298,47 @@ jobs:
 
               private boolean biometricAvailable() {
                   int r = BiometricManager.from(this).canAuthenticate(
-                      BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.BIOMETRIC_WEAK);
+                      BiometricManager.Authenticators.BIOMETRIC_STRONG);
                   return r == BiometricManager.BIOMETRIC_SUCCESS;
               }
 
               private void showBiometricGate() {
                   if (biometricInProgress) return;
                   biometricInProgress = true;
+
                   Executor ex = ContextCompat.getMainExecutor(this);
                   BiometricPrompt prompt = new BiometricPrompt(this, ex, new BiometricPrompt.AuthenticationCallback() {
                       @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
                           biometricInProgress = false;
                           webView.loadUrl(ADMIN_URL);
                       }
+
                       @Override public void onAuthenticationError(int code, CharSequence msg) {
                           biometricInProgress = false;
+
+                          // "استخدام تسجيل الدخول" is a genuine fallback, not a loop.
+                          if (code == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                              webView.loadUrl(ADMIN_URL);
+                              return;
+                          }
+
                           Toast.makeText(MainActivity.this, "استخدم بصمة الإصبع للدخول إلى لوحة التحكم", Toast.LENGTH_LONG).show();
-                          new android.os.Handler().postDelayed(() -> showBiometricGate(), 700);
+                          new android.os.Handler().postDelayed(() -> {
+                              if (!isFinishing() && !isDestroyed()) showBiometricGate();
+                          }, 700);
                       }
+
                       @Override public void onAuthenticationFailed() {
                           Toast.makeText(MainActivity.this, "لم يتم التعرف على البصمة", Toast.LENGTH_SHORT).show();
                       }
                   });
+
                   BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
                       .setTitle("تسجيل الدخول ببصمة الإصبع")
-                      .setSubtitle("أكد هويتك لفتح لوحة تحكم الفرات فارما")
+                      .setSubtitle("ضع إصبعك على مستشعر البصمة لفتح لوحة التحكم")
                       .setNegativeButtonText("استخدام تسجيل الدخول")
                       .build();
+
                   prompt.authenticate(info);
               }
 
@@ -330,8 +378,12 @@ jobs:
                       @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) { return false; }
                       @Override public void onPageFinished(WebView view, String url) {
                           refresh.setRefreshing(false);
-                          if (url.contains("admin.html") || url.contains("orders.html") || url.contains("inventory.html"))
-                              getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean(BIO_ENABLED, true).apply();
+                          if (url.contains("admin.html") || url.contains("orders.html") || url.contains("inventory.html")) {
+                              getSharedPreferences(PREFS, MODE_PRIVATE)
+                                      .edit()
+                                      .putBoolean(BIO_ENABLED, true)
+                                      .apply();
+                          }
                           injectTheme(view);
                       }
                       @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
@@ -484,14 +536,14 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.4.7
-          name: Elforat Pharma Admin v1.4.7
+          tag_name: v1.4.8
+          name: Elforat Pharma Admin v1.4.8
           generate_release_notes: true
           files: android-app/app/build/outputs/apk/release/app-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Elforat-Pharma-Admin-APK-v1.4.7
+          name: Elforat-Pharma-Admin-APK-v1.4.8
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 

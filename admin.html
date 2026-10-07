@@ -1035,5 +1035,57 @@ window.onload=async function(){
   }
 };
 </script>
+
+<style id="admin-notification-center-v1">
+#efp-notification-panel{position:fixed;top:72px;left:24px;width:min(390px,calc(100vw - 32px));max-height:min(72vh,620px);overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:20px;box-shadow:0 18px 50px rgba(15,23,42,.18);z-index:1000;display:none}
+#efp-notification-panel.open{display:block;animation:efpNIn .18s ease-out}
+#efp-notification-panel .efp-n-head{position:sticky;top:0;background:#fff;border-bottom:1px solid #eef0f4;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;z-index:2}
+#efp-notification-panel .efp-n-item{padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer}
+#efp-notification-panel .efp-n-item:hover{background:#f8fafc}
+#efp-notification-panel .efp-n-item.unread{background:#faf8ff}
+#efp-notification-panel .efp-n-dot{width:8px;height:8px;border-radius:50%;background:#4d3ceb;flex:0 0 auto}
+@keyframes efpNIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+@media(max-width:768px){#efp-notification-panel{left:12px;right:12px;width:auto;top:66px;max-height:70vh}}
+</style>
+<div id="efp-notification-panel" aria-hidden="true">
+  <div class="efp-n-head">
+    <div>
+      <div class="font-bold text-slate-900">مركز الإشعارات</div>
+      <div id="efp-n-summary" class="text-[11px] text-slate-400 mt-0.5">جاري التحميل...</div>
+    </div>
+    <button id="efp-n-readall" class="text-[11px] font-bold text-[#4d3ceb]">تحديد الكل كمقروء</button>
+  </div>
+  <div id="efp-n-list"></div>
+</div>
+<script>
+(function(){
+  const bell=document.querySelector('header button[title="إشعارات"]');
+  const panel=document.getElementById('efp-notification-panel');
+  const list=document.getElementById('efp-n-list');
+  const summary=document.getElementById('efp-n-summary');
+  const readAll=document.getElementById('efp-n-readall');
+  if(!bell||!panel||!list)return;
+  let notifications=[];
+  function esc(v){return typeof escapeHtml==='function'?escapeHtml(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function fmt(v){try{return new Date(v).toLocaleString('ar-EG',{dateStyle:'short',timeStyle:'short'});}catch(e){return '';}}
+  function render(){
+    const unread=notifications.filter(n=>!n.is_read).length;
+    summary.textContent=unread?unread+' إشعارات غير مقروءة':'لا توجد إشعارات غير مقروءة';
+    list.innerHTML=notifications.length?notifications.map(n=>'<div class="efp-n-item '+(!n.is_read?'unread':'')+'" data-id="'+n.id+'"><div class="flex items-start gap-3"><span class="efp-n-dot mt-1.5"></span><div class="min-w-0 flex-1"><div class="font-bold text-xs text-slate-800">'+esc(n.title)+'</div><div class="text-[11px] text-slate-500 mt-1 leading-5">'+esc(n.body)+'</div><div class="text-[9px] text-slate-400 mt-1">'+fmt(n.created_at)+'</div></div></div></div>').join(''):'<div class="py-12 text-center text-xs text-slate-400">لا توجد إشعارات حتى الآن.</div>';
+    list.querySelectorAll('.efp-n-item').forEach(el=>el.onclick=async()=>{const id=el.dataset.id;await _supabase.from('admin_notifications').update({is_read:true}).eq('id',id);const n=notifications.find(x=>String(x.id)===String(id));if(n)n.is_read=true;render();});
+  }
+  async function load(){
+    const r=await _supabase.from('admin_notifications').select('id,type,title,body,entity_type,entity_id,is_read,created_at').order('created_at',{ascending:false}).limit(40);
+    if(!r.error){notifications=r.data||[];render();}
+  }
+  bell.onclick=async function(e){e.preventDefault();e.stopPropagation();panel.classList.toggle('open');panel.setAttribute('aria-hidden',panel.classList.contains('open')?'false':'true');if(panel.classList.contains('open'))await load();};
+  readAll.onclick=async function(){const unread=notifications.filter(n=>!n.is_read).map(n=>n.id);if(unread.length)await _supabase.from('admin_notifications').update({is_read:true}).in('id',unread);notifications.forEach(n=>n.is_read=true);render();};
+  document.addEventListener('click',e=>{if(panel.classList.contains('open')&&!panel.contains(e.target)&&!bell.contains(e.target))panel.classList.remove('open');});
+  if(window._supabase){
+    try{_supabase.channel('admin-notification-center').on('postgres_changes',{event:'*',schema:'public',table:'admin_notifications'},()=>load()).subscribe();}catch(e){}
+  }
+  window.efpNotificationCenterLoad=load;
+})();
+</script>
 </body>
 </html>

@@ -19,6 +19,13 @@
 .customer-name-wide{display:block;min-width:150px;max-width:240px;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;word-break:normal!important;line-height:1.5;font-size:13px;}
 .order-code-wide{display:block;min-width:130px;max-width:190px;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;word-break:normal!important;line-height:1.45;direction:ltr;text-align:right;font-size:13px;}
 @media(max-width:768px){.order-code-wide{min-width:180px;max-width:none;}.customer-name-wide{min-width:190px;max-width:none;}}
+
+.payment-col,.payment-cell{width:125px;min-width:125px;text-align:center!important;}
+.status-col,.status-cell{width:125px;min-width:125px;text-align:center!important;}
+.payment-cell,.status-cell{vertical-align:middle!important;}
+.payment-badge{white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;max-width:100%;}
+.status-select{width:112px;max-width:112px;text-align:center;text-align-last:center;white-space:nowrap;overflow:hidden;text-overflow:clip;}
+@media(max-width:768px){.payment-col,.payment-cell{width:92px;min-width:92px;}.status-col,.status-cell{width:96px;min-width:96px;}.payment-badge{font-size:9px!important;padding-left:4px!important;padding-right:4px!important;}.status-select{width:88px;max-width:88px;font-size:9px!important;padding-left:2px!important;padding-right:2px!important;}}
 </style><style>
     body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
@@ -338,8 +345,8 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
                       <th class="px-4 font-semibold">العميل والموبايل</th>
                       <th class="px-4 font-semibold">الأصناف</th>
                       <th class="px-4 font-semibold">الإجمالي</th>
-                      <th class="px-4 font-semibold">الدفع</th>
-                      <th class="px-4 font-semibold">حالة الطلب</th>
+                      <th class="px-4 font-semibold payment-col">الدفع</th>
+                      <th class="px-4 font-semibold status-col">حالة الطلب</th>
                       <th class="px-4 text-left font-semibold">الإجراءات</th>
                     </tr>
                   </thead>
@@ -708,11 +715,11 @@ function renderOrders(){
         <td class="px-4 py-2">
           <span class="font-bold text-on-surface font-data-tabular">${money(o.total)} ج.م</span>
         </td>
-        <td class="px-4 py-2">
-          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${pb.cls}">${pb.html}</span>
+        <td class="px-4 py-2 payment-cell">
+          <span class="payment-badge inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${pb.cls}">${pb.html}</span>
         </td>
-        <td class="px-4 py-2">
-          <select class="h-8 px-2 rounded-full font-label-sm text-label-sm font-semibold bg-transparent focus:outline-none border ${st.cls}" onclick="event.stopPropagation()" onchange="updateStatus('${id}',this.value)">
+        <td class="px-4 py-2 status-cell">
+          <select class="status-select h-8 px-2 rounded-full font-label-sm text-label-sm font-semibold bg-transparent focus:outline-none border ${st.cls}" onclick="event.stopPropagation()" onchange="updateStatus('${id}',this.value)">
             <option value="جديد" ${normStatus(o.status)==='جديد'?'selected':''}>جديد</option>
             <option value="قيد التنفيذ" ${normStatus(o.status)==='قيد التنفيذ'?'selected':''}>قيد التنفيذ</option>
             <option value="قيد التجهيز" ${normStatus(o.status)==='قيد التجهيز'?'selected':''}>قيد التجهيز</option>

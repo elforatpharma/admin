@@ -23,7 +23,8 @@
 .payment-col,.payment-cell{width:125px;min-width:125px;text-align:center!important;}
 .status-col,.status-cell{width:125px;min-width:125px;text-align:center!important;}
 .payment-cell,.status-cell{vertical-align:middle!important;}
-.payment-badge{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;max-width:100%;line-height:1.15!important;text-align:center!important;}
+.payment-badge{display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:center!important;column-gap:3px!important;row-gap:1px!important;width:100%!important;max-width:100%!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.15!important;text-align:center!important;}
+.payment-badge>span:not(.material-symbols-outlined){display:block!important;max-width:78px!important;white-space:normal!important;overflow-wrap:anywhere!important;text-align:center!important;}
 .status-select{width:112px;max-width:112px;text-align:center;text-align-last:center;white-space:nowrap;overflow:hidden;text-overflow:clip;}
 @media(max-width:768px){.payment-col,.payment-cell{width:92px;min-width:92px;}.status-col,.status-cell{width:96px;min-width:96px;}.payment-badge{font-size:9px!important;padding-left:4px!important;padding-right:4px!important;}.status-select{width:88px;max-width:88px;font-size:9px!important;padding-left:2px!important;padding-right:2px!important;}}
 

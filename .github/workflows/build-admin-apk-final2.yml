@@ -42,7 +42,7 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/java/com/elforatpharma/admin
           test -s app/google-services.json
-          sed -i -E 's/versionCode = [0-9]+/versionCode = 7/; s/versionName = "[^"]+"/versionName = "1.4.2"/' app/build.gradle.kts
+          sed -i -E 's/versionCode = [0-9]+/versionCode = 8/; s/versionName = "[^"]+"/versionName = "1.4.3"/' app/build.gradle.kts
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
 
@@ -408,14 +408,14 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.4.2
-          name: Elforat Pharma Admin v1.4.2
+          tag_name: v1.4.3
+          name: Elforat Pharma Admin v1.4.3
           generate_release_notes: true
           files: android-app/app/build/outputs/apk/release/app-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Elforat-Pharma-Admin-APK-v1.4.2
+          name: Elforat-Pharma-Admin-APK-v1.4.3
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 

@@ -39,6 +39,13 @@
   .modal,.fixed.inset-0>div{max-width:calc(100vw - 24px)!important}
 }
 </style>
+<style id="inventory-table-alignment-fix">
+#inventory-table thead th{ text-align:center!important; vertical-align:middle!important; }
+#inventory-table tbody td.inventory-center-cell{ text-align:center!important; vertical-align:middle!important; }
+#inventory-table tbody td.inventory-center-cell > .flex.flex-col{ align-items:center; }
+#inventory-table tbody td.inventory-center-cell > .inline-flex{ margin-inline:auto; }
+</style>
+
 <style id="efp-loading-skeleton">
 .efp-loading-skeleton{display:inline-block;width:78px;height:1.05em;border-radius:8px;background:linear-gradient(90deg,#eef0ff 25%,#f7f6ff 50%,#eef0ff 75%);background-size:200% 100%;animation:efpSkeleton 1.15s ease-in-out infinite;vertical-align:middle;color:transparent!important}
 .efp-loading-skeleton *{visibility:hidden!important}
@@ -278,21 +285,21 @@
       <!-- جدول تفصيلي احترافي للمخزون -->
       <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-6">
         <div class="overflow-x-auto">
-          <table class="w-full text-right border-collapse">
+          <table id="inventory-table" class="w-full text-right border-collapse">
             <thead>
               <tr class="h-11 bg-surface-container-low text-text-secondary font-label-sm text-label-sm">
                 <th class="px-4 py-2 w-12 text-center">
                   <input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" onclick="toggleAll(this.checked)" title="تحديد الكل"/>
                 </th>
-                <th class="px-4 py-2">الصنف والاسم العلمي</th>
-                <th class="px-4 py-2">كود SKU / الباركود</th>
-                <th class="px-4 py-2">الفئة</th>
-                <th class="px-4 py-2">التشغيلة (Batch)</th>
-                <th class="px-4 py-2">انتهاء الصلاحية</th>
-                <th class="px-4 py-2">الرصيد ومستوى التوفر</th>
-                <th class="px-4 py-2">حد الطلب</th>
-                <th class="px-4 py-2">السعر / البيع</th>
-                <th class="px-4 py-2">الحالة</th>
+                <th class="px-4 py-2 text-center">الصنف والاسم العلمي</th>
+                <th class="px-4 py-2 text-center">كود SKU / الباركود</th>
+                <th class="px-4 py-2 text-center">الفئة</th>
+                <th class="px-4 py-2 text-center">التشغيلة (Batch)</th>
+                <th class="px-4 py-2 text-center">انتهاء الصلاحية</th>
+                <th class="px-4 py-2 text-center">الرصيد ومستوى التوفر</th>
+                <th class="px-4 py-2 text-center">حد الطلب</th>
+                <th class="px-4 py-2 text-center">السعر / البيع</th>
+                <th class="px-4 py-2 text-center">الحالة</th>
                 <th class="px-4 py-2 text-center">إجراءات</th>
               </tr>
             </thead>
@@ -540,7 +547,7 @@ function renderTable(){
       }
       return `
       <tr class="hover:bg-canvas-bg transition-colors group ${rowSel?'bg-primary/5':''}">
-        <td class="px-4 py-3 text-center"><input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" ${rowSel?'checked':''} onclick="toggleOne('${id}',this.checked)"/></td>
+        <td class="px-4 py-3 text-center inventory-center-cell"><input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" ${rowSel?'checked':''} onclick="toggleOne('${id}',this.checked)"/></td>
         <td class="px-4 py-3">
           <div class="flex items-center gap-2">
             <img class="w-10 h-10 rounded-lg object-cover shadow-sm bg-surface-container ${hideCols.has('img')?'hidden':''}" onerror="this.style.display='none'" alt="" src="${escapeHtml(p.img||p.image)||''}"/>
@@ -574,7 +581,7 @@ function renderTable(){
             <span class="font-label-sm text-label-sm ${exp<=90?'bg-danger text-on-primary px-1.5 py-0.5 rounded font-bold':'text-tertiary'}">${exp<=0?'منتهية':('متبقي '+exp+' يوماً')}</span>`
           :'<span class="text-text-secondary">—</span>'}
         </td>
-        <td class="px-4 py-3 w-44">
+        <td class="px-4 py-3 w-44 inventory-center-cell">
           ${HAS_STOCK?`
             <div class="flex flex-col gap-1">
               <div class="flex justify-between items-center font-data-tabular text-data-tabular">

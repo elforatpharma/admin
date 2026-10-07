@@ -47,6 +47,20 @@
 #inventory-table tbody td.inventory-status-cell .inline-flex{transform:translateX(0)!important;}
 #inventory-table th:nth-child(6),#inventory-table td:nth-child(6){padding-left:0!important;padding-right:0!important;}
 #inventory-table th:nth-child(7),#inventory-table td:nth-child(7){padding-left:0!important;padding-right:0!important;}
+
+#inventory-table{table-layout:fixed!important;}
+#inventory-table th:nth-child(2),#inventory-table td:nth-child(2){width:27%!important;}
+#inventory-table th:nth-child(3),#inventory-table td:nth-child(3){width:13%!important;}
+#inventory-table th:nth-child(4),#inventory-table td:nth-child(4){width:10%!important;}
+#inventory-table th:nth-child(5),#inventory-table td:nth-child(5){width:14%!important;}
+#inventory-table th:nth-child(6),#inventory-table td:nth-child(6){width:10%!important;}
+#inventory-table th:nth-child(7),#inventory-table td:nth-child(7){width:10%!important;}
+#inventory-table th:nth-child(8),#inventory-table td:nth-child(8){width:10%!important;}
+#inventory-table tbody tr>td{vertical-align:middle!important;}
+#inventory-table tbody td:nth-child(2)>div{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;}
+#inventory-table tbody td:nth-child(2) img{flex:0 0 44px!important;}
+#inventory-table tbody td:nth-child(2) .flex.flex-col{min-width:0!important;overflow:hidden!important;}
+#inventory-table tbody td:nth-child(3){white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
 </style>
 
 <style id="efp-loading-skeleton">
@@ -545,7 +559,7 @@ function renderTable(){
         <td class="px-4 py-3 text-center">
           <input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" ${rowSel?'checked':''} onchange="toggleOne('${id}',this.checked)" aria-label="تحديد الصنف"/>
         </td>
-        <td class="px-4 py-3">
+        <td class="px-1 py-1">
           <div class="flex items-center gap-3 min-w-0 items-center text-right w-full">
             <img class="w-11 h-11 rounded-lg object-cover shadow-sm bg-surface-container flex-shrink-0" onerror="this.style.display='none'" alt="" src="${escapeHtml(p.img||p.image)||''}"/>
             <div class="flex flex-col min-w-0 items-start text-right flex-1">
@@ -554,7 +568,7 @@ function renderTable(){
             </div>
           </div>
         </td>
-        <td class="px-4 py-3">
+        <td class="px-1 py-1">
           <div class="flex flex-col">
             <span class="font-data-tabular text-data-tabular font-bold text-on-surface">${escapeHtml(String(sku))}</span>
             ${HAS_BARCODE?`<span class="font-label-sm text-label-sm text-text-secondary">${escapeHtml(String(barc))}</span>`:''}
@@ -591,7 +605,7 @@ function renderTable(){
             ${info.label}
           </span>
         </td>
-        <td class="px-4 py-3 text-center">
+        <td class="px-1 py-1 text-center">
           <div class="flex items-center justify-center gap-1">${actions}</div>
         </td>
       </tr>`;

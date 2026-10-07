@@ -537,7 +537,7 @@ if (document.readyState === 'loading') {
 // وتتعامل مع InstaPay/Vodafone Cash كحالة دفع غير معروفة.
 // الإصلاح هنا يحافظ على بيانات قاعدة البيانات ويصحح العرض فقط.
 (function installOrdersDisplayFix(){
-  const isOrdersPage = /(?:^|\\/)orders\\.html(?:$|[?#])/.test(location.pathname + location.search + location.hash);
+  const isOrdersPage = location.pathname.endsWith('/orders.html') || location.pathname.endsWith('orders.html');
   if(!isOrdersPage) return;
 
   function getOrders(){

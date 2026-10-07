@@ -134,7 +134,7 @@ jobs:
           package com.elforatpharma.admin;
 
           import android.Manifest;
-          import android.app.Activity;
+          import androidx.fragment.app.FragmentActivity;
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
           import android.content.Intent;
@@ -162,7 +162,7 @@ jobs:
           import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
           import java.util.concurrent.Executor;
 
-          public class MainActivity extends Activity {
+          public class MainActivity extends FragmentActivity {
               private static final String ADMIN_URL = "https://elforatpharma.github.io/admin/";
               private static final String PREFS = "elforat_admin";
               private static final String BIO_ENABLED = "biometric_enabled";

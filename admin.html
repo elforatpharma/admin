@@ -1055,28 +1055,38 @@ window.onload=async function(){
     </div>
     <button id="efp-n-readall" class="text-[11px] font-bold text-[#4d3ceb]">تحديد الكل كمقروء</button>
   </div>
-  <div id="efp-n-list"></div>
+  <div id="efp-n-list"></div><div class="px-4 py-3 bg-slate-50 border-y border-slate-100 text-[11px] font-black text-slate-600">آخر نشاط إداري</div><div id="efp-a-list"></div>
 </div>
 <script>
 (function(){
   const bell=document.querySelector('header button[title="إشعارات"]');
   const panel=document.getElementById('efp-notification-panel');
   const list=document.getElementById('efp-n-list');
+  const activityList=document.getElementById('efp-a-list');
   const summary=document.getElementById('efp-n-summary');
   const readAll=document.getElementById('efp-n-readall');
   if(!bell||!panel||!list)return;
   let notifications=[];
   function esc(v){return typeof escapeHtml==='function'?escapeHtml(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
   function fmt(v){try{return new Date(v).toLocaleString('ar-EG',{dateStyle:'short',timeStyle:'short'});}catch(e){return '';}}
+  let activities=[];
+  function renderActivity(){
+    if(!activityList)return;
+    activityList.innerHTML=activities.length?activities.map(a=>'<div class="px-4 py-2.5 border-b border-slate-100"><div class="text-[11px] font-bold text-slate-700">'+esc(a.action)+'</div><div class="text-[10px] text-slate-400 mt-0.5">'+esc(a.entity_type||'')+' '+esc(a.entity_id||'')+' — '+fmt(a.created_at)+'</div></div>').join(''):'<div class="px-4 py-5 text-center text-[11px] text-slate-400">لا يوجد نشاط مسجل بعد.</div>';
+  }
   function render(){
     const unread=notifications.filter(n=>!n.is_read).length;
     summary.textContent=unread?unread+' إشعارات غير مقروءة':'لا توجد إشعارات غير مقروءة';
     list.innerHTML=notifications.length?notifications.map(n=>'<div class="efp-n-item '+(!n.is_read?'unread':'')+'" data-id="'+n.id+'"><div class="flex items-start gap-3"><span class="efp-n-dot mt-1.5"></span><div class="min-w-0 flex-1"><div class="font-bold text-xs text-slate-800">'+esc(n.title)+'</div><div class="text-[11px] text-slate-500 mt-1 leading-5">'+esc(n.body)+'</div><div class="text-[9px] text-slate-400 mt-1">'+fmt(n.created_at)+'</div></div></div></div>').join(''):'<div class="py-12 text-center text-xs text-slate-400">لا توجد إشعارات حتى الآن.</div>';
+    renderActivity();
     list.querySelectorAll('.efp-n-item').forEach(el=>el.onclick=async()=>{const id=el.dataset.id;await _supabase.from('admin_notifications').update({is_read:true}).eq('id',id);const n=notifications.find(x=>String(x.id)===String(id));if(n)n.is_read=true;render();});
   }
   async function load(){
     const r=await _supabase.from('admin_notifications').select('id,type,title,body,entity_type,entity_id,is_read,created_at').order('created_at',{ascending:false}).limit(40);
-    if(!r.error){notifications=r.data||[];render();}
+    if(!r.error){notifications=r.data||[];}
+    const a=await _supabase.from('admin_activity_log').select('id,action,entity_type,entity_id,created_at').order('created_at',{ascending:false}).limit(25);
+    if(!a.error)activities=a.data||[];
+    render();
   }
   bell.onclick=async function(e){e.preventDefault();e.stopPropagation();panel.classList.toggle('open');panel.setAttribute('aria-hidden',panel.classList.contains('open')?'false':'true');if(panel.classList.contains('open'))await load();};
   readAll.onclick=async function(){const unread=notifications.filter(n=>!n.is_read).map(n=>n.id);if(unread.length)await _supabase.from('admin_notifications').update({is_read:true}).in('id',unread);notifications.forEach(n=>n.is_read=true);render();};

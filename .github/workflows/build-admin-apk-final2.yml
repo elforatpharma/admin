@@ -42,7 +42,7 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/java/com/elforatpharma/admin
           test -s app/google-services.json
-          sed -i -E 's/versionCode = [0-9]+/versionCode = 19/; s/versionName = "[^"]+"/versionName = "1.5.4"/' app/build.gradle.kts
+          sed -i -E 's/versionCode = [0-9]+/versionCode = 20/; s/versionName = "[^"]+"/versionName = "1.5.5"/' app/build.gradle.kts
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
           # Create a separate tightly-cropped splash logo so the Android 12+ startup screen shows the real logo clearly.
@@ -575,14 +575,14 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.5.4
-          name: Elforat Pharma Admin v1.5.4
+          tag_name: v1.5.5
+          name: Elforat Pharma Admin v1.5.5
           generate_release_notes: true
           files: android-app/app/build/outputs/apk/release/app-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Elforat-Pharma-Admin-APK-v1.5.4
+          name: Elforat-Pharma-Admin-APK-v1.5.5
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 

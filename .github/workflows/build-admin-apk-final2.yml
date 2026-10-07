@@ -288,7 +288,7 @@ jobs:
                   boolean dark = (getResources().getConfiguration().uiMode & 0x30) == 0x20;
                   String css = dark
                       ? "body{background:#0f172a!important;color:#e5e7eb!important}" +
-                        "header,aside,.bg-white,.bg-white\/80,.bg-slate-50,.bg-gray-50{background-color:#111827!important;color:#e5e7eb!important}" +
+                        "header,aside,.bg-white,.bg-white/80,.bg-slate-50,.bg-gray-50{background-color:#111827!important;color:#e5e7eb!important}" +
                         ".text-gray-900,.text-slate-800,.text-slate-700{color:#f3f4f6!important}" +
                         ".text-gray-500,.text-slate-500,.text-gray-400{color:#cbd5e1!important}" +
                         "input,select,textarea{background:#1f2937!important;color:#fff!important;border-color:#374151!important}"

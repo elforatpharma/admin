@@ -8,9 +8,10 @@ input,select,textarea{min-width:0;overflow-wrap:normal;word-break:normal;}
 .material-symbols-outlined{font-size:20px;line-height:1;vertical-align:middle;}
 @media(min-width:1024px){
   main{min-width:0;overflow-x:hidden;}
-  .overflow-x-auto{overflow-x:hidden!important;}
-  .overflow-x-auto>table{width:100%!important;min-width:0!important;table-layout:auto;}
-  table{max-width:100%;}
+  /* Keep the page itself fixed, but let wide tables scroll inside their own container. */
+  .overflow-x-auto{overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+  .overflow-x-auto>table{width:max-content;min-width:100%;max-width:none;table-layout:auto;}
+  table{max-width:none;}
   th,td{padding-left:10px!important;padding-right:10px!important;font-size:13px;white-space:nowrap;word-break:normal!important;overflow-wrap:normal!important;vertical-align:middle;}
   .customer-name-wide{min-width:150px;max-width:240px;font-size:13px;}
   .order-code-wide{min-width:130px;max-width:190px;font-size:13px;}

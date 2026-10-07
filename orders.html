@@ -65,6 +65,31 @@
   input,select,textarea,button{max-width:100%}
   .modal,.fixed.inset-0>div{max-width:calc(100vw - 24px)!important}
 }
+<style id="mobile-action-buttons">
+@media(max-width:768px){
+  /* صف أدوات الطلبات: عمودي وواضح على الهاتف */
+  main .flex.items-center.gap-2 > button{
+    white-space:nowrap!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+    width:100%!important;
+    min-width:0!important;
+    justify-content:center!important;
+  }
+  /* حاوية أزرار: تصدير / طباعة / إنشاء طلب / تحديث */
+  main .flex.items-center.gap-2:has(button[onclick="exportCSV()"]){
+    width:100%!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:8px!important;
+  }
+  main .flex.items-center.gap-2:has(button[onclick="exportCSV()"]) button{
+    flex:0 0 auto!important;
+    height:42px!important;
+  }
+}
+</style>
 <style id="inventory-ui-orders">
 /* ===== Inventory UI System — Orders ===== */
 body{background:#f8fafc!important;color:#0f172a;}

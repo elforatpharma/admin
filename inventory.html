@@ -44,6 +44,7 @@
 #inventory-table tbody td.inventory-product-cell>div{align-items:center!important;width:100%;text-align:right!important;}
 #inventory-table tbody td.inventory-product-cell .font-headline-sm,#inventory-table tbody td.inventory-product-cell .scientific-name-cell{text-align:right!important;width:100%;}
 #inventory-table tbody td.inventory-status-cell{text-align:center!important;vertical-align:middle!important;}
+#inventory-table tbody td.inventory-status-cell .inline-flex{transform:translateX(4px)!important;}
 </style>
 
 <style id="efp-loading-skeleton">
@@ -582,7 +583,7 @@ function renderTable(){
             ${Number(p.discount)?`<span class="text-text-secondary text-label-sm">خصم ${p.discount}%</span>`:''}
           </div>
         </td>
-        <td class="px-1 py-1 text-center inventory-status-cell">
+        <td class="px-0.5 py-1 text-center inventory-status-cell">
           <span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full ${info.cls} font-label-sm text-label-sm translate-x-1">
             <span class="w-2 h-2 rounded-full ${info.dot}"></span>
             ${info.label}

@@ -26,6 +26,9 @@
     body::-webkit-scrollbar{display:none;}
     .scrollbar-none::-webkit-scrollbar{display:none;}
     /* هوية النوافذ المنبثقة (SweetAlert2) موحّدة الآن في layout.js لتطبق على كل صفحات اللوحة */
+  /* Center placeholder dashes and their table cells */
+  #inventory-body td.inventory-center-cell{ text-align:center!important; vertical-align:middle!important; }
+  #inventory-body td.inventory-center-cell > span.text-text-secondary{ display:inline-block; width:100%; text-align:center; }
   /* Mobile UX */
 @media(max-width:1023.98px){
   body{overflow-x:hidden!important}
@@ -559,10 +562,10 @@ function renderTable(){
             <span class="font-label-sm text-label-sm text-text-secondary">القاهرة المركزي</span>
           </div>
         </td>
-        <td class="px-4 py-3">
+        <td class="px-4 py-3 inventory-center-cell">
           <span class="font-data-tabular text-data-tabular px-2 py-0.5 rounded bg-surface-container font-mono text-on-surface">${escapeHtml(String(batch))}</span>
         </td>
-        <td class="px-4 py-3">
+        <td class="px-4 py-3 inventory-center-cell">
           ${HAS_EXPIRY&&p.expiry?`
             <div class="flex items-center gap-1.5 font-data-tabular text-data-tabular ${exp<=90?'text-danger font-bold':'text-on-surface'}">
               <span class="material-symbols-outlined text-[16px] ${exp<=90?'text-danger':'text-tertiary'}">${exp<=90?'event_busy':'calendar_today'}</span>
@@ -583,8 +586,8 @@ function renderTable(){
               </div>
             </div>`:'<span class="text-text-secondary">كمية غير مسجلة</span>'}
         </td>
-        <td class="px-4 py-3 font-data-tabular text-data-tabular">${reorder?reorder+' وحدة':'—'}</td>
-        <td class="px-4 py-3 font-data-tabular text-data-tabular">
+        <td class="px-4 py-3 font-data-tabular text-data-tabular inventory-center-cell">${reorder?reorder+' وحدة':'—'}</td>
+        <td class="px-4 py-3 font-data-tabular text-data-tabular inventory-center-cell">
           <div class="flex flex-col">
             <span class="font-bold text-on-surface">${p.price?money(p.price)+' ج.م':'—'}</span>
             ${Number(p.discount)?`<span class="text-text-secondary text-label-sm">خصم ${p.discount}%</span>`:''}

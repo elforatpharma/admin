@@ -642,16 +642,22 @@ function getFiltered(){
 
 function payBadge(o){
   const p=String(payOf(o)).toLowerCase();
+  const kind=paymentKind(o);
   const ps=paymentStatusOf(o);
-  if(ps==='paid')return{html:'<span class="material-symbols-outlined text-xs">verified</span> <span>مدفوع إلكترونياً</span>',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200'};
-  if(ps==='pending')return{html:'<span class="material-symbols-outlined text-xs">schedule</span> <span>بانتظار الدفع</span>',cls:'bg-amber-50 text-amber-800 border border-amber-200'};
+  if(kind==='cod'||ps==='cod')return{html:'<span class="material-symbols-outlined text-xs">payments</span> <span>كاش — عند الاستلام</span>',cls:'bg-amber-100 text-amber-800 border border-amber-200'};
+  if(ps==='paid')return{html:'<span class="material-symbols-outlined text-xs">verified</span> <span>مدفوع</span>',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200'};
+  if(ps==='pending'){
+    if(kind==='instapay')return{html:'<span class="material-symbols-outlined text-xs">schedule</span> <span>بانتظار تأكيد InstaPay</span>',cls:'bg-amber-50 text-amber-800 border border-amber-200'};
+    if(kind==='wallet')return{html:'<span class="material-symbols-outlined text-xs">schedule</span> <span>بانتظار تأكيد فودافون كاش</span>',cls:'bg-amber-50 text-amber-800 border border-amber-200'};
+    return{html:'<span class="material-symbols-outlined text-xs">schedule</span> <span>بانتظار الدفع</span>',cls:'bg-amber-50 text-amber-800 border border-amber-200'};
+  }
   if(ps==='failed')return{html:'<span class="material-symbols-outlined text-xs">error</span> <span>فشل الدفع</span>',cls:'bg-red-50 text-red-700 border border-red-200'};
-  if(p==='cod'||p==='كاش'||p==='الدفع عند الاستلام')return{html:'<span class="material-symbols-outlined text-xs">payments</span> <span>كاش COD</span>',cls:'bg-amber-100 text-amber-800 border border-amber-200'};
-  if(p==='card'||p==='بطاقة'||p==='فيزا')return{html:'<span class="material-symbols-outlined text-xs">credit_card</span> <span>فيزا مدفوعة</span>',cls:'bg-blue-50 text-blue-700 border border-blue-200'};
-  if(p==='wallet'||p==='محفظة'||p==='فودافون كاش')return{html:'<span class="material-symbols-outlined text-xs">account_balance_wallet</span> <span>فودافون كاش</span>',cls:'bg-purple-50 text-purple-700 border border-purple-200'};
-  return{html:'<span class="material-symbols-outlined text-xs">payments</span> <span>—</span>',cls:'bg-surface-container-high text-on-surface-variant'};
+  if(ps==='refunded')return{html:'<span class="material-symbols-outlined text-xs">undo</span> <span>مسترد</span>',cls:'bg-slate-50 text-slate-700 border border-slate-200'};
+  if(kind==='card')return{html:'<span class="material-symbols-outlined text-xs">credit_card</span> <span>بطاقة</span>',cls:'bg-blue-50 text-blue-700 border border-blue-200'};
+  if(kind==='wallet')return{html:'<span class="material-symbols-outlined text-xs">account_balance_wallet</span> <span>فودافون كاش</span>',cls:'bg-purple-50 text-purple-700 border border-purple-200'};
+  if(kind==='instapay')return{html:'<span class="material-symbols-outlined text-xs">account_balance</span> <span>InstaPay</span>',cls:'bg-indigo-50 text-indigo-700 border border-indigo-200'};
+  return{html:'<span class="material-symbols-outlined text-xs">payments</span> <span>غير محدد</span>',cls:'bg-surface-container-high text-on-surface-variant'};
 }
-
 function renderOrders(){
   const filtered=getFiltered();
   const total=filtered.length,totalPages=Math.max(1,Math.ceil(total/perPage));

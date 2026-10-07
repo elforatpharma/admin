@@ -73,4 +73,44 @@ table td .material-symbols-outlined{font-size:15px!important;line-height:1!impor
 table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:15px!important;}
 @media(max-width:768px){
   table td .material-symbols-outlined,table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:13px!important;}
-}\n
+}
+
+/* Final mobile button groups: stack every button group vertically to prevent Arabic text wrapping. */
+@media(max-width:768px){
+  .flex.items-center.gap-1:has(>button),
+  .flex.items-center.gap-2:has(>button),
+  .flex.items-center.gap-3:has(>button),
+  .flex.items-center.gap-4:has(>button),
+  .flex.items-center.gap-5:has(>button),
+  .flex.items-center.gap-6:has(>button){
+    flex-direction:column!important;
+    align-items:stretch!important;
+    width:100%!important;
+    gap:8px!important;
+  }
+
+  .flex.items-center.gap-1:has(>button)>button,
+  .flex.items-center.gap-2:has(>button)>button,
+  .flex.items-center.gap-3:has(>button)>button,
+  .flex.items-center.gap-4:has(>button)>button,
+  .flex.items-center.gap-5:has(>button)>button,
+  .flex.items-center.gap-6:has(>button)>button{
+    width:100%!important;
+    min-width:100%!important;
+    max-width:100%!important;
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+    justify-content:center!important;
+  }
+
+  .flex.items-center.gap-1:has(>button)>button,
+  .flex.items-center.gap-2:has(>button)>button,
+  .flex.items-center.gap-3:has(>button)>button,
+  .flex.items-center.gap-4:has(>button)>button,
+  .flex.items-center.gap-5:has(>button)>button,
+  .flex.items-center.gap-6:has(>button)>button{
+    min-height:42px!important;
+  }
+}

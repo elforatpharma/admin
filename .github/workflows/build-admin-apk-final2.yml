@@ -90,13 +90,15 @@ jobs:
                       </intent-filter>
                   </receiver>
 
-                  <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="portrait"
+                      android:windowSoftInputMode="adjustResize">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
-                  </activity>
-                  <activity android:name=".MainActivity" android:exported="false" android:screenOrientation="portrait">
                   </activity>
               </application>
           </manifest>
@@ -221,6 +223,7 @@ jobs:
                   configureBars();
 
                   FrameLayout root = new FrameLayout(this);
+                  root.setBackgroundColor(Color.WHITE);
                   refresh = new TopOnlySwipeRefreshLayout(this);
                   refresh.setColorSchemeColors(Color.rgb(77,60,235), Color.rgb(133,54,255));
                   webView = new WebView(this);

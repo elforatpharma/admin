@@ -270,7 +270,8 @@ jobs:
                   ViewCompat.requestApplyInsets(root);
 
                   configureWebView();
-                  refresh.setOnRefreshListener(() -> webView.reload());
+                  refresh.setEnabled(false);
+                  setupTopOnlyRefresh();
                   createNotificationChannel();
                   requestNotificationPermission();
                   subscribeToOrderTopic();
@@ -338,6 +339,42 @@ jobs:
                       .build();
 
                   prompt.authenticate(info);
+              }
+
+              private void setupTopOnlyRefresh() {
+                  webView.setOnTouchListener(new View.OnTouchListener() {
+                      float downY;
+                      boolean startedAtTop;
+                      boolean triggered;
+                      final int slop = android.view.ViewConfiguration.get(MainActivity.this).getScaledTouchSlop();
+
+                      @Override public boolean onTouch(View v, android.view.MotionEvent event) {
+                          switch (event.getActionMasked()) {
+                              case android.view.MotionEvent.ACTION_DOWN:
+                                  downY = event.getY();
+                                  startedAtTop = webView.getScrollY() <= 0;
+                                  triggered = false;
+                                  return false;
+                              case android.view.MotionEvent.ACTION_MOVE:
+                                  if (startedAtTop && !triggered) {
+                                      float dy = event.getY() - downY;
+                                      if (dy > slop && webView.getScrollY() <= 0) {
+                                          triggered = true;
+                                          webView.clearFocus();
+                                          webView.reload();
+                                          return true;
+                                      }
+                                  }
+                                  return false;
+                              case android.view.MotionEvent.ACTION_UP:
+                              case android.view.MotionEvent.ACTION_CANCEL:
+                                  triggered = false;
+                                  return false;
+                              default:
+                                  return false;
+                          }
+                      }
+                  });
               }
 
               private void configureWebView() {

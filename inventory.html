@@ -294,7 +294,6 @@
                 <th class="px-4 py-2 text-center">الصنف والاسم العلمي</th>
                 <th class="px-4 py-2 text-center">كود SKU / الباركود</th>
                 <th class="px-4 py-2 text-center">الفئة</th>
-                <th class="px-4 py-2 text-center">التشغيلة (Batch)</th>
                 <th class="px-4 py-2 text-center">انتهاء الصلاحية</th>
                 <th class="px-4 py-2 text-center">الرصيد ومستوى التوفر</th>
                 <th class="px-4 py-2 text-center">السعر / البيع</th>
@@ -303,7 +302,6 @@
               </tr>
             </thead>
             <tbody id="inventory-body" class="divide-y divide-border-subtle font-body-sm text-body-sm text-on-surface">
-              <tr><td colspan="11" class="text-center py-12 text-text-secondary font-bold animate-pulse">جاري تحميل المخزون...</td></tr>
             </tbody>
           </table>
         </div>
@@ -450,7 +448,6 @@ async function fetchProducts(){
     products=data||[];
     fillWarehouseSelect();renderKPIs();renderTable();renderRecent();renderCategoryBars();
   }catch(e){
-    document.getElementById('inventory-body').innerHTML=`<tr><td colspan="11" class="text-center py-16 text-error font-bold">فشل جلب المخزون.</td></tr>`;
   }
 }
 
@@ -518,7 +515,6 @@ function renderTable(){
   document.getElementById('bulk-info').textContent=sel.size?`| المحدد: ${sel.size} — <a href="#" onclick="bulkDelete()" class="text-danger font-bold">حذف المحدد</a>`:'';
 
   if(!slice.length){
-    tbody.innerHTML=`<tr><td colspan="11" class="text-center py-16 text-text-secondary">لا توجد أصناف مطابقة حالياً</td></tr>`;
   }else{
     tbody.innerHTML=slice.map(p=>{
       const id=String(p.id),rowSel=sel.has(id);
@@ -530,7 +526,6 @@ function renderTable(){
       const barColor=pct<=30?'bg-warning':(info.label==='انتهاء وشيك'||info.label==='منتهية الصلاحية'?'bg-danger':'bg-success');
       const exp=expDaysRemaining(p);
       const location=p.category||'—';
-      const batch=HAS_BATCH?(p.batch||p.batch_no||p.lot||'—'):'—';
       const reorder=Number(p.reorder_level);
       let actions='';
       const editBtn=`<button onclick="editProduct('${id}')" class="p-1.5 rounded-full hover:bg-surface-container text-text-secondary hover:text-primary transition-colors" title="تعديل بيانات الصنف"><span class="material-symbols-outlined text-[18px]">edit_square</span></button>`;
@@ -568,8 +563,6 @@ function renderTable(){
             <span class="font-label-sm text-label-sm text-text-secondary">القاهرة المركزي</span>
           </div>
         </td>
-        <td class="px-4 py-3 inventory-center-cell">
-          <span class="font-data-tabular text-data-tabular px-2 py-0.5 rounded bg-surface-container font-mono text-on-surface">${escapeHtml(String(batch))}</span>
         </td>
         <td class="px-4 py-3 inventory-center-cell">
           ${HAS_EXPIRY&&p.expiry?`

@@ -89,6 +89,50 @@
     height:42px!important;
   }
 }
+<style id="mobile-order-filter-buttons">
+@media(max-width:768px){
+  /* فلاتر الطلبات: عمودية وعلى سطر واحد في الهاتف */
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6{
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+  }
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div{
+    min-height:58px!important;
+    height:58px!important;
+    padding:10px 14px!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    overflow:hidden!important;
+  }
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div > div{
+    margin-bottom:0!important;
+    flex:0 0 auto!important;
+  }
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div > div:first-child{
+    gap:8px!important;
+  }
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div > div:first-child span:first-child{
+    white-space:nowrap!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+  }
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 > div > div:last-child{
+    margin:0!important;
+    align-items:center!important;
+    gap:8px!important;
+  }
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 .text-headline-xl{
+    font-size:18px!important;
+    line-height:24px!important;
+  }
+  main .grid.grid-cols-2.md\\:grid-cols-3.lg\\:grid-cols-6 .font-label-sm{
+    white-space:nowrap!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+  }
+}
+</style>
 </style>
 <style id="inventory-ui-orders">
 /* ===== Inventory UI System — Orders ===== */

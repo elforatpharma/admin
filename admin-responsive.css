@@ -68,14 +68,13 @@ input,select,textarea{min-width:0;overflow-wrap:normal;word-break:normal;}
   .overflow-x-auto>table{min-width:760px!important;}
 }
 
-/* Compact table action icons */
 table td .material-symbols-outlined{font-size:15px!important;line-height:1!important;}
 table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:15px!important;}
 @media(max-width:768px){
   table td .material-symbols-outlined,table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:13px!important;}
 }
 
-/* Final mobile button groups: stack every button group vertically to prevent Arabic text wrapping. */
+/* Mobile button groups outside tables stack vertically. */
 @media(max-width:768px){
   .flex.items-center.gap-1:has(>button),
   .flex.items-center.gap-2:has(>button),
@@ -95,37 +94,26 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
   .flex.items-center.gap-4:has(>button)>button,
   .flex.items-center.gap-5:has(>button)>button,
   .flex.items-center.gap-6:has(>button)>button{
-    width:100%!important;
-    min-width:100%!important;
-    max-width:100%!important;
-    flex:0 0 auto!important;
-    white-space:nowrap!important;
-    word-break:normal!important;
-    overflow-wrap:normal!important;
-    justify-content:center!important;
+    width:100%!important;min-width:100%!important;max-width:100%!important;
+    flex:0 0 auto!important;white-space:nowrap!important;word-break:normal!important;
+    overflow-wrap:normal!important;justify-content:center!important;min-height:42px!important;
   }
 
-  .flex.items-center.gap-1:has(>button)>button,
-  .flex.items-center.gap-2:has(>button)>button,
-  .flex.items-center.gap-3:has(>button)>button,
-  .flex.items-center.gap-4:has(>button)>button,
-  .flex.items-center.gap-5:has(>button)>button,
-  .flex.items-center.gap-6:has(>button)>button{
-    min-height:42px!important;
-  }
-
-  /* Table action groups stay horizontal, exactly as before. */
+  /* Table actions remain horizontal. */
   table td .flex.items-center.gap-1:has(>button),
   table td .flex.items-center.gap-2:has(>button),
   table td .flex.items-center.gap-3:has(>button),
   table td .flex.items-center.gap-4:has(>button),
   table td .flex.items-center.gap-5:has(>button),
-  table td .flex.items-center.gap-6:has(>button){
-    flex-direction:row!important;
-    align-items:center!important;
-    justify-content:center!important;
-    width:auto!important;
-    gap:4px!important;
+  table td .flex.items-center.gap-6:has(>button),
+  table td .flex.items-center.gap-1:has(>a),
+  table td .flex.items-center.gap-2:has(>a),
+  table td .flex.items-center.gap-3:has(>a),
+  table td .flex.items-center.gap-4:has(>a),
+  table td .flex.items-center.gap-5:has(>a),
+  table td .flex.items-center.gap-6:has(>a){
+    flex-direction:row!important;align-items:center!important;justify-content:center!important;
+    width:auto!important;gap:4px!important;
   }
 
   table td .flex.items-center.gap-1:has(>button)>button,
@@ -133,40 +121,52 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
   table td .flex.items-center.gap-3:has(>button)>button,
   table td .flex.items-center.gap-4:has(>button)>button,
   table td .flex.items-center.gap-5:has(>button)>button,
-  table td .flex.items-center.gap-6:has(>button)>button{
-    width:auto!important;
-    min-width:0!important;
-    max-width:none!important;
-    min-height:0!important;
-    flex:0 0 auto!important;
-    padding-left:4px!important;
-    padding-right:4px!important;
-  }
-
-  /* Also preserve horizontal action links inside table cells. */
-  table td .flex.items-center.gap-1:has(>a),
-  table td .flex.items-center.gap-2:has(>a),
-  table td .flex.items-center.gap-3:has(>a),
-  table td .flex.items-center.gap-4:has(>a),
-  table td .flex.items-center.gap-5:has(>a),
-  table td .flex.items-center.gap-6:has(>a){
-    flex-direction:row!important;
-    align-items:center!important;
-    justify-content:center!important;
-    width:auto!important;
-    gap:4px!important;
-  }
-
+  table td .flex.items-center.gap-6:has(>button)>button,
   table td .flex.items-center.gap-1:has(>a)>a,
   table td .flex.items-center.gap-2:has(>a)>a,
   table td .flex.items-center.gap-3:has(>a)>a,
   table td .flex.items-center.gap-4:has(>a)>a,
   table td .flex.items-center.gap-5:has(>a)>a,
   table td .flex.items-center.gap-6:has(>a)>a{
+    width:auto!important;min-width:0!important;max-width:none!important;min-height:0!important;
+    flex:0 0 auto!important;padding-left:4px!important;padding-right:4px!important;
+  }
+
+  /* Header controls stay on their original horizontal row. */
+  header>.flex.items-center.gap-4:last-child{
+    flex-direction:row!important;
+    align-items:center!important;
+    width:auto!important;
+    gap:16px!important;
+  }
+  header>.flex.items-center.gap-4:last-child>.flex.items-center.gap-2{
+    flex-direction:row!important;
+    align-items:center!important;
+    width:auto!important;
+    gap:8px!important;
+  }
+  header>.flex.items-center.gap-4:last-child button{
     width:auto!important;
     min-width:0!important;
     max-width:none!important;
     min-height:0!important;
     flex:0 0 auto!important;
+    padding-left:8px!important;
+    padding-right:8px!important;
+  }
+
+  /* Dashboard/sidebar close button: keep icon controls horizontal and compact. */
+  [aria-label="إغلاق"] button,
+  [aria-label="Close"] button,
+  button[title="إغلاق"],
+  button[title="Close"],
+  .sidebar-close,
+  .mobile-sidebar-close{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:0!important;
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
   }
 }

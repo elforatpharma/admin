@@ -43,6 +43,14 @@
 .order-detail-panel .whitespace-nowrap{white-space:nowrap!important;}
 .order-detail-panel .material-symbols-outlined{flex-shrink:0!important;}
 @media(max-width:768px){.order-detail-panel{max-width:250px!important;width:250px!important;}}
+
+/* Make order details header compact without forcing a fixed horizontal panel width */
+.order-detail-panel{width:auto!important;max-width:none!important;min-width:0!important;padding-left:8px!important;padding-right:8px!important;}
+.order-detail-panel .flex{gap:4px!important;}
+.order-detail-panel .material-symbols-outlined{font-size:11px!important;}
+.order-detail-panel h1,.order-detail-panel h2,.order-detail-panel h3{font-size:11px!important;}
+.order-detail-panel button{padding:2px!important;}
+@media(max-width:768px){.order-detail-panel{padding-left:4px!important;padding-right:4px!important;}.order-detail-panel,.order-detail-panel *{font-size:8px!important;}.order-detail-panel .material-symbols-outlined{font-size:10px!important;}}
 </style><style>
     body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}

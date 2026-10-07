@@ -87,16 +87,116 @@ public final class AppUpdater {
         return false;
     }
 
+    private static GradientDrawable rounded(int color, float radius) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(color);
+        d.setCornerRadius(radius);
+        return d;
+    }
+
+    private static GradientDrawable brandButton() {
+        GradientDrawable d = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{Color.rgb(77, 60, 235), Color.rgb(133, 54, 255)});
+        d.setCornerRadius(60f);
+        return d;
+    }
+
+    private static int dp(Context context, int value) {
+        return Math.round(value * context.getResources().getDisplayMetrics().density);
+    }
+
     private static void showDialog(Context context, String version, String apkUrl) {
-        new AlertDialog.Builder(context)
-                .setTitle("تحديث جديد متاح")
-                .setMessage("يوجد إصدار جديد من تطبيق الفرات فارما (" + version
-                        + ").\n\nيمكنك تحديث التطبيق الآن بدون حذفه أو تثبيته من البداية.")
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setGravity(Gravity.CENTER_HORIZONTAL);
+        card.setPadding(dp(context, 26), dp(context, 24), dp(context, 26), dp(context, 22));
+        card.setBackground(rounded(Color.WHITE, dp(context, 30)));
+
+        ImageView logo = new ImageView(context);
+        logo.setImageResource(com.elforatpharma.admin.R.drawable.launcher_logo);
+        logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        LinearLayout.LayoutParams logoLp = new LinearLayout.LayoutParams(dp(context, 88), dp(context, 72));
+        logoLp.bottomMargin = dp(context, 8);
+        card.addView(logo, logoLp);
+
+        TextView title = new TextView(context);
+        title.setText("تحديث جديد متاح");
+        title.setTextColor(Color.rgb(30, 41, 59));
+        title.setTextSize(22);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        card.addView(title, new LinearLayout.LayoutParams(-1, dp(context, 38)));
+
+        TextView subtitle = new TextView(context);
+        subtitle.setText("إصدار أحدث من لوحة تحكم الفرات فارما جاهز");
+        subtitle.setTextColor(Color.rgb(100, 116, 139));
+        subtitle.setTextSize(14);
+        subtitle.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams subLp = new LinearLayout.LayoutParams(-1, dp(context, 38));
+        subLp.bottomMargin = dp(context, 12);
+        card.addView(subtitle, subLp);
+
+        TextView versionView = new TextView(context);
+        versionView.setText("الإصدار الجديد  " + version);
+        versionView.setTextColor(Color.rgb(77, 60, 235));
+        versionView.setTextSize(13);
+        versionView.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        versionView.setGravity(Gravity.CENTER);
+        versionView.setBackground(rounded(Color.rgb(245, 243, 255), dp(context, 40)));
+        card.addView(versionView, new LinearLayout.LayoutParams(-1, dp(context, 42)));
+
+        TextView message = new TextView(context);
+        message.setText("سيتم تنزيل التحديث ثم فتح الإصدار الجديد تلقائيًا.\nلن تحتاج إلى حذف التطبيق أو تثبيته من البداية.");
+        message.setTextColor(Color.rgb(71, 85, 105));
+        message.setTextSize(13);
+        message.setGravity(Gravity.CENTER);
+        message.setPadding(dp(context, 4), dp(context, 14), dp(context, 4), dp(context, 10));
+        card.addView(message, new LinearLayout.LayoutParams(-1, dp(context, 74)));
+
+        LinearLayout actions = new LinearLayout(context);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView later = new TextView(context);
+        later.setText("لاحقًا");
+        later.setTextColor(Color.rgb(100, 116, 139));
+        later.setTextSize(15);
+        later.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        later.setGravity(Gravity.CENTER);
+        later.setBackground(rounded(Color.rgb(248, 250, 252), dp(context, 22)));
+
+        TextView update = new TextView(context);
+        update.setText("تحديث الآن");
+        update.setTextColor(Color.WHITE);
+        update.setTextSize(15);
+        update.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        update.setGravity(Gravity.CENTER);
+        update.setBackground(brandButton());
+
+        LinearLayout.LayoutParams buttonLp = new LinearLayout.LayoutParams(0, dp(context, 54), 1f);
+        buttonLp.setMargins(dp(context, 4), 0, dp(context, 4), 0);
+        actions.addView(later, buttonLp);
+        actions.addView(update, buttonLp);
+        card.addView(actions, new LinearLayout.LayoutParams(-1, dp(context, 58)));
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setView(card)
                 .setCancelable(false)
-                .setNegativeButton("لاحقًا", null)
-                .setPositiveButton("تحديث الآن",
-                        (d, w) -> download(context, apkUrl, version))
-                .show();
+                .create();
+
+        later.setOnClickListener(v -> dialog.dismiss());
+        update.setOnClickListener(v -> {
+            dialog.dismiss();
+            download(context, apkUrl, version);
+        });
+
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setDimAmount(0.38f);
+            dialog.getWindow().setLayout(dp(context, 350), -2);
+        }
     }
 
     private static void download(Context context, String apkUrl, String version) {

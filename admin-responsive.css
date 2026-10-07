@@ -48,13 +48,29 @@ input,select,textarea{min-width:0;overflow-wrap:normal;word-break:normal;}
   th,td{font-size:10px!important;padding-left:3px!important;padding-right:3px!important;}
   .overflow-x-auto table .truncate{max-width:80px!important;}
 }
-/* Final table fit: no inner horizontal scrolling. */
-.overflow-x-auto{overflow-x:hidden!important;overflow-y:visible!important;}
-.overflow-x-auto>table,table{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important;}
-table th,table td{overflow:hidden;text-overflow:ellipsis;}
-@media(max-width:768px){table th,table td{font-size:10px!important;padding-left:3px!important;padding-right:3px!important;}}
+/* Final responsive tables: desktop keeps the existing layout; small screens scroll horizontally. */
+.overflow-x-auto{overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+.overflow-x-auto>table{width:100%!important;max-width:none!important;table-layout:fixed!important;}
+.overflow-x-auto table th,.overflow-x-auto table td{overflow:hidden;text-overflow:ellipsis;}
+
+@media(max-width:1023px){
+  .overflow-x-auto{overflow-x:auto!important;overflow-y:visible!important;}
+  .overflow-x-auto>table{width:max-content!important;min-width:720px!important;max-width:none!important;table-layout:fixed!important;}
+  .overflow-x-auto>table th,.overflow-x-auto>table td{overflow:hidden;text-overflow:ellipsis;}
+}
+
+@media(max-width:768px){
+  .overflow-x-auto>table{min-width:760px!important;}
+  table td .material-symbols-outlined,table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:13px!important;}
+}
+
+@media(max-width:480px){
+  .overflow-x-auto>table{min-width:760px!important;}
+}
 
 /* Compact table action icons */
 table td .material-symbols-outlined{font-size:15px!important;line-height:1!important;}
 table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:15px!important;}
-@media(max-width:768px){table td .material-symbols-outlined,table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:13px!important;}}
+@media(max-width:768px){
+  table td .material-symbols-outlined,table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:13px!important;}
+}\n

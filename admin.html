@@ -27,6 +27,12 @@
     .btn-brand-gradient:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,0.4)!important;}
     .nav-active{background:linear-gradient(135deg,rgba(77,60,235,.1),rgba(77,60,235,.04))!important;color:#4d3ceb!important;border-right:3px solid #4d3ceb!important;border-radius:0 9999px 9999px 0!important;}
     .modal-enter{animation:modalIn .28s cubic-bezier(.2,.9,.3,1.2) forwards;}
+    /* Recent orders: keep Arabic customer names horizontal and readable. */
+    .customer-col,.customer-cell{width:24%;min-width:190px;}
+    .customer-cell span{white-space:normal;overflow-wrap:break-word;word-break:normal;line-height:1.6;}
+    @media (max-width:768px){
+      .customer-col,.customer-cell{width:230px;min-width:230px;}
+    }
     @keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
   </style>
 </head>
@@ -298,7 +304,7 @@
               <table class="w-full text-right border-collapse">
                 <thead>
                   <tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
-                    <th class="py-3 px-3 rounded-r-2xl">العميل</th>
+                    <th class="py-3 px-3 rounded-r-2xl customer-col">العميل</th>
                     <th class="py-3 px-3">المنتجات</th>
                     <th class="py-3 px-3">الإجمالي</th>
                     <th class="py-3 px-3">الحالة</th>
@@ -899,7 +905,7 @@ async function fetchStats(){
           ?o.items.filter(i=>!i.isGift).reduce((sum,i)=>sum+(Number(i.qty)||1),0)
           :0;
         return '<tr class="hover:bg-primary-surface/40 transition-colors">'+
-          '<td class="py-3 px-3"><div class="flex flex-col">'+
+          '<td class="py-3 px-3 customer-cell"><div class="flex flex-col min-w-0">'+
           '<span class="font-bold">'+escapeHtml(customerName)+'</span>'+
           '<span class="text-on-surface-variant text-[11px]" dir="ltr">'+escapeHtml(phone)+'</span>'+
           '</div></td>'+

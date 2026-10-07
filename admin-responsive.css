@@ -48,3 +48,8 @@ input,select,textarea{min-width:0;overflow-wrap:normal;word-break:normal;}
   th,td{font-size:10px!important;padding-left:3px!important;padding-right:3px!important;}
   .overflow-x-auto table .truncate{max-width:80px!important;}
 }
+/* Final table fit: no inner horizontal scrolling. */
+.overflow-x-auto{overflow-x:hidden!important;overflow-y:visible!important;}
+.overflow-x-auto>table,table{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important;}
+table th,table td{overflow:hidden;text-overflow:ellipsis;}
+@media(max-width:768px){table th,table td{font-size:10px!important;padding-left:3px!important;padding-right:3px!important;}}

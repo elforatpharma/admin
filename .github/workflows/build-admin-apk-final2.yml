@@ -140,14 +140,14 @@ jobs:
                   NotificationManager nm = getSystemService(NotificationManager.class);
                   createChannel(nm);
 
-                  Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse(target));
-                  open.setPackage(getPackageName());
+                  Intent open = new Intent(this, MainActivity.class);
+                  open.putExtra("deep_link_url", target);
                   open.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                   PendingIntent pi = PendingIntent.getActivity(this, orderId.hashCode(), open,
                           PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-                  Intent actionOpen = new Intent(Intent.ACTION_VIEW, Uri.parse(target));
-                  actionOpen.setPackage(getPackageName());
+                  Intent actionOpen = new Intent(this, MainActivity.class);
+                  actionOpen.putExtra("deep_link_url", target);
                   PendingIntent actionPi = PendingIntent.getActivity(this, orderId.hashCode() + 1, actionOpen,
                           PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
@@ -209,7 +209,7 @@ jobs:
                           });
               }
           }
-          EOFF
+          EOF
 
           cat > app/src/main/java/com/elforatpharma/admin/TopOnlySwipeRefreshLayout.java <<'EOF'
           package com.elforatpharma.admin;
@@ -389,10 +389,11 @@ jobs:
                   boolean biometricEnabled = getSharedPreferences(PREFS, MODE_PRIVATE)
                           .getBoolean(BIO_ENABLED, false);
 
+                  String deepLinkUrl = getIntent().getStringExtra("deep_link_url");
                   if (biometricEnabled && biometricAvailable()) {
-                      showBiometricGate();
+                      showBiometricGate(deepLinkUrl);
                   } else {
-                      webView.loadUrl(ADMIN_URL);
+                      webView.loadUrl(deepLinkUrl == null || deepLinkUrl.isEmpty() ? ADMIN_URL : deepLinkUrl);
                   }
               }
 
@@ -410,7 +411,7 @@ jobs:
                   return r == BiometricManager.BIOMETRIC_SUCCESS;
               }
 
-              private void showBiometricGate() {
+              private void showBiometricGate(String deepLinkUrl) {
                   if (biometricInProgress) return;
                   biometricInProgress = true;
 
@@ -418,7 +419,7 @@ jobs:
                   BiometricPrompt prompt = new BiometricPrompt(this, ex, new BiometricPrompt.AuthenticationCallback() {
                       @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
                           biometricInProgress = false;
-                          webView.loadUrl(ADMIN_URL);
+                          webView.loadUrl(deepLinkUrl == null || deepLinkUrl.isEmpty() ? ADMIN_URL : deepLinkUrl);
                       }
 
                       @Override public void onAuthenticationError(int code, CharSequence msg) {
@@ -426,13 +427,13 @@ jobs:
 
                           // "استخدام تسجيل الدخول" is a genuine fallback, not a loop.
                           if (code == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                              webView.loadUrl(ADMIN_URL);
+                              webView.loadUrl(deepLinkUrl == null || deepLinkUrl.isEmpty() ? ADMIN_URL : deepLinkUrl);
                               return;
                           }
 
                           Toast.makeText(MainActivity.this, "استخدم بصمة الإصبع للدخول إلى لوحة التحكم", Toast.LENGTH_LONG).show();
                           new android.os.Handler().postDelayed(() -> {
-                              if (!isFinishing() && !isDestroyed()) showBiometricGate();
+                              if (!isFinishing() && !isDestroyed()) showBiometricGate(deepLinkUrl);
                           }, 700);
                       }
 
@@ -462,6 +463,7 @@ jobs:
                   s.setAllowFileAccess(false);
                   s.setAllowContentAccess(true);
                   s.setSupportZoom(false);
+                  s.setCacheMode(WebSettings.LOAD_DEFAULT);
 
                   CookieManager cm = CookieManager.getInstance();
                   cm.setAcceptCookie(true);

@@ -388,8 +388,8 @@ function renderSidebar(activePage) {
   const sidebarHTML = `
     <aside id="app-sidebar" class="w-64 h-screen fixed right-0 top-0 bg-white border-l border-gray-100/80 flex flex-col z-50" style="box-shadow:2px 0 24px rgba(0,0,0,.04)">
       <div class="p-5 flex items-center gap-3 border-b border-gray-50">
-        <div class="w-10 h-10 bg-gradient-to-br from-[#4d3ceb] to-[#8536ff] rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
-          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">clinical_notes</span>
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden bg-white shadow-sm border border-gray-100">
+          <img src="./logo.png" alt="الفرات فارما" class="w-full h-full object-contain p-1" />
         </div>
         <div class="flex-1 min-w-0">
           <h1 class="text-[15px] font-black leading-none text-gray-900">الفرات فارما</h1>

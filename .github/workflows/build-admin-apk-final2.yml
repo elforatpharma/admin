@@ -42,7 +42,7 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/java/com/elforatpharma/admin
           test -s app/google-services.json
-          sed -i -E 's/versionCode = [0-9]+/versionCode = 15/; s/versionName = "[^"]+"/versionName = "1.5.0"/' app/build.gradle.kts
+          sed -i -E 's/versionCode = [0-9]+/versionCode = 16/; s/versionName = "[^"]+"/versionName = "1.5.1"/' app/build.gradle.kts
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
           # Create a separate tightly-cropped splash logo so the Android 12+ startup screen shows the real logo clearly.
@@ -256,11 +256,8 @@ jobs:
 
                   FrameLayout root = new FrameLayout(this);
                   root.setBackgroundColor(Color.WHITE);
-                  refresh = new TopOnlySwipeRefreshLayout(this);
-                  refresh.setColorSchemeColors(Color.rgb(77,60,235), Color.rgb(133,54,255));
-                  webView = new WebView(this);
-                  refresh.addView(webView, new FrameLayout.LayoutParams(-1,-1));
-                  root.addView(refresh, new FrameLayout.LayoutParams(-1,-1));
+                  webView = new TopRefreshWebView(this);
+                  root.addView(webView, new FrameLayout.LayoutParams(-1,-1));
                   setContentView(root);
                   ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
                       Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -339,42 +336,6 @@ jobs:
                       .build();
 
                   prompt.authenticate(info);
-              }
-
-              private void setupTopOnlyRefresh() {
-                  webView.setOnTouchListener(new View.OnTouchListener() {
-                      float downY;
-                      boolean startedAtTop;
-                      boolean triggered;
-                      final int slop = android.view.ViewConfiguration.get(MainActivity.this).getScaledTouchSlop();
-
-                      @Override public boolean onTouch(View v, android.view.MotionEvent event) {
-                          switch (event.getActionMasked()) {
-                              case android.view.MotionEvent.ACTION_DOWN:
-                                  downY = event.getY();
-                                  startedAtTop = webView.getScrollY() <= 0;
-                                  triggered = false;
-                                  return false;
-                              case android.view.MotionEvent.ACTION_MOVE:
-                                  if (startedAtTop && !triggered) {
-                                      float dy = event.getY() - downY;
-                                      if (dy > slop && webView.getScrollY() <= 0) {
-                                          triggered = true;
-                                          webView.clearFocus();
-                                          webView.reload();
-                                          return true;
-                                      }
-                                  }
-                                  return false;
-                              case android.view.MotionEvent.ACTION_UP:
-                              case android.view.MotionEvent.ACTION_CANCEL:
-                                  triggered = false;
-                                  return false;
-                              default:
-                                  return false;
-                          }
-                      }
-                  });
               }
 
               private void configureWebView() {
@@ -571,14 +532,14 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.5.0
-          name: Elforat Pharma Admin v1.5.0
+          tag_name: v1.5.1
+          name: Elforat Pharma Admin v1.5.1
           generate_release_notes: true
           files: android-app/app/build/outputs/apk/release/app-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Elforat-Pharma-Admin-APK-v1.5.0
+          name: Elforat-Pharma-Admin-APK-v1.5.1
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 

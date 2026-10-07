@@ -297,7 +297,6 @@
                 <th class="px-4 py-2 text-center">التشغيلة (Batch)</th>
                 <th class="px-4 py-2 text-center">انتهاء الصلاحية</th>
                 <th class="px-4 py-2 text-center">الرصيد ومستوى التوفر</th>
-                <th class="px-4 py-2 text-center">حد الطلب</th>
                 <th class="px-4 py-2 text-center">السعر / البيع</th>
                 <th class="px-4 py-2 text-center">الحالة</th>
                 <th class="px-4 py-2 text-center">إجراءات</th>
@@ -593,7 +592,7 @@ function renderTable(){
               </div>
             </div>`:'<span class="text-text-secondary">كمية غير مسجلة</span>'}
         </td>
-        <td class="px-4 py-3 font-data-tabular text-data-tabular inventory-center-cell">${reorder?reorder+' وحدة':'—'}</td>
+        
         <td class="px-4 py-3 font-data-tabular text-data-tabular inventory-center-cell">
           <div class="flex flex-col">
             <span class="font-bold text-on-surface">${p.price?money(p.price)+' ج.م':'—'}</span>

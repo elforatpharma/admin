@@ -68,7 +68,7 @@ jobs:
                       </intent-filter>
                   </service>
 
-                  <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
+                  <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="landscape">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
@@ -385,7 +385,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Elforat-Pharma-Admin-APK-v1.4.0
+          name: Elforat-Pharma-Admin-APK-v1.4.1
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 

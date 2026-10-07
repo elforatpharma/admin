@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.provider.Settings;
+import android.content.ClipData;
 import android.view.Gravity;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -409,13 +410,14 @@ public final class AppUpdater {
                         context.getPackageName() + ".fileprovider",
                         apkFile);
 
-                Intent intent = new Intent(Intent.ACTION_VIEW);
+                Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
                 intent.setDataAndType(
                         installUri,
                         "application/vnd.android.package-archive");
                 intent.addFlags(
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
                                 | Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setClipData(ClipData.newRawUri("update.apk", installUri));
 
                 context.startActivity(intent);
             } catch (Exception e) {

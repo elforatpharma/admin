@@ -1,4 +1,4 @@
-/* Elforat Pharma Admin — responsive layout hardening */
+/* Elforat Pharma Admin — compact no-scroll responsive tables */
 html,body{width:100%;max-width:100%;overflow-x:hidden;}
 *,*::before,*::after{box-sizing:border-box;}
 body{min-width:0;font-size:14px;}
@@ -6,38 +6,45 @@ img,svg,video,canvas{max-width:100%;}
 input,select,textarea,button{max-width:100%;}
 input,select,textarea{min-width:0;overflow-wrap:normal;word-break:normal;}
 .material-symbols-outlined{font-size:20px;line-height:1;vertical-align:middle;}
+
 @media(min-width:1024px){
   main{min-width:0;overflow-x:hidden;}
-  /* Keep the page itself fixed, but let wide tables scroll inside their own container. */
-  .overflow-x-auto{overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
-  .overflow-x-auto>table{width:max-content;min-width:100%;max-width:none;table-layout:auto;}
-  table{max-width:none;}
-  th,td{padding-left:10px!important;padding-right:10px!important;font-size:13px;white-space:nowrap;word-break:normal!important;overflow-wrap:normal!important;vertical-align:middle;}
-  .customer-name-wide{min-width:150px;max-width:240px;font-size:13px;}
-  .order-code-wide{min-width:130px;max-width:190px;font-size:13px;}
-  .material-symbols-outlined{font-size:19px;}
+  .overflow-x-auto{overflow-x:hidden!important;overflow-y:visible!important;}
+  .overflow-x-auto>table,table{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:auto;}
+  th,td{padding-left:6px!important;padding-right:6px!important;font-size:11px!important;white-space:nowrap;word-break:normal!important;overflow-wrap:normal!important;vertical-align:middle;}
+  .customer-name-wide{min-width:115px;max-width:180px;font-size:11px!important;}
+  .order-code-wide{min-width:105px;max-width:150px;font-size:11px!important;}
+  .material-symbols-outlined{font-size:17px;}
+  .overflow-x-auto table .truncate{max-width:110px!important;}
 }
-@media(max-width:1023px){.lg\\:pr-64{padding-right:0!important;}main{min-width:0;overflow-x:hidden;}}
+
+@media(max-width:1023px){
+  .lg\\:pr-64{padding-right:0!important;}
+  main{min-width:0;overflow-x:hidden;}
+}
+
 @media(max-width:768px){
-  body{font-size:14px;}
-  .overflow-x-auto{overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
-  .overflow-x-auto>table{min-width:max-content;width:max-content;}
-  table{max-width:none;}
-  th,td{white-space:nowrap;word-break:normal!important;overflow-wrap:normal!important;vertical-align:middle;font-size:13px;}
+  body{font-size:13px;}
+  .overflow-x-auto{overflow-x:hidden!important;overflow-y:visible!important;}
+  .overflow-x-auto>table,table{width:100%!important;min-width:0!important;max-width:100%!important;table-layout:auto;}
+  th,td{white-space:nowrap;word-break:normal!important;overflow-wrap:normal!important;vertical-align:middle;font-size:10.5px!important;padding-left:4px!important;padding-right:4px!important;}
   td .customer-name-wide,td .order-code-wide,.customer-name-wide,.order-code-wide{white-space:nowrap!important;word-break:normal!important;overflow-wrap:normal!important;display:block;}
-  .customer-name-wide{min-width:190px;max-width:none;font-size:13px;}
-  .order-code-wide{min-width:180px;max-width:none;font-size:13px;}
+  .customer-name-wide{min-width:125px;max-width:160px;font-size:10.5px!important;}
+  .order-code-wide{min-width:115px;max-width:145px;font-size:10.5px!important;}
   .grid{min-width:0}.grid>*{min-width:0}.flex-1{min-width:0}.flex>*{min-width:0;}
-  header{min-width:0}header input{min-width:0;font-size:13px!important;}
-  header .material-symbols-outlined{font-size:19px;}
+  header{min-width:0}header input{min-width:0;font-size:12px!important;}
+  header .material-symbols-outlined{font-size:17px;}
   button,a,label,th{word-break:normal!important;overflow-wrap:normal!important;}
   .grid-cols-2,.grid-cols-3,.grid-cols-4,.grid-cols-5,.grid-cols-6{grid-template-columns:minmax(0,1fr)!important;}
   [role="dialog"],.fixed.inset-0{max-width:100vw;}
 }
+
 @media(max-width:480px){
-  main{padding-left:10px!important;padding-right:10px!important;}
-  header{padding-left:10px!important;padding-right:10px!important;}
-  .customer-name-wide{min-width:180px}.order-code-wide{min-width:170px;}
-  .material-symbols-outlined{font-size:18px;}
-  th,td{font-size:12.5px;padding-left:8px!important;padding-right:8px!important;}
+  main{padding-left:8px!important;padding-right:8px!important;}
+  header{padding-left:8px!important;padding-right:8px!important;}
+  .customer-name-wide{min-width:105px;max-width:140px;}
+  .order-code-wide{min-width:100px;max-width:135px;}
+  .material-symbols-outlined{font-size:16px;}
+  th,td{font-size:10px!important;padding-left:3px!important;padding-right:3px!important;}
+  .overflow-x-auto table .truncate{max-width:80px!important;}
 }

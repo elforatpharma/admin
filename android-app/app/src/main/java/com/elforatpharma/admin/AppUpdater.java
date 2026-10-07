@@ -301,7 +301,7 @@ public final class AppUpdater {
                     throw new Exception("Downloaded APK size mismatch");
                 }
                 if (expectedDigest != null && expectedDigest.startsWith("sha256:")) {
-                    String expectedHash = expectedDigest.substring("sha256:").trim();
+                    String expectedHash = expectedDigest.substring("sha256:".length()).trim();
                     String actualHash = sha256(apkFile);
                     if (!expectedHash.equalsIgnoreCase(actualHash)) {
                         throw new Exception("Downloaded APK checksum mismatch");

@@ -11,6 +11,10 @@ on:
       - ".github/workflows/build-tailwind-css.yml"
   workflow_dispatch:
 
+concurrency:
+  group: production-tailwind-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 

@@ -74,7 +74,7 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
   table td .material-symbols-outlined,table td button .material-symbols-outlined,table td a .material-symbols-outlined{font-size:13px!important;}
 }
 
-/* Mobile button groups outside tables stack vertically. */
+/* Mobile button groups: stay horizontal when labels fit; wrap between buttons instead of breaking Arabic text. */
 @media(max-width:768px){
   .flex.items-center.gap-1:has(>button),
   .flex.items-center.gap-2:has(>button),
@@ -82,24 +82,29 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
   .flex.items-center.gap-4:has(>button),
   .flex.items-center.gap-5:has(>button),
   .flex.items-center.gap-6:has(>button){
-    flex-direction:column!important;
-    align-items:stretch!important;
-    width:100%!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    flex-wrap:wrap!important;
+    width:auto!important;
+    max-width:100%!important;
     gap:8px!important;
   }
-
   .flex.items-center.gap-1:has(>button)>button,
   .flex.items-center.gap-2:has(>button)>button,
   .flex.items-center.gap-3:has(>button)>button,
   .flex.items-center.gap-4:has(>button)>button,
   .flex.items-center.gap-5:has(>button)>button,
   .flex.items-center.gap-6:has(>button)>button{
-    width:100%!important;min-width:100%!important;max-width:100%!important;
-    flex:0 0 auto!important;white-space:nowrap!important;word-break:normal!important;
-    overflow-wrap:normal!important;justify-content:center!important;min-height:42px!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:42px!important;
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+    word-break:normal!important;
+    overflow-wrap:normal!important;
+    justify-content:center!important;
   }
-
-  /* Table actions remain horizontal. */
   table td .flex.items-center.gap-1:has(>button),
   table td .flex.items-center.gap-2:has(>button),
   table td .flex.items-center.gap-3:has(>button),
@@ -112,10 +117,13 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
   table td .flex.items-center.gap-4:has(>a),
   table td .flex.items-center.gap-5:has(>a),
   table td .flex.items-center.gap-6:has(>a){
-    flex-direction:row!important;align-items:center!important;justify-content:center!important;
-    width:auto!important;gap:4px!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex-wrap:nowrap!important;
+    width:auto!important;
+    gap:4px!important;
   }
-
   table td .flex.items-center.gap-1:has(>button)>button,
   table td .flex.items-center.gap-2:has(>button)>button,
   table td .flex.items-center.gap-3:has(>button)>button,
@@ -128,22 +136,21 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
   table td .flex.items-center.gap-4:has(>a)>a,
   table td .flex.items-center.gap-5:has(>a)>a,
   table td .flex.items-center.gap-6:has(>a)>a{
-    width:auto!important;min-width:0!important;max-width:none!important;min-height:0!important;
-    flex:0 0 auto!important;padding-left:4px!important;padding-right:4px!important;
-  }
-
-  /* Header controls stay on their original horizontal row. */
-  header>.flex.items-center.gap-4:last-child{
-    flex-direction:row!important;
-    align-items:center!important;
     width:auto!important;
-    gap:16px!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:0!important;
+    flex:0 0 auto!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
   }
+  header>.flex.items-center.gap-4:last-child,
   header>.flex.items-center.gap-4:last-child>.flex.items-center.gap-2{
     flex-direction:row!important;
     align-items:center!important;
+    flex-wrap:nowrap!important;
     width:auto!important;
-    gap:8px!important;
+    max-width:none!important;
   }
   header>.flex.items-center.gap-4:last-child button{
     width:auto!important;
@@ -153,9 +160,21 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
     flex:0 0 auto!important;
     padding-left:8px!important;
     padding-right:8px!important;
+    white-space:nowrap!important;
   }
-
-  /* Dashboard/sidebar close button: keep icon controls horizontal and compact. */
+  #quick-tags,#order-status-filters{
+    flex-direction:column!important;
+    flex-wrap:nowrap!important;
+    align-items:stretch!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+  #quick-tags>button,#order-status-filters>div{
+    width:100%!important;
+    min-width:100%!important;
+    max-width:100%!important;
+    flex:0 0 auto!important;
+  }
   [aria-label="إغلاق"] button,
   [aria-label="Close"] button,
   button[title="إغلاق"],

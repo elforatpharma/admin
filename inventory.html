@@ -294,7 +294,6 @@
                 <th class="px-4 py-2 text-center">الصنف والاسم العلمي</th>
                 <th class="px-4 py-2 text-center">كود SKU / الباركود</th>
                 <th class="px-4 py-2 text-center">الفئة</th>
-                <th class="px-4 py-2 text-center">انتهاء الصلاحية</th>
                 <th class="px-4 py-2 text-center">الرصيد ومستوى التوفر</th>
                 <th class="px-4 py-2 text-center">السعر / البيع</th>
                 <th class="px-4 py-2 text-center">الحالة</th>
@@ -524,7 +523,6 @@ function renderTable(){
       const st=Number(p.stock)||0;
       const pct=pctOf(p);
       const barColor=pct<=30?'bg-warning':(info.label==='انتهاء وشيك'||info.label==='منتهية الصلاحية'?'bg-danger':'bg-success');
-      const exp=expDaysRemaining(p);
       const location=p.category||'—';
       const reorder=Number(p.reorder_level);
       let actions='';
@@ -563,15 +561,6 @@ function renderTable(){
             <span class="font-label-sm text-label-sm text-text-secondary">القاهرة المركزي</span>
           </div>
         </td>
-        </td>
-        <td class="px-4 py-3 inventory-center-cell">
-          ${HAS_EXPIRY&&p.expiry?`
-            <div class="flex items-center gap-1.5 font-data-tabular text-data-tabular ${exp<=90?'text-danger font-bold':'text-on-surface'}">
-              <span class="material-symbols-outlined text-[16px] ${exp<=90?'text-danger':'text-tertiary'}">${exp<=90?'event_busy':'calendar_today'}</span>
-              <span>${escapeHtml(String(p.expiry).slice(0,10))}</span>
-            </div>
-            <span class="font-label-sm text-label-sm ${exp<=90?'bg-danger text-on-primary px-1.5 py-0.5 rounded font-bold':'text-tertiary'}">${exp<=0?'منتهية':('متبقي '+exp+' يوماً')}</span>`
-          :'<span class="text-text-secondary">—</span>'}
         </td>
         <td class="px-4 py-3 w-44 inventory-center-cell">
           ${HAS_STOCK?`

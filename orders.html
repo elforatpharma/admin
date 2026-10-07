@@ -26,6 +26,14 @@
 .payment-badge{white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;max-width:100%;}
 .status-select{width:112px;max-width:112px;text-align:center;text-align-last:center;white-space:nowrap;overflow:hidden;text-overflow:clip;}
 @media(max-width:768px){.payment-col,.payment-cell{width:92px;min-width:92px;}.status-col,.status-cell{width:96px;min-width:96px;}.payment-badge{font-size:9px!important;padding-left:4px!important;padding-right:4px!important;}.status-select{width:88px;max-width:88px;font-size:9px!important;padding-left:2px!important;padding-right:2px!important;}}
+
+/* Compact order details panel so the table has more room */
+.order-detail-panel,.order-detail-panel *{font-size:12px!important;}
+.order-detail-panel .material-symbols-outlined{font-size:17px!important;}
+.order-detail-panel h1,.order-detail-panel h2,.order-detail-panel h3{font-size:14px!important;}
+.order-detail-panel .text-2xl{font-size:16px!important;}
+.order-detail-panel .text-xl{font-size:15px!important;}
+@media(max-width:768px){.order-detail-panel,.order-detail-panel *{font-size:11px!important;}.order-detail-panel .material-symbols-outlined{font-size:15px!important;}}
 </style><style>
     body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
@@ -392,7 +400,7 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
               <div class="p-4 bg-surface-container-low flex items-center justify-between border-b border-primary/10">
                 <div class="flex items-center gap-2">
                   <div class="flex flex-col">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2" order-detail-panel>
                       <span class="font-headline-lg text-headline-lg text-on-surface" id="detail-title">طلب #—</span>
                       <span id="detail-badge" class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-bold">—</span>
                     </div>

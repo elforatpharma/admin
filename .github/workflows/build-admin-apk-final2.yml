@@ -212,24 +212,19 @@ jobs:
           import android.content.Context;
           import android.util.AttributeSet;
           import android.view.MotionEvent;
-          import android.view.ViewConfiguration;
           import android.webkit.WebView;
 
           public class TopRefreshWebView extends WebView {
               private float downX;
               private float downY;
               private boolean startedAtTop;
-              private boolean refreshTriggered;
-              private final int touchSlop;
 
               public TopRefreshWebView(Context context) {
                   super(context);
-                  touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
               }
 
               public TopRefreshWebView(Context context, AttributeSet attrs) {
                   super(context, attrs);
-                  touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
               }
 
               @Override
@@ -239,24 +234,21 @@ jobs:
                           downX = event.getX();
                           downY = event.getY();
                           startedAtTop = getScrollY() <= 0;
-                          refreshTriggered = false;
                           break;
+
                       case MotionEvent.ACTION_MOVE:
-                          if (startedAtTop && !refreshTriggered && getScrollY() <= 0) {
-                              float dx = event.getX() - downX;
-                              float dy = event.getY() - downY;
-                              if (dy > touchSlop * 2 && dy > Math.abs(dx)) {
-                                  refreshTriggered = true;
-                                  reload();
-                                  return true;
-                              }
-                          }
+                          // IMPORTANT: never reload during MOVE. This preserves normal WebView
+                          // scrolling and prevents even a tiny downward finger movement from
+                          // jumping the page back to the top.
                           break;
+
                       case MotionEvent.ACTION_UP:
                       case MotionEvent.ACTION_CANCEL:
-                          refreshTriggered = false;
+                          // No refresh/reload here either. Pull-to-refresh is intentionally
+                          // disabled to guarantee stable scroll position.
                           break;
                   }
+
                   return super.onTouchEvent(event);
               }
           }
@@ -583,14 +575,14 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.5.1
-          name: Elforat Pharma Admin v1.5.1
+          tag_name: v1.5.2
+          name: Elforat Pharma Admin v1.5.2
           generate_release_notes: true
           files: android-app/app/build/outputs/apk/release/app-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Elforat-Pharma-Admin-APK-v1.5.1
+          name: Elforat-Pharma-Admin-APK-v1.5.2
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 

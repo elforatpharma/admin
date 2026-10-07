@@ -42,7 +42,7 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/java/com/elforatpharma/admin
           test -s app/google-services.json
-          sed -i -E 's/versionCode = [0-9]+/versionCode = 16/; s/versionName = "[^"]+"/versionName = "1.5.1"/' app/build.gradle.kts
+          sed -i -E 's/versionCode = [0-9]+/versionCode = 17/; s/versionName = "[^"]+"/versionName = "1.5.2"/' app/build.gradle.kts
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
           # Create a separate tightly-cropped splash logo so the Android 12+ startup screen shows the real logo clearly.

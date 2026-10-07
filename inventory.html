@@ -573,15 +573,6 @@ function renderTable(){
           </div>
         </td>
         <td class="px-4 py-3">
-          <div class="flex items-center gap-2">
-            <img class="w-10 h-10 rounded-lg object-cover shadow-sm bg-surface-container ${hideCols.has('img')?'hidden':''}" onerror="this.style.display='none'" alt="" src="${escapeHtml(p.img||p.image)||''}"/>
-            <div class="flex flex-col min-w-0">
-              <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">${escapeHtml(p.name)||'منتج'}</span>
-              <span class="font-label-sm text-label-sm text-text-secondary truncate">${escapeHtml(p.brand||p.science_name||p.category||'')}</span>
-            </div>
-          </div>
-        </td>
-        <td class="px-4 py-3">
           <div class="flex flex-col">
             <span class="font-data-tabular text-data-tabular font-bold text-on-surface">${escapeHtml(String(sku))}</span>
             ${HAS_BARCODE?`<span class="font-label-sm text-label-sm text-text-secondary">${escapeHtml(String(barc))}</span>`:''}
@@ -592,7 +583,6 @@ function renderTable(){
             <span class="font-label-md text-label-md text-on-surface font-semibold text-center">${escapeHtml(location)}</span>
             <span class="font-label-sm text-label-sm text-text-secondary text-center">القاهرة المركزي</span>
           </div>
-        </td>
         </td>
         <td class="px-4 py-3 w-44 inventory-center-cell">
           ${HAS_STOCK?`

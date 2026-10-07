@@ -27,7 +27,9 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.InputStream;
+import java.security.MessageDigest;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
@@ -40,6 +42,8 @@ public final class AppUpdater {
     private static TextView progressTitle;
     private static TextView progressPercent;
     private static TextView progressMessage;
+    private static final String PREFS = "elforat_updater";
+    private static final String SKIPPED_VERSION = "skipped_version";
 
     public static void check(Context context) {
         new Thread(() -> {
@@ -65,12 +69,16 @@ public final class AppUpdater {
                 String latest = release.optString("tag_name", "").replaceFirst("^v", "").trim();
                 JSONArray assets = release.optJSONArray("assets");
                 String apkUrl = null;
+                String apkDigest = null;
+                long apkSize = -1;
 
                 if (assets != null) {
                     for (int i = 0; i < assets.length(); i++) {
                         JSONObject asset = assets.getJSONObject(i);
                         if (asset.optString("name", "").toLowerCase(Locale.US).endsWith(".apk")) {
                             apkUrl = asset.optString("browser_download_url", null);
+                            apkDigest = asset.optString("digest", null);
+                            apkSize = asset.optLong("size", -1);
                             break;
                         }
                     }
@@ -79,11 +87,16 @@ public final class AppUpdater {
                 PackageInfo info = context.getPackageManager().getPackageInfo(
                         context.getPackageName(), 0);
                 String current = info.versionName == null ? "0.0.0" : info.versionName;
+                String skipped = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                        .getString(SKIPPED_VERSION, "");
 
-                if (!latest.isEmpty() && apkUrl != null && newer(latest, current)) {
+                boolean skippedSameVersion = latest.equals(skipped);
+                if (!latest.isEmpty() && apkUrl != null && newer(latest, current) && !skippedSameVersion) {
                     String finalUrl = apkUrl;
+                    String finalDigest = apkDigest;
+                    long finalSize = apkSize;
                     new Handler(context.getMainLooper()).post(
-                            () -> showDialog(context, latest, finalUrl));
+                            () -> showDialog(context, latest, finalUrl, finalDigest, finalSize));
                 }
             } catch (Exception ignored) {
             }
@@ -125,7 +138,7 @@ public final class AppUpdater {
         return Math.round(value * context.getResources().getDisplayMetrics().density);
     }
 
-    private static void showDialog(Context context, String version, String apkUrl) {
+    private static void showDialog(Context context, String version, String apkUrl, String apkDigest, long apkSize) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -208,10 +221,16 @@ public final class AppUpdater {
                 .setCancelable(false)
                 .create();
 
-        later.setOnClickListener(v -> dialog.dismiss());
+        later.setOnClickListener(v -> {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                    .edit().putString(SKIPPED_VERSION, version).apply();
+            dialog.dismiss();
+        });
         update.setOnClickListener(v -> {
             dialog.dismiss();
-            startInAppDownload(context, apkUrl, version);
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                    .edit().remove(SKIPPED_VERSION).apply();
+            startInAppDownload(context, apkUrl, version, apkDigest, apkSize);
         });
 
         dialog.show();
@@ -222,7 +241,7 @@ public final class AppUpdater {
         }
     }
 
-    private static void startInAppDownload(Context context, String apkUrl, String version) {
+    private static void startInAppDownload(Context context, String apkUrl, String version, String expectedDigest, long expectedSize) {
         showProgressDialog(context, version);
 
         new Thread(() -> {
@@ -278,7 +297,17 @@ public final class AppUpdater {
                     connection.disconnect();
                 }
 
-                updateProgress(context, 100, "اكتمل تحميل التحديث");
+                if (expectedSize > 0 && apkFile.length() != expectedSize) {
+                    throw new Exception("Downloaded APK size mismatch");
+                }
+                if (expectedDigest != null && expectedDigest.startsWith("sha256:")) {
+                    String expectedHash = expectedDigest.substring("sha256:").trim();
+                    String actualHash = sha256(apkFile);
+                    if (!expectedHash.equalsIgnoreCase(actualHash)) {
+                        throw new Exception("Downloaded APK checksum mismatch");
+                    }
+                }
+                updateProgress(context, 100, "تم التحقق من سلامة التحديث");
                 new Handler(context.getMainLooper()).postDelayed(
                         () -> beginInstall(context, apkFile), 700);
 
@@ -374,6 +403,18 @@ public final class AppUpdater {
             if (progressPercent != null) progressPercent.setText(percent + "%");
             if (progressMessage != null) progressMessage.setText(message);
         });
+    }
+
+    private static String sha256(File file) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (InputStream input = new FileInputStream(file)) {
+            byte[] buffer = new byte[16 * 1024];
+            int count;
+            while ((count = input.read(buffer)) != -1) digest.update(buffer, 0, count);
+        }
+        StringBuilder hex = new StringBuilder();
+        for (byte b : digest.digest()) hex.append(String.format(Locale.US, "%02x", b & 0xff));
+        return hex.toString();
     }
 
     private static void beginInstall(Context context, File apkFile) {

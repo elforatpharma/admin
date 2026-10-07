@@ -28,29 +28,23 @@
 @media(max-width:768px){.payment-col,.payment-cell{width:92px;min-width:92px;}.status-col,.status-cell{width:96px;min-width:96px;}.payment-badge{font-size:9px!important;padding-left:4px!important;padding-right:4px!important;}.status-select{width:88px;max-width:88px;font-size:9px!important;padding-left:2px!important;padding-right:2px!important;}}
 
 
-/* Extra-compact order details panel */
-.order-detail-panel,.order-detail-panel *{font-size:10px!important;}
-.order-detail-panel .material-symbols-outlined{font-size:13px!important;}
-.order-detail-panel h1,.order-detail-panel h2,.order-detail-panel h3{font-size:12px!important;}
-.order-detail-panel .text-2xl,.order-detail-panel .text-xl{font-size:13px!important;}
-.order-detail-panel button{padding:4px!important;}
-@media(max-width:768px){.order-detail-panel,.order-detail-panel *{font-size:9px!important;}.order-detail-panel .material-symbols-outlined{font-size:12px!important;}}
-
-/* Reduce horizontal footprint of the order details header */
-.order-detail-panel{max-width:300px!important;width:300px!important;}
+/* Compact order-details column: give the orders table the larger share on desktop. */
+.order-detail-panel{min-width:0!important;width:auto!important;max-width:none!important;}
 .order-detail-panel .flex{min-width:0;}
 .order-detail-panel .flex-1{min-width:0!important;max-width:100%;}
-.order-detail-panel .whitespace-nowrap{white-space:nowrap!important;}
-.order-detail-panel .material-symbols-outlined{flex-shrink:0!important;}
-@media(max-width:768px){.order-detail-panel{max-width:250px!important;width:250px!important;}}
-
-/* Make order details header compact without forcing a fixed horizontal panel width */
-.order-detail-panel{width:auto!important;max-width:none!important;min-width:0!important;padding-left:8px!important;padding-right:8px!important;}
-.order-detail-panel .flex{gap:4px!important;}
-.order-detail-panel .material-symbols-outlined{font-size:11px!important;}
+.order-detail-panel .material-symbols-outlined{flex-shrink:0!important;font-size:11px!important;}
 .order-detail-panel h1,.order-detail-panel h2,.order-detail-panel h3{font-size:11px!important;}
 .order-detail-panel button{padding:2px!important;}
-@media(max-width:768px){.order-detail-panel{padding-left:4px!important;padding-right:4px!important;}.order-detail-panel,.order-detail-panel *{font-size:8px!important;}.order-detail-panel .material-symbols-outlined{font-size:10px!important;}}
+.order-detail-panel .whitespace-nowrap{white-space:nowrap!important;}
+@media(min-width:1024px){
+  .order-detail-panel{padding-left:4px!important;padding-right:4px!important;}
+  #detail-panel>.rounded-xl{width:100%!important;}
+}
+@media(max-width:768px){
+  .order-detail-panel{padding-left:0!important;padding-right:0!important;}
+  .order-detail-panel,.order-detail-panel *{font-size:8px!important;}
+  .order-detail-panel .material-symbols-outlined{font-size:10px!important;}
+}
 </style><style>
     body{font-family:'Tajawal',sans-serif;background:#faf8ff;}
     .material-symbols-outlined{font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;}
@@ -302,9 +296,9 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
         </div>
 
         <!-- Master Detail Split Workspace -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           <!-- Right Column: Orders Data Grid & Multi-Filters -->
-          <div class="lg:col-span-7 flex flex-col gap-4">
+          <div class="lg:col-span-9 flex flex-col gap-4 min-w-0">
             <!-- Filter Bar Card -->
             <div class="flex flex-col gap-2 p-4 rounded-xl bg-surface-container-lowest shadow-sm">
               <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
@@ -411,13 +405,13 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
           </div>
 
           <!-- Left Column: Active Order Detail Drawer / Panel -->
-          <div id="detail-panel" class="lg:col-span-5 flex flex-col gap-4 sticky top-20">
+          <div id="detail-panel" class="order-detail-panel lg:col-span-3 flex flex-col gap-4 sticky top-20 min-w-0">
             <!-- Detail Header Card -->
             <div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden border border-primary/10">
               <div class="p-4 bg-surface-container-low flex items-center justify-between border-b border-primary/10">
                 <div class="flex items-center gap-2">
                   <div class="flex flex-col">
-                    <div class="flex items-center gap-2" order-detail-panel>
+                    <div class="flex items-center gap-2 min-w-0">
                       <span class="font-headline-lg text-headline-lg text-on-surface" id="detail-title">طلب #—</span>
                       <span id="detail-badge" class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-bold">—</span>
                     </div>

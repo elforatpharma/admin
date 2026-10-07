@@ -178,23 +178,21 @@ jobs:
                   if (action == MotionEvent.ACTION_DOWN) {
                       downY = ev.getY();
                       startedAtTop = !canChildScrollUp();
-                      // Never let SwipeRefreshLayout take a gesture that starts below page top.
+                      // If the page is not at the very top, WebView owns this gesture completely.
+                      if (!startedAtTop) return false;
                       return super.onInterceptTouchEvent(ev);
                   }
 
+                  if (!startedAtTop) return false;
+
                   if (action == MotionEvent.ACTION_MOVE) {
-                      // If the gesture started while the page was scrolled, leave the whole
-                      // gesture to WebView. This prevents refresh from stealing upward scrolling.
-                      if (!startedAtTop) return false;
-
                       float dy = ev.getY() - downY;
-
-                      // At the top, refresh is allowed only for a real downward pull.
+                      // Only a downward gesture that exceeds touch slop can trigger refresh.
                       if (dy <= touchSlop) return false;
                   }
 
                   if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                      if (!startedAtTop) return false;
+                      return super.onInterceptTouchEvent(ev);
                   }
 
                   return super.onInterceptTouchEvent(ev);
@@ -378,7 +376,7 @@ jobs:
                       @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) { return false; }
                       @Override public void onPageFinished(WebView view, String url) {
                           refresh.setRefreshing(false);
-                          if (url.contains("admin.html") || url.contains("orders.html") || url.contains("inventory.html")) {
+                          if (url != null && url.contains("/admin.html")) {
                               getSharedPreferences(PREFS, MODE_PRIVATE)
                                       .edit()
                                       .putBoolean(BIO_ENABLED, true)

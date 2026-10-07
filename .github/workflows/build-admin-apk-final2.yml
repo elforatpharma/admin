@@ -568,7 +568,13 @@ jobs:
                   view.evaluateJavascript("(function(){var x=document.getElementById('native-dark-mode');if(x)x.remove();var s=document.createElement('style');s.id='native-dark-mode';s.innerHTML="+q+";document.head.appendChild(s);})()", null);
               }
 
-          private void clearNotificationCount() { getSharedPreferences("elforat_admin", MODE_PRIVATE).edit().putInt("notification_count", 0).apply(); }\n\n          private void subscribeToOrderTopic() {
+          private void clearNotificationCount() {
+              getSharedPreferences("elforat_admin", MODE_PRIVATE).edit()
+                      .putInt("notification_count", 0)
+                      .apply();
+          }
+
+          private void subscribeToOrderTopic() {
               com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
                   .addOnCompleteListener(tokenTask -> {
                       if (!tokenTask.isSuccessful()) {

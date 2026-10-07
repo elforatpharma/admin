@@ -416,7 +416,59 @@ jobs:
                   });
 
                   webView.setWebViewClient(new WebViewClient() {
-                      @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) { return false; }
+                      private boolean openExternalAppUrl(String url) {
+                          if (url == null || url.trim().isEmpty()) return false;
+                          Uri uri;
+                          try {
+                              uri = Uri.parse(url);
+                          } catch (Exception ignored) {
+                              return false;
+                          }
+
+                          String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(java.util.Locale.US);
+                          String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(java.util.Locale.US);
+
+                          boolean whatsapp =
+                                  "whatsapp".equals(scheme) ||
+                                  "wa.me".equals(host) ||
+                                  "api.whatsapp.com".equals(host) ||
+                                  "web.whatsapp.com".equals(host) ||
+                                  "whatsapp.com".equals(host) ||
+                                  host.endsWith(".whatsapp.com");
+
+                          boolean externalScheme =
+                                  "tel".equals(scheme) ||
+                                  "mailto".equals(scheme) ||
+                                  "sms".equals(scheme) ||
+                                  "geo".equals(scheme) ||
+                                  "market".equals(scheme);
+
+                          if (!whatsapp && !externalScheme) return false;
+
+                          try {
+                              Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                              intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                              startActivity(intent);
+                              return true;
+                          } catch (Exception e) {
+                              // If the WhatsApp app is not installed, allow https links to
+                              // continue in the WebView/browser instead of breaking navigation.
+                              if (whatsapp && ("http".equals(scheme) || "https".equals(scheme))) {
+                                  return false;
+                              }
+                              return true;
+                          }
+                      }
+
+                      @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          if (request == null || request.getUrl() == null) return false;
+                          return openExternalAppUrl(request.getUrl().toString());
+                      }
+
+                      @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                          return openExternalAppUrl(url);
+                      }
+
                       @Override public void onPageFinished(WebView view, String url) {
                           if (url != null && url.contains("/admin.html")) {
                               getSharedPreferences(PREFS, MODE_PRIVATE)

@@ -113,4 +113,60 @@ table td button .material-symbols-outlined,table td a .material-symbols-outlined
   .flex.items-center.gap-6:has(>button)>button{
     min-height:42px!important;
   }
+
+  /* Table action groups stay horizontal, exactly as before. */
+  table td .flex.items-center.gap-1:has(>button),
+  table td .flex.items-center.gap-2:has(>button),
+  table td .flex.items-center.gap-3:has(>button),
+  table td .flex.items-center.gap-4:has(>button),
+  table td .flex.items-center.gap-5:has(>button),
+  table td .flex.items-center.gap-6:has(>button){
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:auto!important;
+    gap:4px!important;
+  }
+
+  table td .flex.items-center.gap-1:has(>button)>button,
+  table td .flex.items-center.gap-2:has(>button)>button,
+  table td .flex.items-center.gap-3:has(>button)>button,
+  table td .flex.items-center.gap-4:has(>button)>button,
+  table td .flex.items-center.gap-5:has(>button)>button,
+  table td .flex.items-center.gap-6:has(>button)>button{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:0!important;
+    flex:0 0 auto!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+  }
+
+  /* Also preserve horizontal action links inside table cells. */
+  table td .flex.items-center.gap-1:has(>a),
+  table td .flex.items-center.gap-2:has(>a),
+  table td .flex.items-center.gap-3:has(>a),
+  table td .flex.items-center.gap-4:has(>a),
+  table td .flex.items-center.gap-5:has(>a),
+  table td .flex.items-center.gap-6:has(>a){
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:auto!important;
+    gap:4px!important;
+  }
+
+  table td .flex.items-center.gap-1:has(>a)>a,
+  table td .flex.items-center.gap-2:has(>a)>a,
+  table td .flex.items-center.gap-3:has(>a)>a,
+  table td .flex.items-center.gap-4:has(>a)>a,
+  table td .flex.items-center.gap-5:has(>a)>a,
+  table td .flex.items-center.gap-6:has(>a)>a{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:0!important;
+    flex:0 0 auto!important;
+  }
 }

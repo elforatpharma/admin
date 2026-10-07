@@ -556,13 +556,13 @@ function renderTable(){
             ${HAS_BARCODE?`<span class="font-label-sm text-label-sm text-text-secondary">${escapeHtml(String(barc))}</span>`:''}
           </div>
         </td>
-        <td class="px-4 py-3 inventory-category-cell">
+        <td class="px-1 py-1 inventory-category-cell">
           <div class="flex flex-col items-center justify-center w-full text-center">
             <span class="font-label-md text-label-md text-on-surface font-semibold text-center">${escapeHtml(location)}</span>
             <span class="font-label-sm text-label-sm text-text-secondary text-center">القاهرة المركزي</span>
           </div>
         </td>
-        <td class="px-4 py-3 w-44 inventory-center-cell">
+        <td class="px-1 py-1 w-44 inventory-center-cell">
           ${HAS_STOCK?`
             <div class="flex flex-col gap-1">
               <div class="flex justify-between items-center font-data-tabular text-data-tabular">
@@ -575,13 +575,13 @@ function renderTable(){
             </div>`:'<span class="text-text-secondary">كمية غير مسجلة</span>'}
         </td>
         
-        <td class="px-4 py-3 font-data-tabular text-data-tabular inventory-center-cell">
+        <td class="px-1 py-1 font-data-tabular text-data-tabular inventory-center-cell">
           <div class="flex flex-col">
             <span class="font-bold text-on-surface">${p.price?money(p.price)+' ج.م':'—'}</span>
             ${Number(p.discount)?`<span class="text-text-secondary text-label-sm">خصم ${p.discount}%</span>`:''}
           </div>
         </td>
-        <td class="px-4 py-3">
+        <td class="px-1 py-1">
           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${info.cls} font-label-sm text-label-sm">
             <span class="w-2 h-2 rounded-full ${info.dot}"></span>
             ${info.label}

@@ -461,12 +461,28 @@ const TAG_TO_CODE={'جديد':'pending','قيد التنفيذ':'pending','قي�
 function statusTextToCode(s){return deriveStatusCode(s);}
 
 function payOf(o){return o.paymentMethod||o.payment||o.payment_method||'';}
-function paymentStatusOf(o){return String(o.payment_status||'').toLowerCase();}
+function orderRef(o){
+  const explicit=o.order_number||o.order_ref||o.orderNumber;
+  if(explicit)return String(explicit).replace(/^#?ORD[-_]?/i,'').trim().toUpperCase();
+  if(o.merchant_order_id)return String(o.merchant_order_id).slice(-8).toUpperCase();
+  return String(o.id||'').slice(-8).toUpperCase();
+}
+function paymentStatusOf(o){
+  const raw=String(o.payment_status||'').trim().toLowerCase();
+  if(['paid','success','successful','completed','confirmed'].includes(raw))return 'paid';
+  if(['failed','failure','error','declined'].includes(raw))return 'failed';
+  if(['refunded','refund'].includes(raw))return 'refunded';
+  if(['pending','unpaid','awaiting','awaiting_payment','waiting'].includes(raw))return 'pending';
+  if(paymentKind(o)==='cod')return 'cod';
+  if(String(o.status_code||'').toLowerCase()==='paid')return 'paid';
+  return '';
+}
 function normStatus(s){return (s||'قيد التنفيذ').trim();}
 function paymentKind(o){
   const p=String(payOf(o)).toLowerCase();
   if(p.includes('card')||p.includes('visa')||p.includes('master')||p.includes('فيزا')||p.includes('بطاقة'))return 'card';
   if(p.includes('wallet')||p.includes('vodafone')||p.includes('فودافون')||p.includes('محفظة'))return 'wallet';
+  if(p.includes('instapay')||p.includes('insta pay')||p.includes('انستا')||p.includes('إنستا'))return 'instapay';
   if(p.includes('cod')||p.includes('cash')||p.includes('كاش')||p.includes('الاستلام'))return 'cod';
   return p;
 }
@@ -661,7 +677,7 @@ function renderOrders(){
           <div class="flex items-center gap-2 ${String(o.id)===String(selectedId)?'':''}">
             ${String(o.id)===String(selectedId)?'<span class="w-1.5 h-8 rounded-full bg-gradient-to-b from-primary to-[#8536ff] inline-block shrink-0"></span>':''}
             <div>
-              <span class="font-bold text-on-surface text-label-lg">#ORD-${id}</span>
+              <span class="font-bold text-on-surface text-label-lg">#ORD-${orderRef(o)}</span>
               <span class="block text-[10px] text-primary font-bold">${relTime(o.created_at)||st.label}</span>
             </div>
           </div>
@@ -847,7 +863,7 @@ function shareDetail(){
   if(selectedId==null)return;
   const o=allOrders.find(x=>String(x.id)===String(selectedId));
   if(!o)return;
-  const txt=`طلب #ORD-${o.id}\nالعميل: ${o.customerName||'-'}\nالهاتف: ${o.phone||'-'}\nالإجمالي: ${o.total||0} ج.م\nالحالة: ${normStatus(o.status)}`;
+  const txt=`طلب #ORD-${orderRef(o)}\nالعميل: ${o.customerName||'-'}\nالهاتف: ${o.phone||'-'}\nالإجمالي: ${o.total||0} ج.م\nالحالة: ${normStatus(o.status)}`;
   navigator.clipboard.writeText(txt).then(()=>toast('تم نسخ تفاصيل الطلب','success')).catch(()=>toast('تعذر النسخ','error'));
 }
 
@@ -866,7 +882,7 @@ function openWhatsApp(id){
   const s=normStatus(o.status);
   const its=itemStats(o);
   
-  let msg=`أهلاً بك أستاذ/ة ${name} 🌸\nبخصوص طلبك رقم #ORD-${o.id} من صيدلية الفرات فارما:\n\n`;
+  let msg=`أهلاً بك أستاذ/ة ${name} 🌸\nبخصوص طلبك رقم #ORD-${orderRef(o)} من صيدلية الفرات فارما:\n\n`;
   if(s==='تم التوصيل'){
     msg+=`نتمنى أن تكون المنتجات قد نالت إعجابك! نسعد دائماً بخدمتك ونتمنى لك دوام الصحة والعافية 🌿`;
   }else if(s==='تم الشحن'||s==='قيد التجهيز'){
@@ -950,7 +966,7 @@ function renderDetail(){
   }
   const s=statusCodeOf(o);
   const info=statusInfo(s);
-  title.textContent='طلب #ORD-'+o.id;
+  title.textContent='طلب #ORD-'+orderRef(o);
   badge.textContent=info.label;
   badge.className='px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-bold '+info.cls;
   ddate.textContent='تاريخ الإنشاء: '+fmtDate(o.created_at)+' ('+relTime(o.created_at)+')';
@@ -1076,7 +1092,7 @@ async function editOrder(id){
   if(!o)return;
   const itTxt=itsText(o);
   const {value:formValues}=await Swal.fire({
-    title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">edit_note</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">تعديل محتويات الطلب</span><span class="efp-modal-title-sub">#ORD-${escapeHtml(String(o.id))}</span></div></div>`,
+    title:`<div class="efp-modal-title-wrap"><span class="material-symbols-outlined">edit_note</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">تعديل محتويات الطلب</span><span class="efp-modal-title-sub">#ORD-${escapeHtml(orderRef(o))}</span></div></div>`,
     width:560,padding:0,showCloseButton:true,
     customClass:{popup:'efp-modal-popup',htmlContainer:'efp-modal-html',actions:'efp-modal-actions'},
     html:`<div class="efp-field-group">
@@ -1185,7 +1201,7 @@ async function showPrintModal(id){
   const codText = isPaid ? 'مدفوع إلكترونياً (0.00 ج.م)' : `مطلوب تحصيل كاش: ${money(o.total)} ج.م`;
 
   Swal.fire({
-    title: `<div class="efp-modal-title-wrap"><span class="material-symbols-outlined text-primary">print</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">خيارات طباعة الطلب</span><span class="efp-modal-title-sub">#ORD-${escapeHtml(String(o.id))} | ${escapeHtml(o.customerName||'عميل')}</span></div></div>`,
+    title: `<div class="efp-modal-title-wrap"><span class="material-symbols-outlined text-primary">print</span><div class="efp-modal-title-text"><span class="efp-modal-title-main">خيارات طباعة الطلب</span><span class="efp-modal-title-sub">#ORD-${escapeHtml(orderRef(o))} | ${escapeHtml(o.customerName||'عميل')}</span></div></div>`,
     width: 520,
     padding: 0,
     showCloseButton: true,
@@ -1264,7 +1280,7 @@ function printWaybill(id){
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <title>بوليصة شحن #ORD-${escapeHtml(String(o.id))}</title>
+  <title>بوليصة شحن #ORD-${escapeHtml(orderRef(o))}</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
   <style>
@@ -1327,7 +1343,7 @@ function printWaybill(id){
 
   <div class="barcode-box">
     <svg id="barcode-elem"></svg>
-    <div style="font-size:10px; font-weight:bold;">رقم الطلب: #ORD-${escapeHtml(String(o.id))}</div>
+    <div style="font-size:10px; font-weight:bold;">رقم الطلب: #ORD-${escapeHtml(orderRef(o))}</div>
     <div style="font-size:9px; color:#444;">التاريخ: ${fmtDate(o.created_at)}</div>
   </div>
 
@@ -1627,7 +1643,7 @@ function printInvoice(id){
 function printOrders(){
   const filtered=getFiltered();
   if(!filtered.length){toast('لا توجد طلبات للطباعة','error');return;}
-  const rows=filtered.map(o=>`<tr><td>#ORD-${o.id}</td><td>${escapeHtml(o.customerName)||'-'}</td><td>${escapeHtml(o.phone)||'-'}</td><td>${normStatus(o.status)}</td><td><b>${money(o.total)} ج.م</b></td></tr>`).join('');
+  const rows=filtered.map(o=>`<tr><td>#ORD-${orderRef(o)}</td><td>${escapeHtml(o.customerName)||'-'}</td><td>${escapeHtml(o.phone)||'-'}</td><td>${normStatus(o.status)}</td><td><b>${money(o.total)} ج.م</b></td></tr>`).join('');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><style>body{font-family:Tajawal,Arial,sans-serif;padding:24px;color:#0f172a}h1{font-size:18px;color:#4d3ceb}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid #ddd;padding:8px;text-align:right}.muted{color:#64748b;font-size:12px}</style></head><body><h1>الفرات فارما - مانيوال الطلبات ${fmtDate(new Date().toISOString())}</h1><p class="muted">عدد الطلبات: ${filtered.length}</p><table><tr><th>كود</th><th>العميل</th><th>الهاتف</th><th>الحالة</th><th>الإجمالي</th></tr>${rows}</table><script>window.print()<\/script></body></html>`);
   w.document.close();
@@ -1640,7 +1656,7 @@ function exportCSV(){
   const lines=filtered.map(o=>{
     const its=itemStats(o);
     const itsDetail=its.items.map(i=>`${i.name} (x${i.qty||1})`).join(' + ');
-    const code=`#ORD-${o.id}`;
+    const code=`#ORD-${orderRef(o)}`;
     const name=`"${(o.customerName||'').replace(/"/g,'""')}"`;
     const phone=`'${o.phone||''}`;
     const address=`"${(o.address||'').replace(/"/g,'""')}"`;

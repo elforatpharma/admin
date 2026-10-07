@@ -440,9 +440,34 @@ jobs:
               </style>
           </resources>
           EOF
+      - name: Prepare release signing key
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -e
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android-app/elforat-release.jks
+          test -s android-app/elforat-release.jks
+
       - name: Build release APK
         working-directory: android-app
-        run: gradle --no-daemon clean assembleRelease
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android-app/elforat-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -e
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+          gradle --no-daemon clean assembleRelease
+
+      - name: Remove signing key from runner
+        if: always()
+        shell: bash
+        run: rm -f android-app/elforat-release.jks
 
       - name: Verify APK
         shell: bash

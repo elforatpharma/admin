@@ -40,10 +40,8 @@
 }
 </style>
 <style id="inventory-table-alignment-fix">
-#inventory-table tbody td.inventory-image-cell{text-align:center!important;vertical-align:middle!important;}
-#inventory-table tbody td.inventory-image-cell img{display:block;margin-inline:auto;width:44px;height:44px;object-fit:cover;}
 #inventory-table tbody td.inventory-product-cell{text-align:right!important;vertical-align:middle!important;}
-#inventory-table tbody td.inventory-product-cell>div{align-items:flex-start!important;justify-content:center!important;width:100%;text-align:right!important;}
+#inventory-table tbody td.inventory-product-cell>div{align-items:center!important;width:100%;text-align:right!important;}
 #inventory-table tbody td.inventory-product-cell .font-headline-sm,#inventory-table tbody td.inventory-product-cell .scientific-name-cell{text-align:right!important;width:100%;}
 </style>
 
@@ -292,7 +290,6 @@
                 <th class="px-4 py-2 w-12 text-center">
                   <input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" onclick="toggleAll(this.checked)" title="تحديد الكل"/>
                 </th>
-                <th class="px-4 py-2 text-center">الصور</th>
                 <th class="px-4 py-2 text-right">الصنف والاسم العلمي</th>
                 <th class="px-4 py-2 text-center">كود SKU / الباركود</th>
                 <th class="px-4 py-2 text-center">الفئة</th>
@@ -544,13 +541,13 @@ function renderTable(){
         <td class="px-4 py-3 text-center">
           <input class="rounded w-4 h-4 text-primary focus:ring-primary/20 cursor-pointer" type="checkbox" ${rowSel?'checked':''} onchange="toggleOne('${id}',this.checked)" aria-label="تحديد الصنف"/>
         </td>
-        <td class="px-4 py-3 inventory-image-cell text-center">
-          <img class="w-11 h-11 rounded-lg object-cover shadow-sm bg-surface-container mx-auto" onerror="this.style.display='none'" alt="" src="${escapeHtml(p.img||p.image)||''}"/>
-        </td>
         <td class="px-4 py-3">
-          <div class="flex flex-col min-w-0 items-start text-right w-full">
-            <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors text-right w-full">${escapeHtml(p.name)||'منتج'}</span>
-            <span class="font-label-sm text-label-sm text-text-secondary scientific-name-cell text-right w-full">${escapeHtml(p.science_name)||'—'}</span>
+          <div class="flex items-center gap-3 min-w-0 items-center text-right w-full">
+            <img class="w-11 h-11 rounded-lg object-cover shadow-sm bg-surface-container flex-shrink-0" onerror="this.style.display='none'" alt="" src="${escapeHtml(p.img||p.image)||''}"/>
+            <div class="flex flex-col min-w-0 items-start text-right flex-1">
+              <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors text-right w-full">${escapeHtml(p.name)||'منتج'}</span>
+              <span class="font-label-sm text-label-sm text-text-secondary scientific-name-cell text-right w-full">${escapeHtml(p.science_name)||'—'}</span>
+            </div>
           </div>
         </td>
         <td class="px-4 py-3">

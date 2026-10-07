@@ -24,13 +24,13 @@
 #customers-table-body{table-layout:fixed!important;}
 #customers-table{table-layout:fixed!important;width:100%!important;}
 #customers-table th:nth-child(1),#customers-table td:nth-child(1){width:5%!important;padding-left:4px!important;padding-right:4px!important;}
-#customers-table th:nth-child(2),#customers-table td:nth-child(2){width:25%!important;padding-left:4px!important;padding-right:4px!important;}
-#customers-table th:nth-child(3),#customers-table td:nth-child(3){width:16%!important;padding-left:4px!important;padding-right:4px!important;}
+#customers-table th:nth-child(2),#customers-table td:nth-child(2){width:27%!important;padding-left:8px!important;padding-right:8px!important;}
+#customers-table th:nth-child(3),#customers-table td:nth-child(3){width:16%!important;padding-left:8px!important;padding-right:8px!important;}
 #customers-table th:nth-child(4),#customers-table td:nth-child(4){width:8%!important;padding-left:4px!important;padding-right:4px!important;}
-#customers-table th:nth-child(5),#customers-table td:nth-child(5){width:14%!important;padding-left:4px!important;padding-right:4px!important;}
-#customers-table th:nth-child(6),#customers-table td:nth-child(6){width:11%!important;padding-left:4px!important;padding-right:4px!important;}
+#customers-table th:nth-child(5),#customers-table td:nth-child(5){width:15%!important;padding-left:8px!important;padding-right:8px!important;}
+#customers-table th:nth-child(6),#customers-table td:nth-child(6){width:11%!important;padding-left:8px!important;padding-right:8px!important;}
 #customers-table th:nth-child(7),#customers-table td:nth-child(7){width:11%!important;padding-left:4px!important;padding-right:4px!important;}
-#customers-table th:nth-child(8),#customers-table td:nth-child(8){width:10%!important;padding-left:4px!important;padding-right:4px!important;}
+#customers-table th:nth-child(8),#customers-table td:nth-child(8){width:9%!important;padding-left:8px!important;padding-right:8px!important;}
 #customers-table thead th{white-space:nowrap!important;vertical-align:middle!important;}
 #customers-table tbody tr>td{vertical-align:middle!important;}
 #customers-table tbody td:nth-child(2)>div{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;width:100%!important;}
@@ -291,7 +291,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
       <!-- Master Split Layout: Table (Main) + Active Drawer/Card (Sub) -->
       <div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
         <!-- Main Customer Table -->
-        <div class="xl:col-span-8 bg-surface-container-lowest rounded-DEFAULT shadow-sm overflow-hidden relative">
+        <div class="xl:col-span-9 bg-surface-container-lowest rounded-DEFAULT shadow-sm overflow-hidden relative">
           <!-- Table Header & Batch Actions -->
           <div class="p-space-md flex items-center justify-between bg-surface-container-low/40">
             <div class="flex items-center gap-space-sm">
@@ -342,26 +342,26 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
         </div>
 
         <!-- Right/Selected Customer Quick Dossier (4 Columns) -->
-        <div class="xl:col-span-4 flex flex-col gap-space-md">
+        <div class="xl:col-span-3 flex flex-col gap-space-md">
           <!-- Active Customer Profile Card -->
           <div class="bg-surface-container-lowest p-space-lg rounded-DEFAULT shadow-sm flex flex-col gap-space-md relative overflow-hidden">
             <!-- Accent Top Bar -->
             <div class="absolute top-0 right-0 left-0 h-2 bg-brand-gradient-bar"></div>
             <div id="dossier-empty" class="text-center py-12">
-              <span class="material-symbols-outlined text-5xl block mx-auto mb-3 opacity-30 text-primary">how_to_reg</span>
-              <span class="font-body-md text-body-md text-text-secondary">اختر عميلاً من الجدول لعرض ملفه الكامل</span>
+              <span class="material-symbols-outlined text-3xl block mx-auto mb-1 opacity-30 text-primary">how_to_reg</span>
+              <span class="font-body-sm text-body-sm text-text-secondary">اختر عميلاً من الجدول لعرض ملفه الكامل</span>
             </div>
             <div id="dossier-content" class="hidden flex flex-col gap-space-md"></div>
           </div>
           <!-- Quick Delivery & Logistics Snapshot -->
           <div id="delivery-snapshot" class="bg-surface-container-lowest p-space-md rounded-DEFAULT shadow-sm flex items-center justify-between opacity-50">
             <div class="flex items-center gap-space-sm">
-              <div class="w-10 h-10 rounded-full bg-primary-surface flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-[20px]">pin_drop</span>
+              <div class="w-8 h-8 rounded-full bg-primary-surface flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[16px]">pin_drop</span>
               </div>
               <div class="flex flex-col">
-                <span class="font-headline-sm text-headline-sm text-on-surface">عنوان التوصيل الرئيسي</span>
-                <span class="font-body-sm text-body-sm text-text-secondary">اختر عميلاً لعرض العنوان ورقم المنطقة</span>
+                <span class="font-label-lg text-label-lg text-on-surface">عنوان التوصيل الرئيسي</span>
+                <span class="font-label-sm text-label-sm text-text-secondary">اختر عميلاً لعرض العنوان ورقم المنطقة</span>
               </div>
             </div>
             <span class="px-2 py-1 rounded-full bg-surface-container text-text-secondary font-label-sm text-label-sm">—</span>

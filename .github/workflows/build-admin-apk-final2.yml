@@ -14,15 +14,19 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+
       - name: Prepare Android project
         working-directory: android-app
         shell: bash
@@ -31,11 +35,19 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq imagemagick
           printf '%s\n' 'org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8' 'android.useAndroidX=true' > gradle.properties
-          mkdir -p app/src/main/java/com/elforatpharma/admin app/src/main/res/values app/src/main/res/layout app/src/main/res/drawable
+
+          mkdir -p app/src/main/java/com/elforatpharma/admin
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/java/com/elforatpharma/admin
           test -s app/google-services.json
           sed -i -E 's/versionCode = [0-9]+/versionCode = 21/; s/versionName = "[^"]+"/versionName = "1.5.6"/' app/build.gradle.kts
+
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
+          # Create a separate tightly-cropped splash logo so the Android 12+ startup screen shows the real logo clearly.
           convert ../logo.png -trim +repage -resize '460x460>' -background none -gravity center -extent 512x512 app/src/main/res/drawable/splash_logo.png
+
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -43,82 +55,559 @@ jobs:
               <uses-permission android:name="android.permission.USE_BIOMETRIC" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-              <application android:theme="@style/AppTheme" android:label="الفرات فارما" android:icon="@drawable/launcher_logo" android:roundIcon="@drawable/launcher_logo" android:usesCleartextTraffic="false" android:hardwareAccelerated="true" android:resizeableActivity="true" android:supportsRtl="true">
-                  <provider android:name="androidx.core.content.FileProvider" android:authorities="com.elforatpharma.admin.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>
-                  <service android:name=".ElforatFirebaseMessagingService" android:exported="false"><intent-filter><action android:name="com.google.firebase.MESSAGING_EVENT" /></intent-filter></service>
-                  <receiver android:name=".AppUpdateReceiver" android:exported="false"><intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED" /></intent-filter></receiver>
-                  <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity>
+              <application
+                  android:theme="@style/AppTheme"
+                  android:label="الفرات فارما"
+                  android:icon="@drawable/launcher_logo"
+                  android:roundIcon="@drawable/launcher_logo"
+                  android:usesCleartextTraffic="false"
+                  android:hardwareAccelerated="true"
+                  android:resizeableActivity="true"
+                  android:supportsRtl="true">
+                  <provider
+                      android:name="androidx.core.content.FileProvider"
+                      android:authorities="com.elforatpharma.admin.fileprovider"
+                      android:exported="false"
+                      android:grantUriPermissions="true">
+                      <meta-data
+                          android:name="android.support.FILE_PROVIDER_PATHS"
+                          android:resource="@xml/file_paths" />
+                  </provider>
+
+                  <service
+                      android:name=".ElforatFirebaseMessagingService"
+                      android:exported="false">
+                      <intent-filter>
+                          <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                      </intent-filter>
+                  </service>
+
+                  <receiver
+                      android:name=".AppUpdateReceiver"
+                      android:exported="false">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                      </intent-filter>
+                  </receiver>
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="portrait"
+                      android:windowSoftInputMode="adjustResize">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
               </application>
           </manifest>
           EOF
+
           cat > app/src/main/java/com/elforatpharma/admin/ElforatFirebaseMessagingService.java <<'EOF'
           package com.elforatpharma.admin;
+
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
           import android.app.PendingIntent;
           import android.content.Intent;
           import android.os.Build;
           import androidx.core.app.NotificationCompat;
-          import com.google.firebase.messaging.FirebaseMessaging;
           import com.google.firebase.messaging.FirebaseMessagingService;
           import com.google.firebase.messaging.RemoteMessage;
+
           public class ElforatFirebaseMessagingService extends FirebaseMessagingService {
               private static final String CHANNEL_ID = "orders";
               @Override public void onMessageReceived(RemoteMessage message) {
-                  android.util.Log.i("ElforatFCM", "Notification received");
                   String title = message.getNotification() != null && message.getNotification().getTitle() != null ? message.getNotification().getTitle() : "طلب جديد — الفرات فارما";
                   String body = message.getNotification() != null && message.getNotification().getBody() != null ? message.getNotification().getBody() : "يوجد طلب جديد في لوحة التحكم.";
                   NotificationManager nm = getSystemService(NotificationManager.class);
                   if (Build.VERSION.SDK_INT >= 26) {
                       NotificationChannel ch = new NotificationChannel(CHANNEL_ID, "طلبات الفرات فارما", NotificationManager.IMPORTANCE_HIGH);
-                      ch.setDescription("إشعارات الطلبات الجديدة"); ch.enableVibration(true); nm.createNotificationChannel(ch);
+                      ch.setDescription("إشعارات الطلبات الجديدة");
+                      ch.enableVibration(true);
+                      nm.createNotificationChannel(ch);
                   }
-                  Intent intent = new Intent(this, MainActivity.class); intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                  Intent intent = new Intent(this, MainActivity.class);
+                  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                   PendingIntent pi = PendingIntent.getActivity(this, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                  NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID).setSmallIcon(R.drawable.launcher_logo).setContentTitle(title).setContentText(body).setStyle(new NotificationCompat.BigTextStyle().bigText(body)).setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(true).setContentIntent(pi);
+                  NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                          .setSmallIcon(com.elforatpharma.admin.R.drawable.launcher_logo)
+                          .setContentTitle(title).setContentText(body)
+                          .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                          .setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(true).setContentIntent(pi);
                   nm.notify((int) System.currentTimeMillis(), builder.build());
               }
               @Override public void onNewToken(String token) {
                   getSharedPreferences("elforat_admin", MODE_PRIVATE).edit().putString("fcm_token", token).apply();
-                  android.util.Log.i("ElforatFCM", "FCM token refreshed; subscribing to admin_orders");
-                  FirebaseMessaging.getInstance().subscribeToTopic("admin_orders").addOnCompleteListener(task -> {
-                      if (task.isSuccessful()) android.util.Log.i("ElforatFCM", "Topic subscription succeeded after token refresh");
-                      else android.util.Log.e("ElforatFCM", "Topic subscription failed after token refresh", task.getException());
-                  });
               }
           }
           EOF
-          cat > app/src/main/java/com/elforatpharma/admin/MainActivity.java <<'EOF'
+
+          cat > app/src/main/java/com/elforatpharma/admin/TopOnlySwipeRefreshLayout.java <<'EOF'
           package com.elforatpharma.admin;
-          import android.Manifest; import android.app.NotificationChannel; import android.app.NotificationManager; import android.content.Intent; import android.content.pm.PackageManager; import android.graphics.Color; import android.net.Uri; import android.os.Build; import android.os.Bundle; import android.view.View; import android.view.Window; import android.webkit.CookieManager; import android.webkit.ValueCallback; import android.webkit.WebChromeClient; import android.webkit.WebResourceRequest; import android.webkit.WebResourceError; import android.webkit.WebSettings; import android.webkit.WebView; import android.webkit.WebViewClient; import android.widget.FrameLayout; import android.widget.Toast; import androidx.biometric.BiometricManager; import androidx.biometric.BiometricPrompt; import androidx.core.content.ContextCompat; import androidx.fragment.app.FragmentActivity; import androidx.core.graphics.Insets; import androidx.core.view.ViewCompat; import androidx.core.view.WindowInsetsCompat; import com.google.firebase.messaging.FirebaseMessaging; import java.util.concurrent.Executor;
-          public class MainActivity extends FragmentActivity {
-              private static final String ADMIN_URL="https://elforatpharma.github.io/admin/"; private static final String PREFS="elforat_admin"; private static final String BIO_ENABLED="biometric_enabled"; private WebView webView; private ValueCallback<Uri[]> uploadCallback; private boolean biometricInProgress;
-              @Override protected void onCreate(Bundle savedInstanceState){super.onCreate(savedInstanceState);configureBars();FrameLayout root=new FrameLayout(this);root.setBackgroundColor(Color.WHITE);webView=new TopRefreshWebView(this);root.addView(webView,new FrameLayout.LayoutParams(-1,-1));setContentView(root);ViewCompat.setOnApplyWindowInsetsListener(root,(v,insets)->{Insets bars=insets.getInsets(WindowInsetsCompat.Type.systemBars());v.setPadding(0,bars.top,0,bars.bottom);return insets;});ViewCompat.requestApplyInsets(root);configureWebView();createNotificationChannel();requestNotificationPermission();subscribeToOrderTopic();AppUpdater.check(this);boolean biometricEnabled=getSharedPreferences(PREFS,MODE_PRIVATE).getBoolean(BIO_ENABLED,false);if(biometricEnabled&&biometricAvailable())showBiometricGate();else webView.loadUrl(ADMIN_URL);}
-              private void configureBars(){Window w=getWindow();w.setStatusBarColor(Color.WHITE);w.setNavigationBarColor(Color.WHITE);if(Build.VERSION.SDK_INT>=28)w.setNavigationBarDividerColor(Color.WHITE);w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);}
-              private boolean biometricAvailable(){int r=BiometricManager.from(this).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG);return r==BiometricManager.BIOMETRIC_SUCCESS;}
-              private void showBiometricGate(){if(biometricInProgress)return;biometricInProgress=true;Executor ex=ContextCompat.getMainExecutor(this);BiometricPrompt prompt=new BiometricPrompt(this,ex,new BiometricPrompt.AuthenticationCallback(){@Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result){biometricInProgress=false;webView.loadUrl(ADMIN_URL);}@Override public void onAuthenticationError(int code,CharSequence msg){biometricInProgress=false;if(code==BiometricPrompt.ERROR_NEGATIVE_BUTTON){webView.loadUrl(ADMIN_URL);return;}Toast.makeText(MainActivity.this,"استخدم بصمة الإصبع للدخول إلى لوحة التحكم",Toast.LENGTH_LONG).show();new android.os.Handler().postDelayed(()->{if(!isFinishing()&&!isDestroyed())showBiometricGate();},700);}@Override public void onAuthenticationFailed(){Toast.makeText(MainActivity.this,"لم يتم التعرف على البصمة",Toast.LENGTH_SHORT).show();}});BiometricPrompt.PromptInfo info=new BiometricPrompt.PromptInfo.Builder().setTitle("تسجيل الدخول ببصمة الإصبع").setSubtitle("ضع إصبعك على مستشعر البصمة لفتح لوحة التحكم").setNegativeButtonText("استخدام تسجيل الدخول").build();prompt.authenticate(info);}
-              private void configureWebView(){WebSettings s=webView.getSettings();s.setJavaScriptEnabled(true);s.setDomStorageEnabled(true);s.setDatabaseEnabled(true);s.setBuiltInZoomControls(false);s.setDisplayZoomControls(false);s.setMediaPlaybackRequiresUserGesture(false);s.setLoadsImagesAutomatically(true);s.setAllowFileAccess(false);s.setAllowContentAccess(true);s.setSupportZoom(false);CookieManager cm=CookieManager.getInstance();cm.setAcceptCookie(true);cm.setAcceptThirdPartyCookies(webView,true);webView.setWebChromeClient(new WebChromeClient(){@Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){if(uploadCallback!=null)uploadCallback.onReceiveValue(null);uploadCallback=callback;try{startActivityForResult(params.createIntent(),7001);}catch(Exception e){Intent camera=new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);try{startActivityForResult(camera,7001);}catch(Exception ignored){uploadCallback=null;return false;}}return true;}});webView.setWebViewClient(new WebViewClient(){private boolean openExternalAppUrl(String url){if(url==null||url.trim().isEmpty())return false;Uri uri;try{uri=Uri.parse(url);}catch(Exception ignored){return false;}String scheme=uri.getScheme()==null?"":uri.getScheme().toLowerCase(java.util.Locale.US);String host=uri.getHost()==null?"":uri.getHost().toLowerCase(java.util.Locale.US);boolean whatsapp="whatsapp".equals(scheme)||"wa.me".equals(host)||"api.whatsapp.com".equals(host)||"web.whatsapp.com".equals(host)||"whatsapp.com".equals(host)||host.endsWith(".whatsapp.com");boolean externalScheme="tel".equals(scheme)||"mailto".equals(scheme)||"sms".equals(scheme)||"geo".equals(scheme)||"market".equals(scheme);if(!whatsapp&&!externalScheme)return false;try{Intent intent=new Intent(Intent.ACTION_VIEW,uri);intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);startActivity(intent);return true;}catch(Exception e){if(whatsapp&&("http".equals(scheme)||"https".equals(scheme)))return false;return true;}}
-              @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest request){if(request==null||request.getUrl()==null)return false;return openExternalAppUrl(request.getUrl().toString());}@Override public boolean shouldOverrideUrlLoading(WebView view,String url){return openExternalAppUrl(url);}@Override public void onPageFinished(WebView view,String url){if(url!=null&&url.contains("/admin.html"))getSharedPreferences(PREFS,MODE_PRIVATE).edit().putBoolean(BIO_ENABLED,true).apply();injectTheme(view);}@Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError error){if(request.isForMainFrame())Toast.makeText(MainActivity.this,"تعذر تحميل لوحة التحكم. تحقق من الإنترنت.",Toast.LENGTH_LONG).show();}});}
-              private void injectTheme(WebView view){boolean dark=(getResources().getConfiguration().uiMode&0x30)==0x20;String css=dark?"body{background:#0f172a!important;color:#e5e7eb!important}header,aside,.bg-white,.bg-white/80,.bg-slate-50,.bg-gray-50{background-color:#111827!important;color:#e5e7eb!important}.text-gray-900,.text-slate-800,.text-slate-700{color:#f3f4f6!important}.text-gray-500,.text-slate-500,.text-gray-400{color:#cbd5e1!important}input,select,textarea{background:#1f2937!important;color:#fff!important;border-color:#374151!important}":"";String q="'"+css.replace("\\","\\\\").replace("'","\\'")+"'";view.evaluateJavascript("(function(){var x=document.getElementById('native-dark-mode');if(x)x.remove();var s=document.createElement('style');s.id='native-dark-mode';s.innerHTML="+q+";document.head.appendChild(s);})()",null);}
-              private void subscribeToOrderTopic(){FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask->{if(!tokenTask.isSuccessful()){android.util.Log.e("ElforatFCM","Unable to obtain FCM token",tokenTask.getException());return;}android.util.Log.i("ElforatFCM","FCM token obtained; subscribing to admin_orders");FirebaseMessaging.getInstance().subscribeToTopic("admin_orders").addOnCompleteListener(task->{if(task.isSuccessful())android.util.Log.i("ElforatFCM","Topic subscription succeeded: admin_orders");else android.util.Log.e("ElforatFCM","Topic subscription failed: admin_orders",task.getException());});});}
-              private void createNotificationChannel(){if(Build.VERSION.SDK_INT>=26){NotificationChannel ch=new NotificationChannel("orders","طلبات الفرات فارما",NotificationManager.IMPORTANCE_HIGH);ch.setDescription("إشعارات طلبات لوحة التحكم");getSystemService(NotificationManager.class).createNotificationChannel(ch);}}
-              private void requestNotificationPermission(){if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},9001);}
-              @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode==7001&&uploadCallback!=null){Uri[] results=null;if(resultCode==RESULT_OK&&data!=null){if(data.getData()!=null)results=new Uri[]{data.getData()};else if(data.getClipData()!=null){int n=data.getClipData().getItemCount();results=new Uri[n];for(int i=0;i<n;i++)results[i]=data.getClipData().getItemAt(i).getUri();}}uploadCallback.onReceiveValue(results);uploadCallback=null;}}
-              @Override public void onBackPressed(){if(webView!=null&&webView.canGoBack())webView.goBack();else super.onBackPressed();}@Override protected void onDestroy(){if(webView!=null){webView.stopLoading();webView.destroy();}super.onDestroy();}
+
+          import android.content.Context;
+          import android.util.AttributeSet;
+          import android.view.MotionEvent;
+          import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+          public class TopOnlySwipeRefreshLayout extends SwipeRefreshLayout {
+              private boolean startedAtTop;
+              private float downY;
+              private int touchSlop;
+
+              public TopOnlySwipeRefreshLayout(Context context) {
+                  super(context);
+                  init();
+              }
+
+              public TopOnlySwipeRefreshLayout(Context context, AttributeSet attrs) {
+                  super(context, attrs);
+                  init();
+              }
+
+              private void init() {
+                  touchSlop = android.view.ViewConfiguration.get(getContext()).getScaledTouchSlop();
+              }
+
+              @Override
+              public boolean onInterceptTouchEvent(MotionEvent ev) {
+                  final int action = ev.getActionMasked();
+
+                  if (action == MotionEvent.ACTION_DOWN) {
+                      downY = ev.getY();
+                      startedAtTop = !canChildScrollUp();
+                      // If the page is not at the very top, WebView owns this gesture completely.
+                      if (!startedAtTop) return false;
+                      return super.onInterceptTouchEvent(ev);
+                  }
+
+                  if (!startedAtTop) return false;
+
+                  if (action == MotionEvent.ACTION_MOVE) {
+                      float dy = ev.getY() - downY;
+                      // Only a downward gesture that exceeds touch slop can trigger refresh.
+                      if (dy <= touchSlop) return false;
+                  }
+
+                  if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                      return super.onInterceptTouchEvent(ev);
+                  }
+
+                  return super.onInterceptTouchEvent(ev);
+              }
+
+              @Override
+              public boolean canChildScrollUp() {
+                  if (getChildCount() == 0) return false;
+                  android.view.View child = getChildAt(0);
+                  return child.canScrollVertically(-1);
+              }
           }
           EOF
+                    cat > app/src/main/java/com/elforatpharma/admin/TopRefreshWebView.java <<'EOF'
+          package com.elforatpharma.admin;
+
+          import android.content.Context;
+          import android.util.AttributeSet;
+          import android.view.MotionEvent;
+          import android.webkit.WebView;
+
+          public class TopRefreshWebView extends WebView {
+              private float downX;
+              private float downY;
+              private boolean startedAtTop;
+
+              public TopRefreshWebView(Context context) {
+                  super(context);
+              }
+
+              public TopRefreshWebView(Context context, AttributeSet attrs) {
+                  super(context, attrs);
+              }
+
+              @Override
+              public boolean onTouchEvent(MotionEvent event) {
+                  switch (event.getActionMasked()) {
+                      case MotionEvent.ACTION_DOWN:
+                          downX = event.getX();
+                          downY = event.getY();
+                          startedAtTop = getScrollY() <= 0;
+                          break;
+
+                      case MotionEvent.ACTION_MOVE:
+                          // IMPORTANT: never reload during MOVE. This preserves normal WebView
+                          // scrolling and prevents even a tiny downward finger movement from
+                          // jumping the page back to the top.
+                          break;
+
+                      case MotionEvent.ACTION_UP:
+                      case MotionEvent.ACTION_CANCEL:
+                          // No refresh/reload here either. Pull-to-refresh is intentionally
+                          // disabled to guarantee stable scroll position.
+                          break;
+                  }
+
+                  return super.onTouchEvent(event);
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/elforatpharma/admin/MainActivity.java <<'EOF'
+          package com.elforatpharma.admin;
+
+          import android.Manifest;
+          import androidx.fragment.app.FragmentActivity;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.content.pm.PackageManager;
+          import android.graphics.Color;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.view.View;
+          import android.view.Window;
+          import android.webkit.CookieManager;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebResourceError;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.widget.FrameLayout;
+          import android.widget.Toast;
+          import androidx.biometric.BiometricManager;
+          import androidx.biometric.BiometricPrompt;
+          import androidx.core.content.ContextCompat;
+          import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+          import androidx.core.graphics.Insets;
+          import androidx.core.view.ViewCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import java.util.concurrent.Executor;
+
+          public class MainActivity extends FragmentActivity {
+              private static final String ADMIN_URL = "https://elforatpharma.github.io/admin/";
+              private static final String PREFS = "elforat_admin";
+              private static final String BIO_ENABLED = "biometric_enabled";
+              private WebView webView;
+              private ValueCallback<Uri[]> uploadCallback;
+              private boolean biometricInProgress;
+
+              @Override protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  configureBars();
+
+                  FrameLayout root = new FrameLayout(this);
+                  root.setBackgroundColor(Color.WHITE);
+                  webView = new TopRefreshWebView(this);
+                  root.addView(webView, new FrameLayout.LayoutParams(-1,-1));
+                  setContentView(root);
+                  ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                      Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                      v.setPadding(0, bars.top, 0, bars.bottom);
+                      return insets;
+                  });
+                  ViewCompat.requestApplyInsets(root);
+
+                  configureWebView();
+                  createNotificationChannel();
+                  requestNotificationPermission();
+                  subscribeToOrderTopic();
+                  AppUpdater.check(this);
+
+                  boolean biometricEnabled = getSharedPreferences(PREFS, MODE_PRIVATE)
+                          .getBoolean(BIO_ENABLED, false);
+
+                  if (biometricEnabled && biometricAvailable()) {
+                      showBiometricGate();
+                  } else {
+                      webView.loadUrl(ADMIN_URL);
+                  }
+              }
+
+              private void configureBars() {
+                  Window w = getWindow();
+                  w.setStatusBarColor(Color.WHITE);
+                  w.setNavigationBarColor(Color.WHITE);
+                  if (Build.VERSION.SDK_INT >= 28) w.setNavigationBarDividerColor(Color.WHITE);
+                  w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+              }
+
+              private boolean biometricAvailable() {
+                  int r = BiometricManager.from(this).canAuthenticate(
+                      BiometricManager.Authenticators.BIOMETRIC_STRONG);
+                  return r == BiometricManager.BIOMETRIC_SUCCESS;
+              }
+
+              private void showBiometricGate() {
+                  if (biometricInProgress) return;
+                  biometricInProgress = true;
+
+                  Executor ex = ContextCompat.getMainExecutor(this);
+                  BiometricPrompt prompt = new BiometricPrompt(this, ex, new BiometricPrompt.AuthenticationCallback() {
+                      @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
+                          biometricInProgress = false;
+                          webView.loadUrl(ADMIN_URL);
+                      }
+
+                      @Override public void onAuthenticationError(int code, CharSequence msg) {
+                          biometricInProgress = false;
+
+                          // "استخدام تسجيل الدخول" is a genuine fallback, not a loop.
+                          if (code == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                              webView.loadUrl(ADMIN_URL);
+                              return;
+                          }
+
+                          Toast.makeText(MainActivity.this, "استخدم بصمة الإصبع للدخول إلى لوحة التحكم", Toast.LENGTH_LONG).show();
+                          new android.os.Handler().postDelayed(() -> {
+                              if (!isFinishing() && !isDestroyed()) showBiometricGate();
+                          }, 700);
+                      }
+
+                      @Override public void onAuthenticationFailed() {
+                          Toast.makeText(MainActivity.this, "لم يتم التعرف على البصمة", Toast.LENGTH_SHORT).show();
+                      }
+                  });
+
+                  BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
+                      .setTitle("تسجيل الدخول ببصمة الإصبع")
+                      .setSubtitle("ضع إصبعك على مستشعر البصمة لفتح لوحة التحكم")
+                      .setNegativeButtonText("استخدام تسجيل الدخول")
+                      .build();
+
+                  prompt.authenticate(info);
+              }
+
+              private void configureWebView() {
+                  WebSettings s = webView.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setDatabaseEnabled(true);
+                  s.setBuiltInZoomControls(false);
+                  s.setDisplayZoomControls(false);
+                  s.setMediaPlaybackRequiresUserGesture(false);
+                  s.setLoadsImagesAutomatically(true);
+                  s.setAllowFileAccess(false);
+                  s.setAllowContentAccess(true);
+                  s.setSupportZoom(false);
+
+                  CookieManager cm = CookieManager.getInstance();
+                  cm.setAcceptCookie(true);
+                  cm.setAcceptThirdPartyCookies(webView, true);
+
+                  webView.setWebChromeClient(new WebChromeClient() {
+                      @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                          if (uploadCallback != null) uploadCallback.onReceiveValue(null);
+                          uploadCallback = callback;
+                          try {
+                              startActivityForResult(params.createIntent(), 7001);
+                          } catch (Exception e) {
+                              Intent camera = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                              try { startActivityForResult(camera, 7001); }
+                              catch (Exception ignored) { uploadCallback = null; return false; }
+                          }
+                          return true;
+                      }
+                  });
+
+                  webView.setWebViewClient(new WebViewClient() {
+                      private boolean openExternalAppUrl(String url) {
+                          if (url == null || url.trim().isEmpty()) return false;
+                          Uri uri;
+                          try {
+                              uri = Uri.parse(url);
+                          } catch (Exception ignored) {
+                              return false;
+                          }
+
+                          String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(java.util.Locale.US);
+                          String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(java.util.Locale.US);
+
+                          boolean whatsapp =
+                                  "whatsapp".equals(scheme) ||
+                                  "wa.me".equals(host) ||
+                                  "api.whatsapp.com".equals(host) ||
+                                  "web.whatsapp.com".equals(host) ||
+                                  "whatsapp.com".equals(host) ||
+                                  host.endsWith(".whatsapp.com");
+
+                          boolean externalScheme =
+                                  "tel".equals(scheme) ||
+                                  "mailto".equals(scheme) ||
+                                  "sms".equals(scheme) ||
+                                  "geo".equals(scheme) ||
+                                  "market".equals(scheme);
+
+                          if (!whatsapp && !externalScheme) return false;
+
+                          try {
+                              Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                              intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                              startActivity(intent);
+                              return true;
+                          } catch (Exception e) {
+                              // If the WhatsApp app is not installed, allow https links to
+                              // continue in the WebView/browser instead of breaking navigation.
+                              if (whatsapp && ("http".equals(scheme) || "https".equals(scheme))) {
+                                  return false;
+                              }
+                              return true;
+                          }
+                      }
+
+                      @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          if (request == null || request.getUrl() == null) return false;
+                          return openExternalAppUrl(request.getUrl().toString());
+                      }
+
+                      @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                          return openExternalAppUrl(url);
+                      }
+
+                      @Override public void onPageFinished(WebView view, String url) {
+                          if (url != null && url.contains("/admin.html")) {
+                              getSharedPreferences(PREFS, MODE_PRIVATE)
+                                      .edit()
+                                      .putBoolean(BIO_ENABLED, true)
+                                      .apply();
+                          }
+                          injectTheme(view);
+                      }
+                      @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                          if (request.isForMainFrame()) {
+                              Toast.makeText(MainActivity.this, "تعذر تحميل لوحة التحكم. تحقق من الإنترنت.", Toast.LENGTH_LONG).show();
+                          }
+                      }
+                  });
+              }
+
+              private void injectTheme(WebView view) {
+                  boolean dark = (getResources().getConfiguration().uiMode & 0x30) == 0x20;
+                  String css = dark
+                      ? "body{background:#0f172a!important;color:#e5e7eb!important}" +
+                        "header,aside,.bg-white,.bg-white/80,.bg-slate-50,.bg-gray-50{background-color:#111827!important;color:#e5e7eb!important}" +
+                        ".text-gray-900,.text-slate-800,.text-slate-700{color:#f3f4f6!important}" +
+                        ".text-gray-500,.text-slate-500,.text-gray-400{color:#cbd5e1!important}" +
+                        "input,select,textarea{background:#1f2937!important;color:#fff!important;border-color:#374151!important}"
+                      : "";
+                  String q = "'" + css.replace("\\","\\\\").replace("'","\\'") + "'";
+                  view.evaluateJavascript("(function(){var x=document.getElementById('native-dark-mode');if(x)x.remove();var s=document.createElement('style');s.id='native-dark-mode';s.innerHTML="+q+";document.head.appendChild(s);})()", null);
+              }
+
+          private void subscribeToOrderTopic() {
+              com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
+                  .addOnCompleteListener(tokenTask -> {
+                      if (!tokenTask.isSuccessful()) {
+                          android.util.Log.e("ElforatFCM", "FCM token fetch failed", tokenTask.getException());
+                          return;
+                      }
+                      getSharedPreferences("elforat_admin", MODE_PRIVATE).edit()
+                              .putString("fcm_token", tokenTask.getResult()).apply();
+                      com.google.firebase.messaging.FirebaseMessaging.getInstance().subscribeToTopic("admin_orders")
+                          .addOnCompleteListener(task -> {
+                              if (task.isSuccessful()) android.util.Log.i("ElforatFCM", "Topic subscription succeeded: admin_orders");
+                              else android.util.Log.e("ElforatFCM", "Topic subscription failed: admin_orders", task.getException());
+                          });
+                  });
+          }
+
+              private void createNotificationChannel() {
+                  if (Build.VERSION.SDK_INT >= 26) {
+                      NotificationChannel ch = new NotificationChannel("orders", "طلبات الفرات فارما", NotificationManager.IMPORTANCE_HIGH);
+                      ch.setDescription("إشعارات طلبات لوحة التحكم");
+                      getSystemService(NotificationManager.class).createNotificationChannel(ch);
+                  }
+              }
+
+              private void requestNotificationPermission() {
+                  if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                      requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 9001);
+              }
+
+              @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+                  if (requestCode == 7001 && uploadCallback != null) {
+                      Uri[] results = null;
+                      if (resultCode == RESULT_OK && data != null) {
+                          if (data.getData() != null) results = new Uri[]{data.getData()};
+                          else if (data.getClipData() != null) {
+                              int n = data.getClipData().getItemCount();
+                              results = new Uri[n];
+                              for (int i=0;i<n;i++) results[i] = data.getClipData().getItemAt(i).getUri();
+                          }
+                      }
+                      uploadCallback.onReceiveValue(results);
+                      uploadCallback = null;
+                  }
+              }
+
+              @Override public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) webView.goBack(); else super.onBackPressed();
+              }
+
+              @Override protected void onDestroy() {
+                  if (webView != null) { webView.stopLoading(); webView.destroy(); }
+                  super.onDestroy();
+              }
+          }
+          EOF
+
+          cat > app/src/main/res/layout/activity_main.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent" android:layout_height="match_parent">
+              <WebView android:id="@+id/webview" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#FFFFFF" />
+          </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+          EOF
+
           cat > app/src/main/res/values/styles.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?><resources><style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar"><item name="android:fontFamily">sans</item><item name="android:colorAccent">#4D3CEB</item><item name="android:windowLightStatusBar">true</item><item name="android:windowLightNavigationBar">true</item><item name="android:statusBarColor">#FFFFFF</item><item name="android:navigationBarColor">#FFFFFF</item><item name="android:windowNoTitle">true</item></style></resources>
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:colorAccent">#4D3CEB</item>
+                  <item name="android:windowLightStatusBar">true</item>
+                  <item name="android:windowLightNavigationBar">true</item>
+                  <item name="android:statusBarColor">#FFFFFF</item>
+                  <item name="android:navigationBarColor">#FFFFFF</item>
+                  <item name="android:windowNoTitle">true</item>
+              </style>
+          </resources>
           EOF
-          mkdir -p app/src/main/res/values-v31 app/src/main/res/xml
+
+          mkdir -p app/src/main/res/values-v31
+          mkdir -p app/src/main/res/xml
+
           cat > app/src/main/res/values-v31/styles.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?><resources><style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar"><item name="android:fontFamily">sans</item><item name="android:colorAccent">#4D3CEB</item><item name="android:windowLightStatusBar">true</item><item name="android:windowLightNavigationBar">true</item><item name="android:statusBarColor">#FFFFFF</item><item name="android:navigationBarColor">#FFFFFF</item><item name="android:windowSplashScreenBackground">#FFFFFF</item><item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item></style></resources>
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:colorAccent">#4D3CEB</item>
+                  <item name="android:windowLightStatusBar">true</item>
+                  <item name="android:windowLightNavigationBar">true</item>
+                  <item name="android:statusBarColor">#FFFFFF</item>
+                  <item name="android:navigationBarColor">#FFFFFF</item>
+                  <item name="android:windowSplashScreenBackground">#FFFFFF</item>
+                  <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+              </style>
+          </resources>
           EOF
-          test -f app/src/main/res/xml/file_paths.xml
       - name: Prepare release signing key
         shell: bash
-        env: { ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }} }
-        run: printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android-app/elforat-release.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -e
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android-app/elforat-release.jks
+          test -s android-app/elforat-release.jks
+
       - name: Build release APK
         working-directory: android-app
         env:
@@ -126,12 +615,25 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: gradle --no-daemon clean assembleRelease
+        run: |
+          set -e
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+          gradle --no-daemon clean assembleRelease
+
       - name: Remove signing key from runner
         if: always()
+        shell: bash
         run: rm -f android-app/elforat-release.jks
+
       - name: Verify APK
-        run: test -s android-app/app/build/outputs/apk/release/app-release.apk
+        shell: bash
+        run: |
+          set -e
+          test -s android-app/app/build/outputs/apk/release/app-release.apk
+          ls -lh android-app/app/build/outputs/apk/release/app-release.apk
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -139,8 +641,11 @@ jobs:
           name: Elforat Pharma Admin v1.5.6
           generate_release_notes: true
           files: android-app/app/build/outputs/apk/release/app-release.apk
+
       - uses: actions/upload-artifact@v4
         with:
           name: Elforat-Pharma-Admin-APK-v1.5.6
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
+
+# Firebase FCM integration build marker

@@ -530,3 +530,87 @@ if (document.readyState === 'loading') {
   injectLayoutStyles();
   installFastControls();
 }
+
+
+// ===== Orders display compatibility fix =====
+// بعض النسخ القديمة من orders.html كانت تعرض UUID ككود طلب،
+// وتتعامل مع InstaPay/Vodafone Cash كحالة دفع غير معروفة.
+// الإصلاح هنا يحافظ على بيانات قاعدة البيانات ويصحح العرض فقط.
+(function installOrdersDisplayFix(){
+  const isOrdersPage = /(?:^|\\/)orders\\.html(?:$|[?#])/.test(location.pathname + location.search + location.hash);
+  if(!isOrdersPage) return;
+
+  function getOrders(){
+    try { return Array.isArray(allOrders) ? allOrders : []; } catch(_) { return []; }
+  }
+  function getOrderFromRow(row){
+    const m=(row.getAttribute('onclick')||'').match(/selectOrder\\(['"]([^'"]+)['"]\\)/);
+    if(!m) return null;
+    return getOrders().find(o=>String(o.id)===String(m[1])) || null;
+  }
+  function orderRef(o){
+    if(!o) return '';
+    const explicit=o.order_number||o.order_ref||o.orderNumber;
+    if(explicit) return String(explicit).replace(/^#?ORD[-_]?/i,'').trim().toUpperCase();
+    if(o.merchant_order_id) return String(o.merchant_order_id).slice(-8).toUpperCase();
+    return String(o.id||'').slice(-8).toUpperCase();
+  }
+  function paymentKind(o){
+    const p=String(o?.paymentMethod||o?.payment||o?.payment_method||'').toLowerCase();
+    if(p.includes('instapay')||p.includes('insta pay')||p.includes('انستا')||p.includes('إنستا')) return 'instapay';
+    if(p.includes('vodafone')||p.includes('فودافون')||p.includes('wallet')||p.includes('محفظة')) return 'wallet';
+    if(p.includes('card')||p.includes('visa')||p.includes('master')||p.includes('فيزا')||p.includes('بطاقة')) return 'card';
+    if(p.includes('cod')||p.includes('cash')||p.includes('كاش')||p.includes('الاستلام')) return 'cod';
+    return '';
+  }
+  function paymentStatus(o){
+    const raw=String(o?.payment_status||'').trim().toLowerCase();
+    if(['paid','success','successful','completed','confirmed'].includes(raw)) return 'paid';
+    if(['failed','failure','error','declined'].includes(raw)) return 'failed';
+    if(['refunded','refund'].includes(raw)) return 'refunded';
+    if(['pending','unpaid','awaiting','awaiting_payment','waiting'].includes(raw)) return 'pending';
+    if(paymentKind(o)==='cod') return 'cod';
+    if(String(o?.status_code||'').toLowerCase()==='paid') return 'paid';
+    return '';
+  }
+  function paymentBadge(o){
+    const k=paymentKind(o), s=paymentStatus(o);
+    if(k==='cod'||s==='cod') return ['كاش — عند الاستلام','bg-amber-100 text-amber-800 border border-amber-200','payments'];
+    if(s==='paid') return ['مدفوع','bg-emerald-50 text-emerald-800 border border-emerald-200','verified'];
+    if(s==='failed') return ['فشل الدفع','bg-red-50 text-red-700 border border-red-200','error'];
+    if(s==='refunded') return ['مسترد','bg-slate-50 text-slate-700 border border-slate-200','undo'];
+    if(s==='pending'&&k==='instapay') return ['بانتظار تأكيد InstaPay','bg-amber-50 text-amber-800 border border-amber-200','schedule'];
+    if(s==='pending'&&k==='wallet') return ['بانتظار تأكيد فودافون كاش','bg-amber-50 text-amber-800 border border-amber-200','schedule'];
+    if(s==='pending') return ['بانتظار الدفع','bg-amber-50 text-amber-800 border border-amber-200','schedule'];
+    if(k==='instapay') return ['InstaPay','bg-indigo-50 text-indigo-700 border border-indigo-200','account_balance'];
+    if(k==='wallet') return ['فودافون كاش','bg-purple-50 text-purple-700 border border-purple-200','account_balance_wallet'];
+    if(k==='card') return ['بطاقة','bg-blue-50 text-blue-700 border border-blue-200','credit_card'];
+    return [String(o?.paymentMethod||o?.payment_method||'غير محدد'),'bg-surface-container-high text-on-surface-variant','payments'];
+  }
+  function refreshVisibleRows(){
+    const body=document.getElementById('orders-body');
+    if(!body) return;
+    body.querySelectorAll('tr').forEach(row=>{
+      const o=getOrderFromRow(row);
+      if(!o || row.children.length<5) return;
+      const code=row.children[0]?.querySelector('.text-label-lg');
+      if(code) code.textContent='#ORD-'+orderRef(o);
+      const cell=row.children[4];
+      if(cell){
+        const b=paymentBadge(o);
+        cell.innerHTML='<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold '+b[1]+'"><span class="material-symbols-outlined text-xs">'+b[2]+'</span><span>'+escapeHtml(b[0])+'</span></span>';
+      }
+    });
+  }
+  let observer;
+  const start=()=>{
+    const body=document.getElementById('orders-body');
+    if(!body || observer) return;
+    observer=new MutationObserver(()=>requestAnimationFrame(refreshVisibleRows));
+    observer.observe(body,{childList:true,subtree:true});
+    refreshVisibleRows();
+  };
+  const timer=setInterval(()=>{start();if(observer)clearInterval(timer);},100);
+  window.setTimeout(refreshVisibleRows,800);
+  window.setTimeout(refreshVisibleRows,1800);
+})();

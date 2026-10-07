@@ -15,14 +15,32 @@ android {
         versionName = "1.4.0"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+            val keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            val keyAliasValue = System.getenv("ANDROID_KEY_ALIAS")
+            val keyPasswordValue = System.getenv("ANDROID_KEY_PASSWORD")
+
+            check(!keystorePath.isNullOrBlank()) { "ANDROID_KEYSTORE_PATH is missing" }
+            check(!keystorePassword.isNullOrBlank()) { "ANDROID_KEYSTORE_PASSWORD is missing" }
+            check(!keyAliasValue.isNullOrBlank()) { "ANDROID_KEY_ALIAS is missing" }
+            check(!keyPasswordValue.isNullOrBlank()) { "ANDROID_KEY_PASSWORD is missing" }
+
+            storeFile = file(keystorePath)
+            storePassword = keystorePassword
+            keyAlias = keyAliasValue
+            keyPassword = keyPasswordValue
+        }
+    }
+
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
         }
     }
 }
-
 
 dependencies {
     implementation("androidx.core:core:1.15.0")

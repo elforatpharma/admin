@@ -1803,6 +1803,18 @@ window.onload=async function(){
   if(ok){
     fetchOrders();
     try{
+      const deepOrder = new URLSearchParams(window.location.search).get('order');
+      if(deepOrder){
+        const waitForOrder = setInterval(() => {
+          if(Array.isArray(allOrders) && allOrders.some(x=>String(x.id)===String(deepOrder))){
+            clearInterval(waitForOrder);
+            selectOrder(deepOrder);
+          }
+        }, 250);
+        setTimeout(()=>clearInterval(waitForOrder), 10000);
+      }
+    }catch(e){ console.warn('Deep-link order error:',e); }
+    try{
       const ordersChannel=_supabase
         .channel('orders-live-channel')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {

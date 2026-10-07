@@ -206,7 +206,63 @@ jobs:
               }
           }
           EOF
-                    cat > app/src/main/java/com/elforatpharma/admin/MainActivity.java <<'EOF'
+                    cat > app/src/main/java/com/elforatpharma/admin/TopRefreshWebView.java <<'EOF'
+          package com.elforatpharma.admin;
+
+          import android.content.Context;
+          import android.util.AttributeSet;
+          import android.view.MotionEvent;
+          import android.view.ViewConfiguration;
+          import android.webkit.WebView;
+
+          public class TopRefreshWebView extends WebView {
+              private float downX;
+              private float downY;
+              private boolean startedAtTop;
+              private boolean refreshTriggered;
+              private final int touchSlop;
+
+              public TopRefreshWebView(Context context) {
+                  super(context);
+                  touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+              }
+
+              public TopRefreshWebView(Context context, AttributeSet attrs) {
+                  super(context, attrs);
+                  touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+              }
+
+              @Override
+              public boolean onTouchEvent(MotionEvent event) {
+                  switch (event.getActionMasked()) {
+                      case MotionEvent.ACTION_DOWN:
+                          downX = event.getX();
+                          downY = event.getY();
+                          startedAtTop = getScrollY() <= 0;
+                          refreshTriggered = false;
+                          break;
+                      case MotionEvent.ACTION_MOVE:
+                          if (startedAtTop && !refreshTriggered && getScrollY() <= 0) {
+                              float dx = event.getX() - downX;
+                              float dy = event.getY() - downY;
+                              if (dy > touchSlop * 2 && dy > Math.abs(dx)) {
+                                  refreshTriggered = true;
+                                  reload();
+                                  return true;
+                              }
+                          }
+                          break;
+                      case MotionEvent.ACTION_UP:
+                      case MotionEvent.ACTION_CANCEL:
+                          refreshTriggered = false;
+                          break;
+                  }
+                  return super.onTouchEvent(event);
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/elforatpharma/admin/MainActivity.java <<'EOF'
           package com.elforatpharma.admin;
 
           import android.Manifest;
@@ -246,7 +302,6 @@ jobs:
               private static final String PREFS = "elforat_admin";
               private static final String BIO_ENABLED = "biometric_enabled";
               private WebView webView;
-              private TopOnlySwipeRefreshLayout refresh;
               private ValueCallback<Uri[]> uploadCallback;
               private boolean biometricInProgress;
 
@@ -267,8 +322,6 @@ jobs:
                   ViewCompat.requestApplyInsets(root);
 
                   configureWebView();
-                  refresh.setEnabled(false);
-                  setupTopOnlyRefresh();
                   createNotificationChannel();
                   requestNotificationPermission();
                   subscribeToOrderTopic();

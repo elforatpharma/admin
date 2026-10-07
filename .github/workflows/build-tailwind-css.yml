@@ -24,7 +24,7 @@ jobs:
         run: npx --yes tailwindcss@3.4.17 -c tailwind.config.cjs -i ./src/tailwind.css -o ./tailwind.css --minify
       - name: Commit generated CSS
         run: |
-          if git diff --quiet -- tailwind.css; then
+          if [ -z "$(git status --porcelain -- tailwind.css)" ]; then
             echo "No CSS changes."
             exit 0
           fi

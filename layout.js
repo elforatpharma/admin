@@ -5,6 +5,13 @@
 // ===== layout.js =====
 // مكونات واجهة مشتركة (Sidebar + Auth) لجميع صفحات لوحة التحكم
 
+// ---- Offline cache for the whole admin app ----
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+  });
+}
+
 // ---- التحقق من الجلسة وأن المستخدم هو الآدمن المسموح ----
 async function requireAdmin() {
   let { data: { session } } = await _supabase.auth.getSession();

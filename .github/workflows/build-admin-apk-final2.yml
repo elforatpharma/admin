@@ -46,7 +46,9 @@ jobs:
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
           # Create a monochrome transparent notification icon from the El-Forat logo.
-          convert ../logo.png -alpha extract -threshold 10% -transparent black -fill white -opaque white -resize 192x192 -background none -gravity center -extent 192x192 app/src/main/res/drawable/notification_logo.png
+          # Android notification small icons must be a clean monochrome/transparent glyph.
+          # Remove the logo's white background, crop to the actual mark, then make the mark solid white.
+          convert ../logo.png -fuzz 15% -transparent white -trim +repage -resize '120x120>' -gravity center -background none -extent 192x192 -colorspace gray -threshold 18% -negate -alpha on app/src/main/res/drawable/notification_logo.png
           # Create a separate tightly-cropped splash logo so the Android 12+ startup screen shows the real logo clearly.
           convert ../logo.png -trim +repage -resize '460x460>' -background none -gravity center -extent 512x512 app/src/main/res/drawable/splash_logo.png
 
@@ -119,7 +121,6 @@ jobs:
           import android.app.PendingIntent;
           import android.content.Intent;
           import android.media.AudioAttributes;
-          import android.graphics.BitmapFactory;
           import android.net.Uri;
           import android.os.Build;
           import androidx.core.app.NotificationCompat;
@@ -167,7 +168,6 @@ jobs:
                   int notificationId = (int) (System.currentTimeMillis() & 0x7fffffff);
                   NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                           .setSmallIcon(R.drawable.notification_logo)
-                          .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.launcher_logo))
                           .setContentTitle(title)
                           .setContentText(body)
                           .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
@@ -317,7 +317,6 @@ jobs:
                               nm.notify((int)(System.currentTimeMillis() & 0x7fffffff),
                                       new androidx.core.app.NotificationCompat.Builder(context, ElforatFirebaseMessagingService.CHANNEL_ID)
                                               .setSmallIcon(R.drawable.notification_logo)
-                                              .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.launcher_logo))
                                               .setContentTitle("الفرات فارما")
                                               .setContentText(message)
                                               .setAutoCancel(true)

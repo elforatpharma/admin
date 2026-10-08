@@ -596,13 +596,21 @@ jobs:
                   return new java.io.File(dir, OFFLINE_ARCHIVE);
               }
 
+              private boolean offlineLoadAttempted = false;
+
               private void loadAdminOrOffline(String deepLinkUrl) {
                   String target = deepLinkUrl == null || deepLinkUrl.isEmpty() ? ADMIN_URL : deepLinkUrl;
                   java.io.File archive = getOfflineArchive();
+                  boolean offline = !hasNetwork();
 
-                  if (!hasNetwork() && archive.exists() && archive.length() > 0) {
-                      webView.loadUrl(android.net.Uri.fromFile(archive).toString());
-                      Toast.makeText(this, "وضع Offline — عرض آخر نسخة محفوظة", Toast.LENGTH_SHORT).show();
+                  offlineLoadAttempted = false;
+                  webView.getSettings().setCacheMode(offline ? WebSettings.LOAD_CACHE_ONLY : WebSettings.LOAD_DEFAULT);
+
+                  // Keep the real HTTPS origin while offline so the Service Worker,
+                  // Material Symbols font cache, DOM storage and cached Supabase GET
+                  // responses can still work. The local MHT archive is only a fallback.
+                  if (offline) {
+                      webView.loadUrl(target);
                       return;
                   }
 
@@ -726,7 +734,16 @@ jobs:
                       }
                       @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                           if (request.isForMainFrame()) {
-                              Toast.makeText(MainActivity.this, "تعذر تحميل لوحة التحكم. تحقق من الإنترنت.", Toast.LENGTH_LONG).show();
+                              if (!hasNetwork() && !offlineLoadAttempted) {
+                                  offlineLoadAttempted = true;
+                                  java.io.File archive = getOfflineArchive();
+                                  if (archive.exists() && archive.length() > 0) {
+                                      view.loadUrl(android.net.Uri.fromFile(archive).toString());
+                                      Toast.makeText(MainActivity.this, "وضع Offline — عرض آخر نسخة محفوظة", Toast.LENGTH_SHORT).show();
+                                      return;
+                                  }
+                              }
+                              Toast.makeText(MainActivity.this, "تعذر تحميل لوحة التحكم. افتحها مرة بالإنترنت أولاً.", Toast.LENGTH_LONG).show();
                           }
                       }
                   });

@@ -3,7 +3,7 @@
  * Offline shell + cached Supabase GET responses + CDN fonts/icons.
  * Never caches POST/PATCH/DELETE requests.
  */
-const CACHE_NAME = 'elforat-pharma-v4';
+const CACHE_NAME = 'elforat-pharma-v5';
 const STATIC_ASSETS = [
   './admin.html',
   './tailwind.css',
@@ -12,7 +12,9 @@ const STATIC_ASSETS = [
   './supabaseClient.js',
   './imageUploader.js',
   './notificationManager.js',
-  './logo.png'
+  './logo.png',
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap',
+  'https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&family=Tajawal:wght@400;500;700;800;900&display=swap'
 ];
 
 self.addEventListener('install', event => {

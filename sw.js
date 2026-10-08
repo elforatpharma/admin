@@ -1,158 +1,104 @@
 /**
- * Service Worker للفرات فارما (نسخة مُصلَّحة)
- * - مسارات نسبية تشتغل على GitHub Pages حتى لو الموقع تحت /admin/
- * - التثبيت مبيفشلش لو ملف واحد ناقص
- * - بيانات Supabase والـ Auth عمرها ما بتتخزن في الكاش
- * - صفحات HTML (خصوصاً الأدمن) شبكة أولاً ومبتتخزنش
+ * Elforat Pharma Admin Service Worker
+ * Offline shell + cached Supabase GET responses + CDN fonts/icons.
+ * Never caches POST/PATCH/DELETE requests.
  */
-
-const CACHE_NAME = 'elforat-pharma-v3';
+const CACHE_NAME = 'elforat-pharma-v4';
 const STATIC_ASSETS = [
-    './logo.png',
-    './imageUploader.js',
-    './notificationManager.js',
-    './supabaseClient.js'
+  './admin.html',
+  './tailwind.css',
+  './admin-responsive.css',
+  './layout.js',
+  './supabaseClient.js',
+  './imageUploader.js',
+  './notificationManager.js',
+  './logo.png'
 ];
 
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) =>
-            // allSettled: لو ملف فشل، الباقي يتخزن عادي
-            Promise.allSettled(STATIC_ASSETS.map((url) => cache.add(url)))
-        )
-    );
-    self.skipWaiting();
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.allSettled(STATIC_ASSETS.map(url => cache.add(url)))
+    )
+  );
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys()
-            .then((names) => Promise.all(
-                names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n))
-            ))
-            .then(() => self.clients.claim())
-    );
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k.startsWith('elforat-pharma-') && k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
 });
 
-self.addEventListener('fetch', (event) => {
-    const req = event.request;
-    if (req.method !== 'GET') return;
+function cacheResponse(request, response) {
+  if (!response || (!response.ok && response.type !== 'opaque')) return;
+  const copy = response.clone();
+  caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => {});
+}
 
-    const url = new URL(req.url);
+function isSupabaseGet(url) {
+  return url.hostname.endsWith('.supabase.co') &&
+    (url.pathname.startsWith('/rest/v1/') || url.pathname.startsWith('/storage/v1/'));
+}
 
-    // أي طلب خارج نفس الموقع (Supabase / Auth / CDN وغيرها) يمر مباشرة للمتصفح.
-    if (url.origin !== self.location.origin) return;
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
 
-    // صفحات HTML: الشبكة أولاً حتى لا نعرض نسخة قديمة من لوحة الإدارة.
-    if (req.mode === 'navigate') {
-        event.respondWith(
-            fetch(req)
-                .then((res) => {
-                    if (res && res.ok) {
-                        const copy = res.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-                    }
-                    return res;
-                })
-                .catch(() => caches.match(req))
-        );
-        return;
-    }
-
-    const destination = req.destination;
-    const isImage = destination === 'image' || /\.(?:png|jpe?g|webp|gif|svg|ico)(?:\?.*)?$/i.test(url.pathname);
-    const isCodeOrStyle =
-        destination === 'script' ||
-        destination === 'style' ||
-        /\.(?:js|css)(?:\?.*)?$/i.test(url.pathname);
-
-    if (isImage) {
-        // الصور: اعرض الكاش فوراً، ثم حدّثه في الخلفية.
-        event.respondWith(
-            caches.match(req).then((cached) => {
-                const network = fetch(req).then((res) => {
-                    if (res && res.ok) {
-                        const copy = res.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-                    }
-                    return res;
-                }).catch(() => cached);
-                return cached || network;
-            })
-        );
-        return;
-    }
-
-    // JS/CSS وباقي الملفات النصية: الشبكة أولاً.
-    // هذا يمنع بقاء layout.js / uiverse-ui.css / الصفحات المساعدة على نسخة قديمة.
-    if (isCodeOrStyle || destination === 'font' || destination === 'empty') {
-        event.respondWith(
-            fetch(req)
-                .then((res) => {
-                    if (res && res.ok) {
-                        const copy = res.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-                    }
-                    return res;
-                })
-                .catch(() => caches.match(req))
-        );
-        return;
-    }
-
-    // أي أصل آخر: شبكة أولاً مع fallback للكاش.
+  // Dashboard navigation: network first, cached page when offline.
+  if (req.mode === 'navigate') {
     event.respondWith(
-        fetch(req)
-            .then((res) => {
-                if (res && res.ok) {
-                    const copy = res.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-                }
-                return res;
-            })
-            .catch(() => caches.match(req))
+      fetch(req).then(res => {
+        cacheResponse(req, res);
+        return res;
+      }).catch(async () => {
+        return (await caches.match(req)) || (await caches.match(new URL('./admin.html', self.location.href).href));
+      })
     );
-});
-self.addEventListener('push', (event) => {
-    let data = {};
-    if (event.data) {
-        try { data = event.data.json(); }
-        catch (e) { data = { title: 'الفرات فارما', body: event.data.text() }; }
-    }
+    return;
+  }
 
-    event.waitUntil(
-        self.registration.showNotification(data.title || 'الفرات فارما', {
-            body: data.body || 'إشعار جديد',
-            icon: './logo.png',
-            badge: './logo.png',
-            vibrate: [200, 100, 200],
-            tag: data.tag || 'default',
-            requireInteraction: true,
-            actions: [
-                { action: 'open', title: 'فتح' },
-                { action: 'dismiss', title: 'تجاهل' }
-            ],
-            data: data.url || './'
-        })
+  // Supabase GET: network first and save the exact response for offline reads.
+  if (isSupabaseGet(url)) {
+    event.respondWith(
+      fetch(req).then(res => {
+        cacheResponse(req, res);
+        return res;
+      }).catch(() => caches.match(req))
     );
-});
+    return;
+  }
 
-self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    if (event.action === 'dismiss') return;
+  const sameOrigin = url.origin === self.location.origin;
+  const cdn = url.hostname === 'fonts.googleapis.com' ||
+              url.hostname === 'fonts.gstatic.com' ||
+              url.hostname === 'cdn.jsdelivr.net';
 
-    const target = new URL(event.notification.data || './', self.registration.scope).href;
-
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-            for (const client of list) {
-                if (client.url === target && 'focus' in client) return client.focus();
-            }
-            return clients.openWindow ? clients.openWindow(target) : undefined;
-        })
+  if (sameOrigin || cdn) {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        if (cached) return cached;
+        return fetch(req).then(res => {
+          cacheResponse(req, res);
+          return res;
+        });
+      })
     );
+    return;
+  }
+
+  // Other GET resources: network first, cached fallback.
+  event.respondWith(
+    fetch(req).then(res => {
+      cacheResponse(req, res);
+      return res;
+    }).catch(() => caches.match(req))
+  );
 });
 
-self.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING' || event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });

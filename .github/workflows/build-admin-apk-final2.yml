@@ -52,6 +52,7 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.USE_BIOMETRIC" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
@@ -362,6 +363,8 @@ jobs:
               private static final String BIO_ENABLED = "biometric_enabled";
               private WebView webView;
               private ValueCallback<Uri[]> uploadCallback;
+              private static final String OFFLINE_DIR = "offline";
+              private static final String OFFLINE_ARCHIVE = "admin_offline.mht";
               private boolean biometricInProgress;
 
               @Override protected void onCreate(Bundle savedInstanceState) {
@@ -393,7 +396,7 @@ jobs:
                   if (biometricEnabled && biometricAvailable()) {
                       showBiometricGate(deepLinkUrl);
                   } else {
-                      webView.loadUrl(deepLinkUrl == null || deepLinkUrl.isEmpty() ? ADMIN_URL : deepLinkUrl);
+                      loadAdminOrOffline(deepLinkUrl);
                   }
               }
 
@@ -419,7 +422,7 @@ jobs:
                   BiometricPrompt prompt = new BiometricPrompt(this, ex, new BiometricPrompt.AuthenticationCallback() {
                       @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
                           biometricInProgress = false;
-                          webView.loadUrl(deepLinkUrl == null || deepLinkUrl.isEmpty() ? ADMIN_URL : deepLinkUrl);
+                          loadAdminOrOffline(deepLinkUrl);
                       }
 
                       @Override public void onAuthenticationError(int code, CharSequence msg) {
@@ -427,7 +430,7 @@ jobs:
 
                           // "استخدام تسجيل الدخول" is a genuine fallback, not a loop.
                           if (code == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                              webView.loadUrl(deepLinkUrl == null || deepLinkUrl.isEmpty() ? ADMIN_URL : deepLinkUrl);
+                              loadAdminOrOffline(deepLinkUrl);
                               return;
                           }
 
@@ -451,6 +454,52 @@ jobs:
                   prompt.authenticate(info);
               }
 
+              private boolean hasNetwork() {
+                  try {
+                      android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+                      android.net.Network network = cm.getActiveNetwork();
+                      if (network == null) return false;
+                      android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+                      return caps != null && caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                              && caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+                  } catch (Exception ignored) {
+                      return false;
+                  }
+              }
+
+              private java.io.File getOfflineArchive() {
+                  java.io.File dir = new java.io.File(getFilesDir(), OFFLINE_DIR);
+                  if (!dir.exists()) dir.mkdirs();
+                  return new java.io.File(dir, OFFLINE_ARCHIVE);
+              }
+
+              private void loadAdminOrOffline(String deepLinkUrl) {
+                  String target = deepLinkUrl == null || deepLinkUrl.isEmpty() ? ADMIN_URL : deepLinkUrl;
+                  java.io.File archive = getOfflineArchive();
+
+                  if (!hasNetwork() && archive.exists() && archive.length() > 0) {
+                      webView.loadUrl(android.net.Uri.fromFile(archive).toString());
+                      Toast.makeText(this, "وضع Offline — عرض آخر نسخة محفوظة", Toast.LENGTH_SHORT).show();
+                      return;
+                  }
+
+                  webView.loadUrl(target);
+              }
+
+              private void saveOfflineArchive() {
+                  if (!hasNetwork() || webView == null) return;
+                  try {
+                      java.io.File archive = getOfflineArchive();
+                      webView.saveWebArchive(archive.getAbsolutePath(), false, path -> {
+                          if (path != null) {
+                              android.util.Log.i("ElforatOffline", "Offline archive saved: " + path);
+                          }
+                      });
+                  } catch (Exception e) {
+                      android.util.Log.e("ElforatOffline", "Failed to save offline archive", e);
+                  }
+              }
+
               private void configureWebView() {
                   WebSettings s = webView.getSettings();
                   s.setJavaScriptEnabled(true);
@@ -463,7 +512,11 @@ jobs:
                   s.setAllowFileAccess(false);
                   s.setAllowContentAccess(true);
                   s.setSupportZoom(false);
-                  s.setCacheMode(WebSettings.LOAD_DEFAULT);
+                  s.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                  // The archive is app-owned; do not allow local files to access arbitrary remote origins.
+                  s.setAllowFileAccess(true);
+                  s.setAllowUniversalAccessFromFileURLs(false);
+                  s.setAllowFileAccessFromFileURLs(false);
 
                   CookieManager cm = CookieManager.getInstance();
                   cm.setAcceptCookie(true);
@@ -546,6 +599,7 @@ jobs:
                                       .apply();
                           }
                           injectTheme(view);
+                          saveOfflineArchive();
                       }
                       @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                           if (request.isForMainFrame()) {

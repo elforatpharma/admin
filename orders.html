@@ -876,19 +876,35 @@ async function updateStatus(id,newStatus){
     if(error)throw error;
     const i=allOrders.findIndex(o=>String(o.id)===String(id));
     if(i!==-1){Object.assign(allOrders[i],patch);}
-    renderKPIs();renderOrders();
-    if(String(selectedId)===String(id))renderDetail();
+
+    // Send the status push immediately after the database update.
+    // Keep it before UI rendering so a rendering exception cannot prevent the notification.
+    let pushOk=false;
     try{
       const pushResult=await _supabase.functions.invoke('admin-push-notify',{
         body:{order_id:id,status:newStatus,title:'📦 تحديث حالة الطلب'}
       });
       if(pushResult?.error){
         console.error('Status push failed:',pushResult.error);
-      }else if(pushResult?.data?.ok!==true){
+      }else if(pushResult?.data?.ok===true){
+        pushOk=true;
+        console.log('Status push sent successfully:',{order_id:id,status:newStatus});
+      }else{
         console.error('Status push rejected:',pushResult?.data);
       }
-    }catch(pushErr){console.warn('Status push warning:',pushErr);}
-    toast('تم تحديث حالة الطلب','success');
+    }catch(pushErr){
+      console.error('Status push invocation failed:',pushErr);
+    }
+
+    try{
+      renderKPIs();
+      renderOrders();
+      if(String(selectedId)===String(id))renderDetail();
+    }catch(renderErr){
+      console.error('Order UI refresh warning:',renderErr);
+    }
+
+    toast(pushOk?'تم تحديث حالة الطلب وإرسال الإشعار':'تم تحديث حالة الطلب — تعذر إرسال إشعار التطبيق',pushOk?'success':'warning');
   }catch(e){toast('فشل تحديث الحالة','error');}
 }
 

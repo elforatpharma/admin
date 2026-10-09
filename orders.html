@@ -1841,8 +1841,12 @@ function exportCSV(){
   toast('تم تصدير '+filtered.length+' طلب لإكسيل بنجاح','success');
 }
 
+function escapeToastHtml(value){
+  return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 function toast(msg,icon){
-  if(typeof Swal!=='undefined')Swal.fire({toast:true,position:'top-end',icon,title:msg,showConfirmButton:false,timer:1800,timerProgressBar:true});
+  // SweetAlert's title is HTML-capable; escape customer/server-controlled text before rendering.
+  if(typeof Swal!=='undefined')Swal.fire({toast:true,position:'top-end',icon,title:escapeToastHtml(msg),showConfirmButton:false,timer:1800,timerProgressBar:true});
 }
 function confirmDialog(title,text,icon){
   return Swal.fire({title,text,icon,showCancelButton:true,confirmButtonColor:'#4d3ceb',confirmButtonText:'نعم',cancelButtonText:'إلغاء'}).then(r=>r.isConfirmed);

@@ -348,3 +348,53 @@ header .efp-topbar-search{
     font-size:12px!important;
   }
 }
+
+/* Orders page: keep the Quick Action button and notification control aligned. */
+header:has(#global-search) button[onclick="newOrderModal()"]{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:max-content!important;
+  max-width:none!important;
+  height:40px!important;
+  white-space:nowrap!important;
+  word-break:keep-all!important;
+  overflow-wrap:normal!important;
+  gap:8px!important;
+  padding-left:16px!important;
+  padding-right:16px!important;
+}
+header:has(#admin-notification-btn) #admin-notification-btn{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 40px!important;
+  width:40px!important;
+  min-width:40px!important;
+  height:40px!important;
+  padding:0!important;
+}
+header:has(#admin-notification-btn)>div:last-child>div:last-child{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  width:auto!important;
+  min-width:max-content!important;
+  max-width:100%!important;
+}
+@media(max-width:1023px){
+  header:has(#admin-notification-btn)>div:last-child>div:last-child{
+    justify-content:flex-start!important;
+    flex:0 0 auto!important;
+  }
+  header:has(#global-search) button[onclick="newOrderModal()"]{
+    font-size:12px!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+}

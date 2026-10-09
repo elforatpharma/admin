@@ -406,3 +406,7 @@ header:has(#admin-notification-btn)>div:last-child>div:last-child{
     height:40px!important;
   }
 }
+
+
+/* Prevent Material Symbols ligature names (e.g. "visibility") from flashing before the icon font loads. */
+html:not(.material-symbols-ready) .material-symbols-outlined{font-size:0!important;}

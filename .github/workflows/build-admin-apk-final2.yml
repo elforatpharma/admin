@@ -182,36 +182,25 @@ jobs:
                           .setAutoCancel(true)
                           .setContentIntent(pi);
 
-                  boolean hasActions = confirmToken != null && !confirmToken.isEmpty() &&
-                          rejectToken != null && !rejectToken.isEmpty() &&
-                          orderId != null && !orderId.isEmpty();
-
-                  if (hasActions) {
-                      Intent confirm = new Intent(this, NotificationActionReceiver.class);
-                      confirm.setAction(NotificationActionReceiver.ACTION_CONFIRM);
-                      confirm.putExtra(NotificationActionReceiver.EXTRA_TOKEN, confirmToken);
-                      confirm.putExtra(NotificationActionReceiver.EXTRA_ORDER_ID, orderId);
-                      confirm.putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId);
-
-                      Intent reject = new Intent(this, NotificationActionReceiver.class);
-                      reject.setAction(NotificationActionReceiver.ACTION_REJECT);
-                      reject.putExtra(NotificationActionReceiver.EXTRA_TOKEN, rejectToken);
-                      reject.putExtra(NotificationActionReceiver.EXTRA_ORDER_ID, orderId);
-                      reject.putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId);
-
-                      PendingIntent confirmPi = PendingIntent.getBroadcast(this, safeHash(orderId, 20),
-                              confirm, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                      PendingIntent rejectPi = PendingIntent.getBroadcast(this, safeHash(orderId, 30),
-                              reject, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-                      builder.addAction(new NotificationCompat.Action.Builder(
-                              android.R.drawable.ic_menu_view, "فتح الطلب", pi).build());
-                      builder.addAction(new NotificationCompat.Action.Builder(
-                              android.R.drawable.ic_menu_send, "تأكيد", confirmPi).build());
-                      builder.addAction(new NotificationCompat.Action.Builder(
-                              android.R.drawable.ic_menu_close_clear_cancel, "رفض", rejectPi).build());
+                  if (orderId != null && !orderId.isEmpty()) {
+                      Intent acknowledge = new Intent(this, NotificationActionReceiver.class);
+                      acknowledge.setAction(NotificationActionReceiver.ACTION_ACKNOWLEDGE);
+                      acknowledge.putExtra(NotificationActionReceiver.EXTRA_ORDER_ID, orderId);
+                      acknowledge.putExtra(NotificationActionReceiver.EXTRA_TITLE, title);
+                      acknowledge.putExtra(NotificationActionReceiver.EXTRA_BODY, body);
+                      acknowledge.putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId);
+                      Intent snooze = new Intent(this, NotificationActionReceiver.class);
+                      snooze.setAction(NotificationActionReceiver.ACTION_SNOOZE);
+                      snooze.putExtra(NotificationActionReceiver.EXTRA_ORDER_ID, orderId);
+                      snooze.putExtra(NotificationActionReceiver.EXTRA_TITLE, title);
+                      snooze.putExtra(NotificationActionReceiver.EXTRA_BODY, body);
+                      snooze.putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId);
+                      PendingIntent acknowledgePi = PendingIntent.getBroadcast(this, safeHash(orderId, 40), acknowledge, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                      PendingIntent snoozePi = PendingIntent.getBroadcast(this, safeHash(orderId, 50), snooze, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                      builder.addAction(new NotificationCompat.Action.Builder(android.R.drawable.ic_menu_view, "فتح الطلب", pi).build());
+                      builder.addAction(new NotificationCompat.Action.Builder(android.R.drawable.ic_menu_send, "تأكيد الاستلام", acknowledgePi).build());
+                      builder.addAction(new NotificationCompat.Action.Builder(android.R.drawable.ic_lock_idle_alarm, "تأجيل 15 دقيقة", snoozePi).build());
                   }
-
                   nm.notify(notificationId, builder.build());
               }
 

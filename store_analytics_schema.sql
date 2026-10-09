@@ -55,18 +55,53 @@ CREATE POLICY "auth_read_store_events" ON store_events
   FOR SELECT TO authenticated
   USING (public.is_admin());
 
-CREATE OR REPLACE VIEW campaign_performance AS
+CREATE OR REPLACE VIEW public.campaign_performance
+WITH (security_invoker = true)
+AS
+WITH session_attribution AS (
+  SELECT DISTINCT ON (se.session_id)
+    se.session_id,
+    COALESCE(NULLIF(se.campaign, ''), 'direct') AS campaign,
+    COALESCE(NULLIF(se.source, ''), 'direct') AS source
+  FROM public.store_events AS se
+  WHERE se.session_id IS NOT NULL
+    AND btrim(se.session_id) <> ''
+    AND lower(COALESCE(se.event_name, '')) NOT LIKE '%test%'
+    AND lower(se.session_id) NOT LIKE '%test%'
+    AND lower(se.session_id) <> '__test__'
+  ORDER BY se.session_id, se.created_at ASC, se.id ASC
+),
+orders_by_session AS (
+  SELECT
+    o.session_id,
+    COUNT(DISTINCT o.id) AS orders,
+    COALESCE(SUM(o.total) FILTER (
+      WHERE lower(COALESCE(o.status_code, '')) = 'delivered'
+         OR lower(COALESCE(o.status, '')) IN ('delivered', 'تم التوصيل')
+    ), 0) AS revenue
+  FROM public.orders AS o
+  WHERE o.session_id IS NOT NULL
+  GROUP BY o.session_id
+),
+session_rows AS (
+  SELECT
+    sa.campaign,
+    sa.source,
+    sa.session_id,
+    COALESCE(obs.orders, 0) AS orders,
+    COALESCE(obs.revenue, 0) AS revenue
+  FROM session_attribution AS sa
+  LEFT JOIN orders_by_session AS obs ON obs.session_id = sa.session_id
+)
 SELECT
-  coalesce(se.campaign, o.traffic_campaign, 'direct') AS campaign,
-  coalesce(se.source, o.traffic_source, 'direct') AS source,
-  count(DISTINCT se.session_id) AS sessions,
-  count(DISTINCT o.id) AS orders,
-  coalesce(sum(o.total), 0) AS revenue,
-  CASE
-    WHEN count(DISTINCT se.session_id) = 0 THEN 0
-    ELSE round((count(DISTINCT o.id)::numeric / count(DISTINCT se.session_id)::numeric) * 100, 2)
+  campaign,
+  source,
+  COUNT(DISTINCT session_id) AS sessions,
+  SUM(orders)::bigint AS orders,
+  COALESCE(SUM(revenue), 0) AS revenue,
+  CASE WHEN COUNT(DISTINCT session_id) = 0 THEN 0
+       ELSE ROUND((SUM(orders)::numeric / COUNT(DISTINCT session_id)::numeric) * 100, 2)
   END AS conversion_rate
-FROM store_events se
-LEFT JOIN orders o ON o.session_id = se.session_id
-GROUP BY 1, 2
+FROM session_rows
+GROUP BY campaign, source
 ORDER BY revenue DESC, orders DESC;

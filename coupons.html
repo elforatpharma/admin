@@ -55,12 +55,15 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
 <style id="efp-coupons-topbar-css">
 .efp-dashboard-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:0;position:relative!important;height:auto!important;flex-shrink:0!important}
 .efp-topbar-search{flex:1 1 420px;min-width:180px;max-width:620px}
+.efp-topbar-search-row{display:flex;align-items:center;gap:8px;width:100%;min-width:0}
 .efp-topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:0 0 auto;min-width:0;white-space:nowrap}
 .efp-topbar-add{height:40px!important;min-height:40px!important;min-width:160px;flex:0 0 auto}
 .efp-topbar-refresh{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;padding:0!important;flex:0 0 40px!important}
 @media(max-width:1023px){
  .efp-dashboard-topbar{align-items:stretch;flex-wrap:wrap;gap:10px;padding:12px!important}
  .efp-topbar-search{flex:1 1 100%;width:100%;max-width:none;min-width:0}
+ .efp-topbar-search-row{width:100%}
+ .efp-topbar-search-row>div{flex:1 1 auto}
  .efp-topbar-actions{flex:1 1 100%;width:100%;justify-content:flex-start;gap:8px}
  .efp-topbar-add{flex:1 1 auto;min-width:0}
 }
@@ -145,9 +148,14 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
 
   <header class="efp-dashboard-topbar sticky top-0 z-30 min-h-16 bg-surface/90 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between gap-4 px-6 py-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
     <div class="efp-topbar-search">
-      <div class="relative w-full">
-        <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none">search</span>
-        <input id="global-search" class="w-full h-10 pr-10 pl-4 rounded-full bg-surface-container-lowest font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-sm border border-border-subtle focus:border-primary-border" placeholder="بحث باسم أو رمز الكوبون..." type="text" oninput="onSearch(this.value)" aria-label="بحث باسم أو رمز الكوبون"/>
+      <div class="efp-topbar-search-row">
+        <div class="relative w-full min-w-0">
+          <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none">search</span>
+          <input id="global-search" class="w-full h-10 pr-10 pl-4 rounded-full bg-surface-container-lowest font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-sm border border-border-subtle focus:border-primary-border" placeholder="بحث باسم أو رمز الكوبون..." type="text" oninput="onSearch(this.value)" aria-label="بحث باسم أو رمز الكوبون"/>
+        </div>
+        <button type="button" onclick="fetchAll()" class="efp-topbar-refresh inline-flex items-center justify-center size-10 rounded-full border border-border-subtle bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors shrink-0" title="إعادة تحميل الكوبونات" aria-label="إعادة تحميل الكوبونات">
+          <span class="material-symbols-outlined text-xl">refresh</span>
+        </button>
       </div>
     </div>
     <div class="efp-topbar-actions">
@@ -157,9 +165,6 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
       </div>
       <button type="button" onclick="document.getElementById('quick-coupon-drawer').scrollIntoView({behavior:'smooth'})" class="efp-topbar-add inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02] whitespace-nowrap">
         <span class="material-symbols-outlined text-lg">add_circle</span><span>إنشاء كود خصم / عرض جديد</span>
-      </button>
-      <button type="button" onclick="fetchAll()" class="efp-topbar-refresh inline-flex items-center justify-center size-10 rounded-full border border-border-subtle bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors shrink-0" title="إعادة تحميل الكوبونات" aria-label="إعادة تحميل الكوبونات">
-        <span class="material-symbols-outlined text-xl">refresh</span>
       </button>
     </div>
   </header>

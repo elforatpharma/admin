@@ -158,6 +158,16 @@ async function loadAnalytics(){
     document.getElementById('kpis').innerHTML='<p class="text-sm text-red-500 font-bold col-span-full">فشل تحميل البيانات. تأكدي من الجداول والصلاحيات.</p>';
     return;
   }
+  // استبعاد بيانات الاختبار الواضحة حتى لا ترفع أرقام الزيارات والتحويل.
+  const isTestTraffic = (x) => {
+    const eventName = String(x && x.event_name || '').trim().toLowerCase();
+    const sessionId = String(x && x.session_id || '').trim().toLowerCase();
+    return /(^|[_-])test([_-]|$)/.test(eventName) ||
+      /(^|[_-])test([_-]|$)/.test(sessionId) ||
+      sessionId === '__test__';
+  };
+  events = events.filter(x => !isTestTraffic(x));
+  visits = visits.filter(x => !isTestTraffic(x));
   const sessions=unique(visits.length?visits:events,x=>x.session_id);
   // الطلبات الملغية مش بتتحسب في التحويل ولا مسار "طلب مكتمل"
   const validOrders=orders.filter(o=>statusCodeOf(o)!=='cancelled');

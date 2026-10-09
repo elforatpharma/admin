@@ -52,30 +52,47 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
 .efp-loading-skeleton *{visibility:hidden!important}
 @keyframes efpSkeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+<style id="efp-coupons-topbar-css">
+.efp-dashboard-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:0;position:relative!important;height:auto!important;flex-shrink:0!important}
+.efp-topbar-search{flex:1 1 420px;min-width:180px;max-width:620px}
+.efp-topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:0 0 auto;min-width:0;white-space:nowrap}
+.efp-topbar-add{height:40px!important;min-height:40px!important;min-width:160px;flex:0 0 auto}
+.efp-topbar-refresh{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;padding:0!important;flex:0 0 40px!important}
+@media(max-width:1023px){
+ .efp-dashboard-topbar{align-items:stretch;flex-wrap:wrap;gap:10px;padding:12px!important}
+ .efp-topbar-search{flex:1 1 100%;width:100%;max-width:none;min-width:0}
+ .efp-topbar-actions{flex:1 1 100%;width:100%;justify-content:flex-start;gap:8px}
+ .efp-topbar-add{flex:1 1 auto;min-width:0}
+}
+@media(max-width:480px){
+ .efp-topbar-actions{gap:8px}
+ .efp-topbar-add{height:40px!important;min-height:40px!important;padding-left:12px;padding-right:12px;font-size:13px}
+ .efp-topbar-search input{height:40px}
+}
+</style>
 </head>
 <body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
 <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
 
   <div id="sidebar-placeholder"></div>
 
-  <header class="sticky top-0 z-30 h-16 bg-surface/80 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(15,23,42,0.04)]">
-    <div class="flex items-center gap-4 w-1/2">
-      <div class="relative w-full max-w-xl">
-        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px] pointer-events-none">search</span>
-        <input id="global-search" class="w-full h-11 pr-10 pl-4 bg-canvas-bg rounded-full text-body-sm font-body-sm text-on-surface placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="بحث باسم أو رمز الكوبون..." type="text" oninput="onSearch(this.value)"/>
+  <header class="efp-dashboard-topbar sticky top-0 z-30 min-h-16 bg-surface/90 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between gap-4 px-6 py-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <div class="efp-topbar-search">
+      <div class="relative w-full">
+        <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none">search</span>
+        <input id="global-search" class="w-full h-10 pr-10 pl-4 rounded-full bg-surface-container-lowest font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-sm border border-border-subtle focus:border-primary-border" placeholder="بحث باسم أو رمز الكوبون..." type="text" oninput="onSearch(this.value)" aria-label="بحث باسم أو رمز الكوبون"/>
       </div>
     </div>
-    <div class="flex items-center gap-4">
-      <div class="hidden lg:flex items-center gap-2 bg-success-surface text-tertiary px-3 py-1 rounded-full">
-        <span class="w-2 h-2 rounded-full bg-success"></span>
-        <span class="font-label-sm text-label-sm font-bold">نظام التسعير الترويجي متصل</span>
+    <div class="efp-topbar-actions">
+      <div class="efp-store-status hidden lg:flex items-center gap-2 px-3 py-2 rounded-full bg-success-surface border border-emerald-200">
+        <span class="w-2 h-2 rounded-full bg-success animate-pulse shrink-0"></span>
+        <span class="font-label-sm text-label-sm text-emerald-800 font-medium whitespace-nowrap">نظام التسعير الترويجي متصل</span>
       </div>
-      <button onclick="document.getElementById('quick-coupon-drawer').scrollIntoView({behavior:'smooth'})" class="flex items-center gap-2 btn-brand-gradient text-on-primary px-4 py-2.5 rounded-full transition-all transform hover:-translate-y-0.5">
-        <span class="material-symbols-outlined text-[18px]">add_circle</span>
-        <span class="font-label-lg text-label-lg">إنشاء كود خصم / عرض جديد</span>
+      <button type="button" onclick="document.getElementById('quick-coupon-drawer').scrollIntoView({behavior:'smooth'})" class="efp-topbar-add inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02] whitespace-nowrap">
+        <span class="material-symbols-outlined text-lg">add_circle</span><span>إنشاء كود خصم / عرض جديد</span>
       </button>
-      <button onclick="fetchAll()" class="flex items-center gap-2 px-3 h-10 rounded-full bg-surface-container-low text-text-secondary hover:text-on-surface text-label-sm font-label-sm shadow-sm transition-all" title="تحديث">
-        <span class="material-symbols-outlined text-[18px]">refresh</span>
+      <button type="button" onclick="fetchAll()" class="efp-topbar-refresh inline-flex items-center justify-center size-10 rounded-full border border-border-subtle bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors shrink-0" title="إعادة تحميل الكوبونات" aria-label="إعادة تحميل الكوبونات">
+        <span class="material-symbols-outlined text-xl">refresh</span>
       </button>
     </div>
   </header>

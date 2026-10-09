@@ -379,6 +379,7 @@ function renderSidebar(activePage) {
     { href: 'reviews.html',     icon: 'rate_review',  label: 'آراء وتقييمات العملاء' },
     { href: 'settings.html',    icon: 'settings',     label: 'إعدادات المتجر' },
     { href: 'system-check.html', icon: 'health_and_safety', label: 'فحص الربط' },
+    { href: 'connection-monitor.html', icon: 'sync', label: 'مراقبة الاتصال والمزامنة' },
   ];
 
   const navHTML = navItems.map(item => {

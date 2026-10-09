@@ -704,7 +704,7 @@ function renderPagination(totalPages){
   }
   pages.forEach(p=>{
     if(p==='...'){html+=`<span class="px-1 text-text-secondary">...</span>`;}
-    else{html+=`<button onclick="changePage(${p})" class="w-8 h-8 rounded-full font-label-sm text-label-sm ${p===page?'bg-primary text-on-primary':'text-text-secondary hover:bg-surface-container'}">${p}</button>`;}
+    else{html+=`<button onclick="changePage(${p})" class="min-w-10 h-9 px-3 rounded-lg font-label-sm text-label-sm flex items-center justify-center ${p===page?'bg-primary text-on-primary':'text-text-secondary hover:bg-surface-container'}">${p}</button>`;}
   });
   html+=`<button onclick="changePage(${page+1})" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-container ${page>=totalPages?'opacity-40 pointer-events-none':''}" title="التالي"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>`;
   box.innerHTML=html;

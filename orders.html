@@ -717,27 +717,38 @@ function setQuickTag(tag){
   renderOrders();
 }
 
-function onSearch(v){page=1;renderOrders();}
+function onSearch(v){
+  const value=String(v||'');
+  const globalInput=document.getElementById('global-search');
+  const tableInput=document.getElementById('table-search');
+  if(globalInput && globalInput.value!==value)globalInput.value=value;
+  if(tableInput && tableInput.value!==value)tableInput.value=value;
+  page=1;
+  renderOrders();
+}
 
 function applyFilters(){page=1;renderOrders();}
 function perPageChanged(v){perPage=Number(v);page=1;renderOrders();}
 
 function getFiltered(){
-  const q=(document.getElementById('table-search').value||'').trim().toLowerCase();
-  const pay=document.getElementById('payment-filter').value;
+  const q=(document.getElementById('table-search')?.value||document.getElementById('global-search')?.value||'').trim().toLowerCase();
+  const pay=document.getElementById('payment-filter')?.value||'';
   const payStatus=document.getElementById('pay-status-filter')?.value||'';
   const couponFilter=document.getElementById('coupon-filter')?.value||'';
-  const period=document.getElementById('period-filter').value;
+  const period=document.getElementById('period-filter')?.value||'';
   const now=new Date();
   return allOrders.filter(o=>{
     if(quickTag!=='all'){
       const s=statusCodeOf(o);
-      if(quickTag==='new'){if(!(o.status==='جديد'||PENDING.has(s)))return false;}
-      else if(PENDING.has(quickTag)){if(!PENDING.has(s))return false;}
-      else if(s!==quickTag)return false;
+      if(quickTag==='new'){
+        if(s!=='pending')return false;
+      }else{
+        const targetCode=TAG_TO_CODE[quickTag]||quickTag;
+        if(s!==targetCode)return false;
+      }
     }
     if(q){
-      const hay=String(o.id||'')+' '+String(o.customerName||'')+' '+String(o.phone||'');
+      const hay=String(o.id||'')+' '+String(orderRef(o)||'')+' '+String(o.customerName||'')+' '+String(o.phone||'');
       if(!hay.toLowerCase().includes(q))return false;
     }
     if(pay&&paymentKind(o)!==pay)return false;

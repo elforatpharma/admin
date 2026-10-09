@@ -182,6 +182,13 @@ function getPeriodDef(p){
   return {currentStart,prevStart,days,label,now};
 }
 
+function isDeliveredOrder(o){
+  const code=String((o&&o.status_code)||'').trim().toLowerCase();
+  const status=String((o&&o.status)||'').trim().toLowerCase();
+  return code==='delivered' || status==='delivered' ||
+    /تم التوصيل|تم التسليم|تم استلام الطلب/.test(status);
+}
+
 function bucketKey(t, isHour){
   const d=new Date(t);
   if(isHour) return d.getHours();
@@ -228,11 +235,11 @@ async function loadReport(p){
     const total=parseFloat(o.total)||0;
 
     if(t>=def.prevStart.getTime()&&t<def.currentStart.getTime()){
-      if((o.status_code||'')==='delivered'||o.status==='تم التوصيل') prevRevenue+=total;
+      if(isDeliveredOrder(o)) prevRevenue+=total;
     }
     if(t>=def.currentStart.getTime()){
       curOrders++;
-      if((o.status_code||'')==='delivered'||o.status==='تم التوصيل'){
+      if(isDeliveredOrder(o)){
         curRevenue+=total; curDelivered++;
         const k=bucketKey(t,isHour);
         buckets[k]=(buckets[k]||0)+total;

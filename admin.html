@@ -60,6 +60,25 @@
   </style>
 
 <style id="efp-dashboard-topbar-css">.efp-dashboard-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:0}.efp-topbar-search{flex:1 1 420px;min-width:180px;max-width:620px}.efp-topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:0 0 auto;min-width:0}.efp-topbar-add{min-width:132px}.efp-topbar-notifications{width:40px;height:40px;padding:0}@media(max-width:1023px){.efp-dashboard-topbar{align-items:stretch;flex-wrap:wrap;gap:10px;padding:12px!important}.efp-topbar-search{flex:1 1 100%;max-width:none;min-width:0}.efp-topbar-actions{width:100%;justify-content:flex-start;gap:8px}.efp-topbar-add{flex:1 1 auto;min-width:0}.efp-topbar-notifications{flex:0 0 40px}}@media(max-width:480px){.efp-topbar-actions{gap:8px}.efp-topbar-add{height:40px;padding-left:12px;padding-right:12px;font-size:13px}.efp-topbar-notifications{width:40px;height:40px}.efp-topbar-search input{height:40px}}</style>
+  <style id="efp-topbar-overlap-fix">
+    .efp-dashboard-topbar{
+      position:relative!important;
+      inset:auto!important;
+      flex-shrink:0!important;
+      height:auto!important;
+      min-height:0!important;
+      align-self:stretch!important;
+      z-index:30!important;
+    }
+    #efp-topbar-notifications,.efp-topbar-add{position:relative!important;flex-shrink:0!important;}
+    main{position:relative!important;z-index:0!important;margin-top:0!important;clear:both!important;}
+    @media(max-width:1023px){
+      .efp-dashboard-topbar{display:flex!important;flex-wrap:wrap!important;gap:10px!important;}
+      .efp-topbar-search{flex:1 1 100%!important;width:100%!important;max-width:none!important;}
+      .efp-topbar-actions{position:relative!important;display:flex!important;flex:1 1 100%!important;width:100%!important;align-items:center!important;}
+      main{padding-top:24px!important;}
+    }
+  </style>
 </head>
 <body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
 <div class="flex h-screen overflow-hidden">

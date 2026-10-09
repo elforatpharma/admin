@@ -238,70 +238,18 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
 }
 </style>
 <style id="orders-topbar-button-match">
-/* Mirror the dashboard's home-page topbar controls exactly. */
-header:has(#admin-notification-btn) .efp-topbar-add{
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:8px!important;
-  height:40px!important;
-  min-height:40px!important;
-  min-width:132px!important;
-  padding:0 16px!important;
-  border:0!important;
-  border-radius:50px!important;
-  background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;
-  color:#fff!important;
-  box-shadow:0 8px 20px rgba(77,60,235,.3)!important;
-  font-family:inherit!important;
-  font-size:14px!important;
-  font-weight:700!important;
-  line-height:1!important;
-  white-space:nowrap!important;
-  flex:0 0 auto!important;
-}
-header:has(#admin-notification-btn) .efp-topbar-add:hover{
-  background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;
-  box-shadow:0 10px 24px rgba(77,60,235,.4)!important;
-}
-header:has(#admin-notification-btn) .efp-topbar-add .material-symbols-outlined{
-  font-size:20px!important;
-  line-height:1!important;
-}
-header:has(#admin-notification-btn) #admin-notification-btn{
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  width:40px!important;
-  min-width:40px!important;
-  max-width:40px!important;
-  height:40px!important;
-  min-height:40px!important;
-  padding:0!important;
-  border:1px solid #e5e7eb!important;
-  border-radius:50%!important;
-  background:#fff!important;
-  color:#64748b!important;
-  box-shadow:none!important;
-  flex:0 0 40px!important;
-  position:relative!important;
-}
-header:has(#admin-notification-btn) #admin-notification-btn:hover{
-  background:#f1f5f9!important;
-  color:#0f172a!important;
-}
-header:has(#admin-notification-btn) #admin-notification-btn .material-symbols-outlined{
-  font-size:20px!important;
-  line-height:1!important;
-}
-@media(max-width:1023px){
-  header:has(#admin-notification-btn) .efp-topbar-add{
-    min-width:132px!important;
-    padding-left:12px!important;
-    padding-right:12px!important;
-    font-size:13px!important;
-  }
-}
+/* Match the home dashboard's topbar structure, button dimensions, and notification position. */
+header.efp-dashboard-topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;min-width:0!important;height:auto!important;min-height:64px!important;position:relative!important;inset:auto!important;flex-shrink:0!important;}
+header.efp-dashboard-topbar .efp-topbar-search{flex:1 1 420px!important;width:auto!important;min-width:180px!important;max-width:620px!important;}
+header.efp-dashboard-topbar .efp-topbar-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:10px!important;flex:0 0 auto!important;min-width:0!important;flex-wrap:nowrap!important;}
+header.efp-dashboard-topbar .efp-topbar-add{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;height:40px!important;min-height:40px!important;min-width:132px!important;padding:0 16px!important;border:0!important;border-radius:50px!important;background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;color:#fff!important;box-shadow:0 8px 20px rgba(77,60,235,.3)!important;font-family:inherit!important;font-size:14px!important;font-weight:700!important;line-height:1!important;white-space:nowrap!important;flex:0 0 auto!important;}
+header.efp-dashboard-topbar .efp-topbar-add:hover{background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;box-shadow:0 10px 24px rgba(77,60,235,.4)!important;}
+header.efp-dashboard-topbar .efp-topbar-add .material-symbols-outlined{font-size:20px!important;line-height:1!important;}
+header.efp-dashboard-topbar #admin-notification-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:40px!important;min-width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;border:1px solid #e5e7eb!important;border-radius:50%!important;background:#fff!important;color:#64748b!important;box-shadow:none!important;flex:0 0 40px!important;position:relative!important;}
+header.efp-dashboard-topbar #admin-notification-btn:hover{background:#f1f5f9!important;color:#0f172a!important;}
+header.efp-dashboard-topbar #admin-notification-btn .material-symbols-outlined{font-size:20px!important;line-height:1!important;}
+@media(max-width:1023px){header.efp-dashboard-topbar{align-items:stretch!important;flex-wrap:wrap!important;gap:10px!important;padding:12px!important;}header.efp-dashboard-topbar .efp-topbar-search{flex:1 1 100%!important;width:100%!important;min-width:0!important;max-width:none!important;}header.efp-dashboard-topbar .efp-topbar-actions{width:100%!important;flex:1 1 100%!important;justify-content:flex-start!important;flex-wrap:nowrap!important;gap:8px!important;}header.efp-dashboard-topbar .efp-topbar-add{height:40px!important;min-height:40px!important;min-width:132px!important;padding:0 12px!important;font-size:13px!important;}}
+@media(max-width:480px){header.efp-dashboard-topbar{padding-left:8px!important;padding-right:8px!important;}header.efp-dashboard-topbar .efp-topbar-actions{gap:8px!important;}}
 </style>
 </head>
 <body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
@@ -311,28 +259,26 @@ header:has(#admin-notification-btn) #admin-notification-btn .material-symbols-ou
 
   <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
     <header class="sticky top-0 z-30 h-16 bg-surface/90 backdrop-blur-xl border-b border-border-subtle flex items-center justify-between px-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div class="flex items-center gap-4 w-1/2">
-        <div class="relative w-full max-w-md">
+      <div class="efp-topbar-search">
+        <div class="relative w-full">
           <span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none">search</span>
           <input id="global-search" class="w-full h-10 pr-10 pl-16 rounded-full bg-surface-container-lowest font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-sm border border-transparent focus:border-primary-border" placeholder="بحث برقم الطلب، اسم العميل، الهاتف..." type="text" oninput="onSearch(this.value)"/>
           <kbd class="absolute left-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-md bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant hidden md:block">Ctrl + K</kbd>
         </div>
       </div>
-      <div class="flex items-center gap-4">
-        <div class="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-success-surface border border-emerald-200">
+      <div class="efp-topbar-actions">
+        <div class="efp-store-status hidden lg:flex items-center gap-2 px-3 py-2 rounded-full bg-success-surface border border-emerald-200">
           <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
           <span class="font-label-sm text-label-sm text-emerald-800 font-medium">الطلبات متزامنة وقيد العمل</span>
         </div>
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="newOrderModal()" class="efp-topbar-add inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02] whitespace-nowrap">
+        <button type="button" onclick="newOrderModal()" class="efp-topbar-add inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02] whitespace-nowrap">
             <span class="material-symbols-outlined text-lg">add</span><span>إجراء سريع</span>
           </button>
           <button type="button" id="admin-notification-btn" onclick="clearAdminNotifications()" class="efp-topbar-notifications relative inline-flex items-center justify-center size-10 rounded-full border border-border-subtle bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors shrink-0" title="إشعارات الطلبات الجديدة" aria-label="إشعارات الطلبات الجديدة">
             <span class="material-symbols-outlined text-xl">notifications</span>
             <span id="admin-notification-badge" class="hidden absolute -top-0.5 -left-0.5 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[10px] font-bold items-center justify-center ring-2 ring-surface">0</span>
-          </button>
-        </div>
-      </div>
+        </button>
+    </div>
     </header>
 
     <main class="w-full px-6 py-6 bg-surface min-h-screen">

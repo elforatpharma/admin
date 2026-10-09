@@ -255,3 +255,96 @@ header.sticky.top-0.z-30,
     gap:10px!important;
   }
 }
+
+/* Unified global search-bar layout for dashboard pages. */
+header:has(#global-search),
+header:has(.efp-topbar-search){
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  min-width:0!important;
+  height:auto!important;
+  min-height:64px!important;
+}
+header:has(#global-search)>div:first-child{
+  display:flex!important;
+  flex:1 1 420px!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:720px!important;
+}
+header:has(#global-search)>div:first-child>div{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+}
+header #global-search,
+header .efp-topbar-search input{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  text-overflow:ellipsis;
+}
+header:has(#global-search)>div:last-child{
+  display:flex!important;
+  flex:0 1 auto!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+header .efp-topbar-search{
+  flex:1 1 420px!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:720px!important;
+}
+@media(max-width:1023px){
+  header:has(#global-search),
+  header:has(.efp-topbar-search){
+    align-items:stretch!important;
+    flex-wrap:wrap!important;
+    gap:10px!important;
+    padding-top:12px!important;
+    padding-bottom:12px!important;
+  }
+  header:has(#global-search)>div:first-child,
+  header .efp-topbar-search{
+    flex:1 1 100%!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+  }
+  header:has(#global-search)>div:last-child,
+  header .efp-topbar-actions{
+    flex:1 1 100%!important;
+    width:100%!important;
+    max-width:100%!important;
+    justify-content:flex-start!important;
+    flex-wrap:wrap!important;
+    gap:8px!important;
+  }
+  header #global-search,
+  header .efp-topbar-search input{
+    height:42px!important;
+    font-size:13px!important;
+  }
+}
+@media(max-width:480px){
+  header:has(#global-search),
+  header:has(.efp-topbar-search){
+    padding-left:8px!important;
+    padding-right:8px!important;
+  }
+  header:has(#global-search)>div:last-child{
+    column-gap:6px!important;
+    row-gap:8px!important;
+  }
+  header #global-search,
+  header .efp-topbar-search input{
+    font-size:12px!important;
+  }
+}

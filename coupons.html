@@ -620,7 +620,7 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
     const pct=best?best.discount_percentage:'20';
     document.getElementById('campaign-code').textContent=code;
     document.getElementById('campaign-title').textContent=best
-      ?`حملة "${best.code}" النشطة (خصم ${pct}% على الطلب)`
+      ?`حملة نشطة (خصم ${pct}% على الطلب)`
       :'حملة العروض الترويجية النشطة (خصم 20% + هدية)';
   }
   function copyCampaignCode(){

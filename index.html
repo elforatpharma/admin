@@ -161,5 +161,19 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
     </style>
+
+<script>
+/* Keep Material Symbols ligature names hidden on the login screen until the icon font is ready. */
+(function(){
+  function markMaterialSymbolsReady(){
+    if(!document.fonts || !document.fonts.load){document.documentElement.classList.add('material-symbols-ready');return;}
+    document.fonts.load('24px "Material Symbols Outlined"').then(function(){
+      document.documentElement.classList.add('material-symbols-ready');
+    }).catch(function(){});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',markMaterialSymbolsReady,{once:true});
+  else markMaterialSymbolsReady();
+})();
+</script>
 </body>
 </html>

@@ -237,6 +237,72 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
   }
 }
 </style>
+<style id="orders-topbar-button-match">
+/* Mirror the dashboard's home-page topbar controls exactly. */
+header:has(#admin-notification-btn) .efp-topbar-add{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  height:40px!important;
+  min-height:40px!important;
+  min-width:132px!important;
+  padding:0 16px!important;
+  border:0!important;
+  border-radius:50px!important;
+  background:linear-gradient(90deg,#4d3ceb 0%,#8536ff 100%)!important;
+  color:#fff!important;
+  box-shadow:0 8px 20px rgba(77,60,235,.3)!important;
+  font-family:inherit!important;
+  font-size:14px!important;
+  font-weight:700!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  flex:0 0 auto!important;
+}
+header:has(#admin-notification-btn) .efp-topbar-add:hover{
+  background:linear-gradient(90deg,#3517d6 0%,#4d3ceb 100%)!important;
+  box-shadow:0 10px 24px rgba(77,60,235,.4)!important;
+}
+header:has(#admin-notification-btn) .efp-topbar-add .material-symbols-outlined{
+  font-size:20px!important;
+  line-height:1!important;
+}
+header:has(#admin-notification-btn) #admin-notification-btn{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:40px!important;
+  min-width:40px!important;
+  max-width:40px!important;
+  height:40px!important;
+  min-height:40px!important;
+  padding:0!important;
+  border:1px solid #e5e7eb!important;
+  border-radius:50%!important;
+  background:#fff!important;
+  color:#64748b!important;
+  box-shadow:none!important;
+  flex:0 0 40px!important;
+  position:relative!important;
+}
+header:has(#admin-notification-btn) #admin-notification-btn:hover{
+  background:#f1f5f9!important;
+  color:#0f172a!important;
+}
+header:has(#admin-notification-btn) #admin-notification-btn .material-symbols-outlined{
+  font-size:20px!important;
+  line-height:1!important;
+}
+@media(max-width:1023px){
+  header:has(#admin-notification-btn) .efp-topbar-add{
+    min-width:132px!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+    font-size:13px!important;
+  }
+}
+</style>
 </head>
 <body class="bg-background font-body-md text-on-surface antialiased min-h-screen">
 <div class="flex h-screen overflow-hidden">

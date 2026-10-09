@@ -42,7 +42,7 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/java/com/elforatpharma/admin
           test -s app/google-services.json
-          sed -i -E 's/versionCode = [0-9]+/versionCode = 28/; s/versionName = "[^"]+"/versionName = "1.7.5"/' app/build.gradle.kts
+          sed -i -E 's/versionCode = [0-9]+/versionCode = 29/; s/versionName = "[^"]+"/versionName = "1.7.6"/' app/build.gradle.kts
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
           # Create a monochrome transparent notification icon from the El-Forat logo.
@@ -279,12 +279,31 @@ jobs:
           public class NotificationActionReceiver extends BroadcastReceiver {
               public static final String ACTION_CONFIRM = "com.elforatpharma.admin.ACTION_CONFIRM";
               public static final String ACTION_REJECT = "com.elforatpharma.admin.ACTION_REJECT";
+              public static final String ACTION_ACKNOWLEDGE = "com.elforatpharma.admin.ACTION_ACKNOWLEDGE";
+              public static final String ACTION_SNOOZE = "com.elforatpharma.admin.ACTION_SNOOZE";
+              public static final String ACTION_SNOOZE_REMIND = "com.elforatpharma.admin.ACTION_SNOOZE_REMIND";
+              public static final String EXTRA_TITLE = "notification_title";
+              public static final String EXTRA_BODY = "notification_body";
               public static final String EXTRA_TOKEN = "action_token";
               public static final String EXTRA_ORDER_ID = "order_id";
               public static final String EXTRA_NOTIFICATION_ID = "notification_id";
               private static final String ENDPOINT = "https://sidtdxchiqiogfkwbdui.supabase.co/functions/v1/admin-notification-action";
 
               @Override public void onReceive(Context context, Intent intent) {
+                  String action = intent.getAction();
+                  if (ACTION_ACKNOWLEDGE.equals(action)) {
+                      cancelAndToast(context, intent, "تم تأكيد استلام الإشعار");
+                      return;
+                  }
+                  if (ACTION_SNOOZE.equals(action)) {
+                      scheduleSnooze(context, intent);
+                      cancelAndToast(context, intent, "تم تأجيل الإشعار لمدة 15 دقيقة");
+                      return;
+                  }
+                  if (ACTION_SNOOZE_REMIND.equals(action)) {
+                      postReminder(context, intent.getStringExtra(EXTRA_TITLE), intent.getStringExtra(EXTRA_BODY), intent.getStringExtra(EXTRA_ORDER_ID));
+                      return;
+                  }
                   final PendingResult pending = goAsync();
                   final String token = intent.getStringExtra(EXTRA_TOKEN);
                   final String orderId = intent.getStringExtra(EXTRA_ORDER_ID);
@@ -339,6 +358,58 @@ jobs:
                           pending.finish();
                       });
                   }).start();
+              }
+
+              private static void cancelAndToast(Context context, Intent intent, String message) {
+                  int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1);
+                  if (id >= 0) ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(id);
+                  android.content.SharedPreferences prefs = context.getSharedPreferences(ElforatFirebaseMessagingService.PREFS, Context.MODE_PRIVATE);
+                  prefs.edit().putInt(ElforatFirebaseMessagingService.COUNT_KEY, Math.max(0, prefs.getInt(ElforatFirebaseMessagingService.COUNT_KEY, 1) - 1)).apply();
+                  android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show();
+              }
+
+              private static void scheduleSnooze(Context context, Intent source) {
+                  String orderId = source.getStringExtra(EXTRA_ORDER_ID);
+                  Intent reminder = new Intent(context, NotificationActionReceiver.class);
+                  reminder.setAction(ACTION_SNOOZE_REMIND);
+                  reminder.putExtra(EXTRA_ORDER_ID, orderId);
+                  reminder.putExtra(EXTRA_TITLE, source.getStringExtra(EXTRA_TITLE));
+                  reminder.putExtra(EXTRA_BODY, source.getStringExtra(EXTRA_BODY));
+                  int requestCode = Math.abs((orderId == null ? "" : orderId).hashCode()) + 60;
+                  android.app.PendingIntent pi = android.app.PendingIntent.getBroadcast(context, requestCode, reminder, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+                  android.app.AlarmManager alarm = (android.app.AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+                  if (alarm != null) {
+                      long when = System.currentTimeMillis() + 15L * 60L * 1000L;
+                      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) alarm.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, when, pi);
+                      else alarm.set(android.app.AlarmManager.RTC_WAKEUP, when, pi);
+                  }
+              }
+
+              private static void postReminder(Context context, String title, String body, String orderId) {
+                  android.app.NotificationManager nm = (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                  String target = "https://elforatpharma.github.io/admin/orders.html" + (orderId == null || orderId.isEmpty() ? "" : "?order=" + android.net.Uri.encode(orderId));
+                  Intent open = new Intent(context, MainActivity.class);
+                  open.putExtra("deep_link_url", target);
+                  open.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                  int base = Math.abs((orderId == null ? "" : orderId).hashCode());
+                  android.app.PendingIntent openPi = android.app.PendingIntent.getActivity(context, base + 10, open, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+                  int notificationId = (int)(System.currentTimeMillis() & 0x7fffffff);
+                  androidx.core.app.NotificationCompat.Builder b = new androidx.core.app.NotificationCompat.Builder(context, ElforatFirebaseMessagingService.CHANNEL_ID)
+                      .setSmallIcon(R.drawable.notification_logo).setColor(android.graphics.Color.rgb(212,166,42)).setColorized(true)
+                      .setContentTitle(title == null || title.isEmpty() ? "الفرات فارما" : title)
+                      .setContentText(body == null || body.isEmpty() ? "تذكير بمتابعة الطلب #" + orderId : body)
+                      .setStyle(new androidx.core.app.NotificationCompat.BigTextStyle().bigText(body == null ? "" : body))
+                      .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH).setAutoCancel(true).setContentIntent(openPi);
+                  Intent ack = new Intent(context, NotificationActionReceiver.class); ack.setAction(ACTION_ACKNOWLEDGE); ack.putExtra(EXTRA_ORDER_ID, orderId); ack.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
+                  Intent snooze = new Intent(context, NotificationActionReceiver.class); snooze.setAction(ACTION_SNOOZE); snooze.putExtra(EXTRA_ORDER_ID, orderId); snooze.putExtra(EXTRA_TITLE, title); snooze.putExtra(EXTRA_BODY, body); snooze.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
+                  android.app.PendingIntent ackPi = android.app.PendingIntent.getBroadcast(context, base + 40, ack, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+                  android.app.PendingIntent snoozePi = android.app.PendingIntent.getBroadcast(context, base + 50, snooze, android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+                  b.addAction(new androidx.core.app.NotificationCompat.Action.Builder(android.R.drawable.ic_menu_view, "فتح الطلب", openPi).build());
+                  b.addAction(new androidx.core.app.NotificationCompat.Action.Builder(android.R.drawable.ic_menu_send, "تأكيد الاستلام", ackPi).build());
+                  b.addAction(new androidx.core.app.NotificationCompat.Action.Builder(android.R.drawable.ic_lock_idle_alarm, "تأجيل 15 دقيقة", snoozePi).build());
+                  nm.notify(notificationId, b.build());
+                  android.content.SharedPreferences prefs = context.getSharedPreferences(ElforatFirebaseMessagingService.PREFS, Context.MODE_PRIVATE);
+                  prefs.edit().putInt(ElforatFirebaseMessagingService.COUNT_KEY, prefs.getInt(ElforatFirebaseMessagingService.COUNT_KEY, 0) + 1).apply();
               }
 
               private static String escape(String s) {
@@ -918,14 +989,14 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.7.5
-          name: Elforat Pharma Admin v1.7.5
+          tag_name: v1.7.6
+          name: Elforat Pharma Admin v1.7.6
           generate_release_notes: true
           files: android-app/app/build/outputs/apk/release/app-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Elforat-Pharma-Admin-APK-v1.7.5
+          name: Elforat-Pharma-Admin-APK-v1.7.6
           path: android-app/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 

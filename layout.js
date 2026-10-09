@@ -622,3 +622,18 @@ if (document.readyState === 'loading') {
   window.setTimeout(refreshVisibleRows,800);
   window.setTimeout(refreshVisibleRows,1800);
 })();
+
+
+/* Wait for the Material Symbols font before revealing icon ligatures. */
+(function(){
+  function markMaterialSymbolsReady(){
+    if(!document.fonts || !document.fonts.load){document.documentElement.classList.add('material-symbols-ready');return;}
+    document.fonts.load('24px "Material Symbols Outlined"').then(function(){
+      document.documentElement.classList.add('material-symbols-ready');
+    }).catch(function(){
+      /* Keep ligature words hidden if the icon font fails to load. */
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',markMaterialSymbolsReady,{once:true});
+  else markMaterialSymbolsReady();
+})();

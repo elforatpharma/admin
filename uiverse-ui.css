@@ -130,3 +130,38 @@ body.efp-uiverse-ui:not(.efp-inventory-page) main .bg-gray-50{background:#faf9ff
   body.efp-uiverse-ui:not(.efp-inventory-page) main .overflow-hidden.rounded-xl,
   body.efp-uiverse-ui:not(.efp-inventory-page) main .overflow-hidden.rounded-2xl{border-radius:20px!important;}
 }
+
+
+/* Accessibility/contrast fix: purple gradient action buttons must always use white text.
+   Covers shared brand buttons, gradient utility classes, and inline gradient styles
+   across every admin page, including the inventory page. */
+:is(button, a, [role="button"]):is(
+  .btn-brand-gradient,
+  [class*="gradient"],
+  [class*="bg-gradient"],
+  [style*="linear-gradient"]
+),
+button.btn-brand-gradient,
+a.btn-brand-gradient,
+[role="button"].btn-brand-gradient {
+  color: #fff !important;
+}
+:is(button, a, [role="button"]):is(
+  .btn-brand-gradient,
+  [class*="gradient"],
+  [class*="bg-gradient"],
+  [style*="linear-gradient"]
+) > :is(span, strong, b, i, svg, .material-symbols-outlined),
+button.btn-brand-gradient > *,
+a.btn-brand-gradient > *,
+[role="button"].btn-brand-gradient > * {
+  color: #fff !important;
+}
+:is(button, a, [role="button"]):is(
+  .btn-brand-gradient,
+  [class*="gradient"],
+  [class*="bg-gradient"],
+  [style*="linear-gradient"]
+) svg {
+  color: #fff !important;
+}

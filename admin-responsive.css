@@ -349,32 +349,24 @@ header .efp-topbar-search{
   }
 }
 
-/* Orders page: keep the Quick Action button and notification control aligned. */
-header:has(#global-search) button[onclick="newOrderModal()"]{
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  flex:0 0 auto!important;
-  width:auto!important;
-  min-width:max-content!important;
-  max-width:none!important;
-  height:40px!important;
+/* Orders page buttons match the dashboard's product and notification controls. */
+header:has(#admin-notification-btn) .efp-topbar-add{
+  min-width:132px!important;
   white-space:nowrap!important;
-  word-break:keep-all!important;
+  word-break:normal!important;
   overflow-wrap:normal!important;
-  gap:8px!important;
-  padding-left:16px!important;
-  padding-right:16px!important;
 }
 header:has(#admin-notification-btn) #admin-notification-btn{
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  flex:0 0 40px!important;
   width:40px!important;
   min-width:40px!important;
+  max-width:40px!important;
   height:40px!important;
+  min-height:40px!important;
   padding:0!important;
+  flex:0 0 40px!important;
+}
+header:has(#admin-notification-btn) #admin-notification-btn .material-symbols-outlined{
+  font-size:20px!important;
 }
 header:has(#admin-notification-btn)>div:last-child>div:last-child{
   display:flex!important;
@@ -388,13 +380,29 @@ header:has(#admin-notification-btn)>div:last-child>div:last-child{
   max-width:100%!important;
 }
 @media(max-width:1023px){
+  header:has(#admin-notification-btn) .efp-topbar-add{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    height:40px!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+    font-size:13px!important;
+  }
   header:has(#admin-notification-btn)>div:last-child>div:last-child{
     justify-content:flex-start!important;
     flex:0 0 auto!important;
   }
-  header:has(#global-search) button[onclick="newOrderModal()"]{
-    font-size:12px!important;
+}
+@media(max-width:480px){
+  header:has(#admin-notification-btn) .efp-topbar-add{
+    height:40px!important;
     padding-left:12px!important;
     padding-right:12px!important;
+    font-size:13px!important;
+  }
+  header:has(#admin-notification-btn) #admin-notification-btn{
+    width:40px!important;
+    min-width:40px!important;
+    height:40px!important;
   }
 }

@@ -70,6 +70,33 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
  .efp-topbar-search input{height:40px}
 }
 </style>
+
+<style id="coupons-mobile-heading-layout">
+@media(max-width:767.98px){
+  main .coupons-page-title-row{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    gap:8px!important;
+    width:100%!important;
+  }
+  main .coupons-page-title-row h1{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    line-height:1.45!important;
+  }
+  main .coupons-page-title-row .coupons-connection-badge{
+    display:inline-flex!important;
+    align-self:flex-start!important;
+    width:max-content!important;
+    max-width:100%!important;
+    white-space:nowrap!important;
+    flex:0 0 auto!important;
+  }
+}
+</style>
 </head>
 <body class="bg-canvas-bg font-body-md text-body-md text-on-surface antialiased">
 <div class="pr-0 lg:pr-64 flex-1 flex flex-col min-h-screen overflow-y-auto no-print">
@@ -108,9 +135,9 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
             <span class="material-symbols-outlined text-[14px]">chevron_left</span>
             <span class="text-primary font-bold">الكوبونات والعروض الترويجية</span>
           </div>
-          <div class="flex items-center gap-space-sm">
+          <div class="coupons-page-title-row flex items-center gap-space-sm">
             <h1 class="font-headline-xl text-headline-xl text-on-surface">إدارة الخصومات والحملات النشطة</h1>
-            <span class="flex items-center gap-1 bg-success-surface text-tertiary px-3 py-0.5 rounded-full font-label-sm text-label-sm shadow-sm">
+            <span class="coupons-connection-badge flex items-center gap-1 bg-success-surface text-tertiary px-3 py-0.5 rounded-full font-label-sm text-label-sm shadow-sm whitespace-nowrap">
               <span class="w-2 h-2 rounded-full bg-success"></span>
               نظام التسعير الترويجي متصل
             </span>

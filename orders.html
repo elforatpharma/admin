@@ -258,11 +258,11 @@ main input,main select{background:#f8fafc!important;border-color:#e2e8f0!importa
           <span class="font-label-sm text-label-sm text-emerald-800 font-medium">الطلبات متزامنة وقيد العمل</span>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="newOrderModal()" class="flex items-center gap-2 px-4 h-10 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02]">
+          <button type="button" onclick="newOrderModal()" class="efp-topbar-add inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full btn-brand-gradient font-label-lg text-label-lg transition-transform hover:scale-[1.02] whitespace-nowrap">
             <span class="material-symbols-outlined text-lg">add</span><span>إجراء سريع</span>
           </button>
-          <button id="admin-notification-btn" onclick="clearAdminNotifications()" class="relative p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" title="إشعارات الطلبات الجديدة">
-            <span class="material-symbols-outlined text-2xl">notifications</span>
+          <button type="button" id="admin-notification-btn" onclick="clearAdminNotifications()" class="efp-topbar-notifications relative inline-flex items-center justify-center size-10 rounded-full border border-border-subtle bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors shrink-0" title="إشعارات الطلبات الجديدة" aria-label="إشعارات الطلبات الجديدة">
+            <span class="material-symbols-outlined text-xl">notifications</span>
             <span id="admin-notification-badge" class="hidden absolute -top-0.5 -left-0.5 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[10px] font-bold items-center justify-center ring-2 ring-surface">0</span>
           </button>
         </div>

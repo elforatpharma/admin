@@ -71,6 +71,46 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
 }
 </style>
 
+<style id="coupons-mobile-category-tabs">
+/* Keep coupon category buttons stacked and each Arabic label on one line on phones. */
+@media(max-width:767.98px){
+  main .coupon-category-tabs{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    width:100%!important;
+    gap:6px!important;
+    padding:6px!important;
+    border-radius:16px!important;
+    overflow:visible!important;
+  }
+  main .coupon-category-tabs .coupon-category-tab{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:10px!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:44px!important;
+    padding:10px 14px!important;
+    border-radius:12px!important;
+    white-space:nowrap!important;
+    flex-wrap:nowrap!important;
+    text-align:right!important;
+    line-height:1.4!important;
+  }
+  main .coupon-category-tabs .coupon-category-tab > span:not(.material-symbols-outlined){
+    white-space:nowrap!important;
+    word-break:keep-all!important;
+    overflow-wrap:normal!important;
+    flex:0 0 auto!important;
+  }
+  main .coupon-category-tabs .coupon-category-tab .material-symbols-outlined{
+    flex:0 0 auto!important;
+  }
+}
+</style>
 <style id="coupons-mobile-heading-layout">
 @media(max-width:767.98px){
   main .coupons-page-title-row{
@@ -273,18 +313,18 @@ main input:focus,main select:focus{border-color:#c4c0ff!important;box-shadow:0 0
       <!-- Primary Tab Bar & Controls -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-4">
         <!-- Category Tabs -->
-        <div class="flex items-center gap-space-xs bg-surface-container-low p-1 rounded-full shadow-inner overflow-x-auto scrollbar-none">
-          <button id="tab-coupons" onclick="setTab('coupons')" class="bg-primary-container text-on-primary px-5 py-2 rounded-full font-label-lg text-label-lg shadow-sm transition-all flex items-center gap-2">
+        <div class="coupon-category-tabs flex items-center gap-space-xs bg-surface-container-low p-1 rounded-full shadow-inner overflow-x-auto scrollbar-none">
+          <button id="tab-coupons" onclick="setTab('coupons')" class="coupon-category-tab bg-primary-container text-on-primary px-5 py-2 rounded-full font-label-lg text-label-lg shadow-sm transition-all flex items-center gap-2">
             <span class="material-symbols-outlined text-[18px]">confirmation_number</span>
             <span>أكواد الخصم</span>
             <span class="bg-on-primary/20 text-on-primary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-coupons"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
           </button>
-          <button id="tab-bogo" onclick="setTab('bogo')" class="text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2">
+          <button id="tab-bogo" onclick="setTab('bogo')" class="coupon-category-tab text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2">
             <span class="material-symbols-outlined text-[18px]">inventory_2</span>
             <span>عروض الحزم والـ BOGO</span>
             <span class="bg-surface-container text-text-secondary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-bogo"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>
           </button>
-          <button id="tab-ship" onclick="setTab('ship')" class="text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2">
+          <button id="tab-ship" onclick="setTab('ship')" class="coupon-category-tab text-text-secondary hover:text-on-surface px-5 py-2 rounded-full font-label-lg text-label-lg transition-all flex items-center gap-2">
             <span class="material-symbols-outlined text-[18px]">local_shipping</span>
             <span>الشحن المجاني</span>
             <span class="bg-surface-container text-text-secondary font-label-sm text-label-sm px-2 py-0.2 rounded-full" id="tab-count-ship"><span class="efp-loading-skeleton" aria-label="جاري التحميل"></span></span>

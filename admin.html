@@ -108,6 +108,41 @@
           </div>
         </div>
 
+        <!-- Connection and synchronization monitor -->
+        <section id="efp-connection-monitor" class="rounded-2xl bg-surface-container-lowest border border-border-subtle/70 shadow-sm p-4 mb-6" aria-live="polite">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">sync</span>
+              <div>
+                <h2 class="font-bold text-sm text-on-surface">مراقبة الاتصال والمزامنة</h2>
+                <p class="text-xs text-on-surface-variant mt-0.5">حالة الإنترنت وقاعدة البيانات والتحديث اللحظي</p>
+              </div>
+            </div>
+            <button id="connection-sync-now" type="button" onclick="runConnectionSyncCheck(true)" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full btn-brand-gradient text-xs font-bold">
+              <span id="connection-sync-icon" class="material-symbols-outlined text-sm">sync</span><span id="connection-sync-button-label">فحص ومزامنة الآن</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="flex items-center gap-2 rounded-xl bg-surface-container-low px-3 py-2.5 min-w-0">
+              <span id="connection-network-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+              <div class="min-w-0"><div class="text-xs text-on-surface-variant">الإنترنت</div><div id="connection-network-label" class="text-sm font-bold text-on-surface">جاري الفحص...</div></div>
+            </div>
+            <div class="flex items-center gap-2 rounded-xl bg-surface-container-low px-3 py-2.5 min-w-0">
+              <span id="connection-db-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+              <div class="min-w-0"><div class="text-xs text-on-surface-variant">قاعدة البيانات</div><div id="connection-db-label" class="text-sm font-bold text-on-surface">جاري الفحص...</div></div>
+            </div>
+            <div class="flex items-center gap-2 rounded-xl bg-surface-container-low px-3 py-2.5 min-w-0">
+              <span id="connection-realtime-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+              <div class="min-w-0"><div class="text-xs text-on-surface-variant">المزامنة اللحظية</div><div id="connection-realtime-label" class="text-sm font-bold text-on-surface">جاري الاتصال...</div></div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-2 mt-3 text-[11px] text-on-surface-variant">
+            <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span>آخر فحص ناجح</span>
+            <span id="connection-last-sync" dir="ltr">—</span>
+          </div>
+          <p id="connection-monitor-message" class="hidden mt-2 text-xs text-red-600" role="status"></p>
+        </section>
+
         <!-- Low Stock Alert -->
         <div id="low-stock-banner" class="relative overflow-hidden rounded-2xl bg-gradient-to-l from-error-container via-surface-container-low to-surface-container-lowest p-4 shadow-sm mb-6 border border-red-100 hidden">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
@@ -1007,6 +1042,83 @@ document.getElementById('gift-form').onsubmit=async(e)=>{
   finally{btn.disabled=false;btn.innerHTML='حفظ الهدية';}
 };
 
+// ===== Connection and synchronization monitor =====
+let efpRealtimeStatus = 'CONNECTING';
+let efpConnectionCheckRunning = false;
+let efpLastSuccessfulCheck = null;
+function efpSetMonitorState(kind, state, label) {
+  const dot = document.getElementById('connection-' + kind + '-dot');
+  const text = document.getElementById('connection-' + kind + '-label');
+  if (!dot || !text) return;
+  const colors = { ok: 'bg-emerald-500', warn: 'bg-amber-500', bad: 'bg-red-500' };
+  dot.classList.remove('bg-emerald-500', 'bg-amber-500', 'bg-red-500');
+  dot.classList.add(colors[state] || colors.warn);
+  text.textContent = label;
+}
+function efpUpdateLastCheck() {
+  const el = document.getElementById('connection-last-sync');
+  if (el) el.textContent = efpLastSuccessfulCheck ? efpLastSuccessfulCheck.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}) : '—';
+}
+function efpSetMonitorMessage(message) {
+  const el = document.getElementById('connection-monitor-message');
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('hidden', !message);
+}
+async function runConnectionSyncCheck(refreshData = false) {
+  if (efpConnectionCheckRunning) return;
+  efpConnectionCheckRunning = true;
+  const btn = document.getElementById('connection-sync-now');
+  const icon = document.getElementById('connection-sync-icon');
+  const label = document.getElementById('connection-sync-button-label');
+  if (btn) btn.disabled = true;
+  if (icon) icon.textContent = 'sync';
+  if (label) label.textContent = 'جاري الفحص...';
+  efpSetMonitorMessage('');
+  try {
+    if (!navigator.onLine) {
+      efpSetMonitorState('network', 'bad', 'غير متصل');
+      efpSetMonitorState('db', 'bad', 'غير متاحة دون إنترنت');
+      efpSetMonitorState('realtime', 'bad', 'متوقفة دون إنترنت');
+      throw new Error('لا يوجد اتصال بالإنترنت. قد تعرض الصفحة بيانات محفوظة مؤقتًا.');
+    }
+    efpSetMonitorState('network', 'ok', 'متصل');
+    efpSetMonitorState('db', 'warn', 'جاري الاختبار...');
+    const result = await _supabase.from('orders').select('id').limit(1);
+    if (result.error) throw result.error;
+    efpSetMonitorState('db', 'ok', 'متصلة');
+    efpSetMonitorState('realtime', efpRealtimeStatus === 'SUBSCRIBED' ? 'ok' : 'warn', efpRealtimeStatus === 'SUBSCRIBED' ? 'متصلة' : 'إعادة الاتصال جارية');
+    efpLastSuccessfulCheck = new Date();
+    efpUpdateLastCheck();
+    if (refreshData) {
+      await Promise.allSettled([fetchStats(), fetchGifts()]);
+      efpLastSuccessfulCheck = new Date();
+      efpUpdateLastCheck();
+    }
+  } catch (error) {
+    if (navigator.onLine) {
+      efpSetMonitorState('network', 'ok', 'متصل');
+      efpSetMonitorState('db', 'bad', 'فشل الاتصال');
+      efpSetMonitorMessage(refreshData ? 'تعذر فحص قاعدة البيانات أو المزامنة. تحقق من الاتصال ثم حاول مرة أخرى.' : 'تعذر الوصول إلى قاعدة البيانات حاليًا. قد تكون البيانات المعروضة قديمة.');
+    } else {
+      efpSetMonitorMessage(error && error.message ? error.message : 'الاتصال غير متاح حاليًا.');
+    }
+  } finally {
+    efpConnectionCheckRunning = false;
+    if (btn) btn.disabled = false;
+    if (label) label.textContent = 'فحص ومزامنة الآن';
+  }
+}
+window.addEventListener('online', () => { efpSetMonitorState('network', 'ok', 'عاد الاتصال'); runConnectionSyncCheck(false); });
+window.addEventListener('offline', () => {
+  efpSetMonitorState('network', 'bad', 'غير متصل');
+  efpSetMonitorState('db', 'bad', 'غير متاحة دون إنترنت');
+  efpSetMonitorState('realtime', 'bad', 'متوقفة دون إنترنت');
+  efpSetMonitorMessage('أنت غير متصل. سيتم استعادة الفحص والمزامنة عند عودة الإنترنت.');
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) runConnectionSyncCheck(false); });
+setInterval(() => { if (!document.hidden) runConnectionSyncCheck(false); }, 45000);
+
 // ====== INIT ======
 window.onload=async function(){
   renderSidebar('admin.html');
@@ -1017,6 +1129,7 @@ window.onload=async function(){
   if(ok){
     fetchStats();
     fetchGifts();
+    runConnectionSyncCheck(false);
 
     // تفعيل التحديث اللحظي المباشر لجميع إحصائيات وطلبات الرئيسية فوراً بدون ريفريش
     try {
@@ -1024,10 +1137,15 @@ window.onload=async function(){
         .channel('admin-home-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
           console.log('تحديث لحظي وارد للطلبات في الرئيسية:', payload);
+          efpLastSuccessfulCheck = new Date(); efpUpdateLastCheck();
           fetchStats();
         })
         .subscribe((status) => {
           console.log('Realtime subscription status (admin.html):', status);
+          efpRealtimeStatus = status;
+          if (status === 'SUBSCRIBED') efpSetMonitorState('realtime', 'ok', 'متصلة');
+          else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') efpSetMonitorState('realtime', navigator.onLine ? 'bad' : 'warn', navigator.onLine ? 'تعذر الاتصال' : 'بانتظار الإنترنت');
+          else efpSetMonitorState('realtime', 'warn', 'جاري الاتصال...');
         });
     } catch(e) {
       console.warn('Realtime error on admin.html:', e);

@@ -640,7 +640,7 @@ function renderTable(){
   }
   pages.forEach(x=>{
     if(x==='…')html+=`<span class="px-1 text-text-secondary">...</span>`;
-    else html+=`<button onclick="changePage(${x})" class="w-9 h-9 rounded-full font-bold font-data-tabular text-data-tabular shadow-sm ${x===page?'btn-brand-gradient text-on-primary':'bg-surface-container-lowest text-text-secondary hover:text-on-surface'}">${x}</button>`;
+    else html+=`<button onclick="changePage(${x})" class="min-w-10 h-9 px-3 rounded-lg font-bold font-data-tabular text-data-tabular shadow-sm flex items-center justify-center ${x===page?'btn-brand-gradient text-on-primary':'bg-surface-container-lowest text-text-secondary hover:text-on-surface'}">${x}</button>`;
   });
   html+=`<button onclick="changePage(${page+1})" class="w-9 h-9 rounded-full bg-surface-container-lowest text-text-secondary hover:text-on-surface flex items-center justify-center shadow-sm ${page>=tp?'pointer-events-none opacity-40':''}"><span class="material-symbols-outlined text-[18px]">chevron_left</span></button>`;
   p.innerHTML=html;

@@ -442,6 +442,17 @@ header.efp-dashboard-topbar #admin-notification-btn .material-symbols-outlined{f
               </div>
             </div>
 
+            <!-- Rows-per-page control above the table -->
+            <div class="flex items-center justify-start gap-2 px-1 py-2 font-label-sm text-label-sm text-on-surface">
+              <span>عرض</span>
+              <select id="per-page" class="h-8 px-3 rounded-full bg-surface-container-lowest border border-outline-variant/40 text-on-surface focus:outline-none" onchange="perPageChanged(this.value)">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+              </select>
+              <span>طلب لكل صفحة</span>
+            </div>
+
             <!-- Orders Table Container -->
             <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
               <div class="overflow-x-auto">
@@ -462,18 +473,9 @@ header.efp-dashboard-topbar #admin-notification-btn .material-symbols-outlined{f
                   </tbody>
                 </table>
               </div>
-              <!-- Table Footer / Pagination -->
-              <div class="flex items-center justify-between px-4 py-2 bg-surface-container-low font-label-sm text-label-sm text-on-surface">
-                <div class="flex items-center gap-2">
-                  <span>عرض</span>
-                  <select id="per-page" class="h-8 px-2 rounded-full bg-surface-container-lowest text-on-surface focus:outline-none" onchange="perPageChanged(this.value)">
-                    <option value="10">10</option>
-                    <option value="20" selected>20</option>
-                    <option value="50">50</option>
-                  </select>
-                  <span>طلب لكل صفحة</span>
-                </div>
-                <div class="flex items-center gap-1" id="pagination"></div>
+              <!-- Bottom pagination -->
+              <div class="flex items-center justify-center px-4 py-3 bg-surface-container-low font-label-sm text-label-sm text-on-surface">
+                <div class="flex items-center justify-center flex-wrap gap-1" id="pagination"></div>
               </div>
             </div>
 

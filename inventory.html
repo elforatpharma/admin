@@ -376,7 +376,7 @@
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-[22px]">history</span>
-                <h2 class="font-headline-lg text-headline-lg text-on-surface">أحدث الأصناف والتحركات</h2>
+                <h2 class="font-headline-lg text-headline-lg text-on-surface">سجل حركات المخزون</h2>
               </div>
               <button onclick="fetchProducts()" class="font-label-sm text-label-sm text-primary font-bold hover:underline">تحديث</button>
             </div>
@@ -1055,31 +1055,49 @@ function toggleCustomize(){
   renderTable();
 }
 
-function renderRecent(){
+functasync function renderRecent(){
   const box=document.getElementById('recent-list');
-  const recent=(products||[]).slice(0,3);
-  if(!recent.length){box.innerHTML='<div class="py-6 text-center text-text-secondary">لا توجد تحركات بعد.</div>';return;}
-  box.innerHTML=recent.map((p,i)=>{
-    const kind=i===0?'إضافة جديدة':'إضافة مخزني';
-    const icon=i===0?'input':'add_box';
-    const cls=i===0?'bg-success-surface text-tertiary':'bg-primary-surface text-primary';
-    return `<div class="py-2.5 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="w-9 h-9 rounded-full ${cls} flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">${icon}</span></div>
-        <div class="flex flex-col">
-          <span class="font-label-lg text-label-lg text-on-surface">${escapeHtml(p.name)||'منتج'}</span>
-          <span class="font-label-sm text-label-sm text-text-secondary">${escapeHtml(p.category)||'بدون فئة'} - ${HAS_STOCK?('الرصيد: '+(p.stock||0)):'متوفر في الكتالوج'}</span>
+  if(!box)return;
+  box.innerHTML='<div class="py-6 text-center text-text-secondary">جاري تحميل سجل الحركات...</div>';
+  try{
+    const{data,error}=await _supabase.rpc('admin_recent_inventory_movements',{p_limit:20});
+    if(error)throw error;
+    const recent=Array.isArray(data)?data:[];
+    if(!recent.length){
+      box.innerHTML='<div class="py-6 text-center text-text-secondary">لا توجد حركات مخزون مسجلة بعد.</div>';
+      return;
+    }
+    box.innerHTML=recent.map(m=>{
+      const qty=Number(m.quantity_change)||0;
+      const isAddition=qty>0;
+      const cls=isAddition?'bg-success-surface text-tertiary':'bg-danger-surface text-danger';
+      const icon=isAddition?'add_box':'remove_circle';
+      const kind=isAddition?'إضافة / استرجاع':'خصم / حجز';
+      const signed=(qty>0?'+':'−')+Math.abs(qty);
+      const productName=escapeHtml(m.product_name||'منتج');
+      const reason=escapeHtml(m.reason||'حركة مخزون');
+      const orderLabel=m.order_id?' • الطلب #'+escapeHtml(String(m.order_id).slice(0,8)):'';
+      return `<div class="py-2.5 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-9 h-9 shrink-0 rounded-full ${cls} flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">${icon}</span></div>
+          <div class="flex flex-col min-w-0">
+            <span class="font-label-lg text-label-lg text-on-surface break-words">${productName}</span>
+            <span class="font-label-sm text-label-sm text-text-secondary break-words">${reason}${orderLabel}</span>
+          </div>
         </div>
-      </div>
-      <div class="flex flex-col text-left">
-        <span class="font-data-tabular text-data-tabular font-bold text-tertiary">${kind}</span>
-        <span class="font-label-sm text-label-sm text-text-secondary">${relTime(p.created_at)||'الآن'}</span>
-      </div>
-    </div>`;
-  }).join('');
+        <div class="flex flex-col text-left shrink-0">
+          <span class="font-data-tabular text-data-tabular font-bold ${isAddition?'text-tertiary':'text-danger'}">${signed} • ${kind}</span>
+          <span class="font-label-sm text-label-sm text-text-secondary">${relTime(m.created_at)||'الآن'}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    console.warn('Failed to load inventory movement history:',e&&e.message||e);
+    box.innerHTML='<div class="py-6 text-center text-text-secondary">تعذر تحميل سجل الحركات. اضغط تحديث وحاول مرة أخرى.</div>';
+  }
 }
 
-function renderCategoryBars(){
+ion renderCategoryBars(){
   const box=document.getElementById('category-bars');
   const cats=[...new Set((products||[]).map(p=>(p.category||'بدون فئة')).filter(Boolean))];
   if(!cats.length){box.innerHTML='<div class="text-center py-6 text-text-secondary">لا توجد فئات بعد.</div>';return;}

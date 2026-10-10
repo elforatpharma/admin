@@ -1055,7 +1055,7 @@ function toggleCustomize(){
   renderTable();
 }
 
-functasync function renderRecent(){
+async function renderRecent(){
   const box=document.getElementById('recent-list');
   if(!box)return;
   box.innerHTML='<div class="py-6 text-center text-text-secondary">جاري تحميل سجل الحركات...</div>';
@@ -1097,7 +1097,7 @@ functasync function renderRecent(){
   }
 }
 
-ion renderCategoryBars(){
+function renderCategoryBars(){
   const box=document.getElementById('category-bars');
   const cats=[...new Set((products||[]).map(p=>(p.category||'بدون فئة')).filter(Boolean))];
   if(!cats.length){box.innerHTML='<div class="text-center py-6 text-text-secondary">لا توجد فئات بعد.</div>';return;}

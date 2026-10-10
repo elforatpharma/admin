@@ -185,8 +185,11 @@ function getPeriodDef(p){
 function isDeliveredOrder(o){
   const code=String((o&&o.status_code)||'').trim().toLowerCase();
   const status=String((o&&o.status)||'').trim().toLowerCase();
-  return code==='delivered' || status==='delivered' ||
-    /تم التوصيل|تم التسليم|تم استلام الطلب/.test(status);
+  // The canonical status_code takes precedence whenever it is recognized.
+  // Only legacy rows without a valid code fall back to their visible label.
+  const validCodes=['pending','paid','processing','shipped','delivered','cancelled'];
+  if(validCodes.includes(code)) return code==='delivered';
+  return status==='delivered' || /تم التوصيل|تم التسليم|تم استلام الطلب/.test(status);
 }
 
 function bucketKey(t, isHour){

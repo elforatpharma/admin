@@ -85,10 +85,8 @@ BEGIN
     OR public.derive_order_status_code(OLD.status) = 'cancelled';
 
   IF NEW.status IS DISTINCT FROM OLD.status THEN
-    -- Label changes are authoritative; status-code sync triggers run later.
     is_cancelled := public.derive_order_status_code(NEW.status) = 'cancelled';
   ELSIF NEW.status_code IS DISTINCT FROM OLD.status_code THEN
-    -- If only the canonical code changes, trust it before the label sync runs.
     is_cancelled := coalesce(NEW.status_code, '') = 'cancelled';
   ELSE
     is_cancelled :=
@@ -96,30 +94,20 @@ BEGIN
       OR public.derive_order_status_code(NEW.status) = 'cancelled';
   END IF;
 
-  IF was_cancelled = is_cancelled THEN
-    RETURN NEW;
-  END IF;
-
+  IF was_cancelled = is_cancelled THEN RETURN NEW; END IF;
   items := to_jsonb(NEW.items);
-  IF items IS NULL OR jsonb_typeof(items) <> 'array' THEN
-    RETURN NEW;
-  END IF;
-
+  IF items IS NULL OR jsonb_typeof(items) <> 'array' THEN RETURN NEW; END IF;
   order_label := coalesce(nullif(NEW.order_number, ''), NEW.id::text);
 
   IF is_cancelled THEN
-    IF coalesce(OLD.stock_restored, false) THEN
-      RETURN NEW;
-    END IF;
-
+    IF coalesce(OLD.stock_restored, false) THEN RETURN NEW; END IF;
     FOR r IN
       SELECT (i->>'id') AS pid,
              sum(greatest(coalesce(nullif(i->>'qty','')::int,1),1)) AS qty
       FROM jsonb_array_elements(items) i
       WHERE NOT (coalesce((i->>'isGift')::boolean,false) AND (i->>'id') LIKE E'gift\\_%')
         AND i->>'id' IS NOT NULL
-      GROUP BY 1
-      ORDER BY 1
+      GROUP BY 1 ORDER BY 1
     LOOP
       UPDATE public.products SET stock = stock + r.qty WHERE id::text = r.pid;
       IF FOUND THEN
@@ -127,13 +115,10 @@ BEGIN
         VALUES (r.pid::uuid, NEW.id, r.qty, 'استرجاع مخزون بسبب إلغاء الطلب #' || order_label);
       END IF;
     END LOOP;
-
     NEW.stock_restored := true;
     RETURN NEW;
   END IF;
 
-  -- Reopening a cancelled order reserves stock again. If unavailable, reject
-  -- the status change to avoid overselling.
   IF coalesce(OLD.stock_restored, false) THEN
     FOR r IN
       SELECT (i->>'id') AS pid,
@@ -141,23 +126,17 @@ BEGIN
       FROM jsonb_array_elements(items) i
       WHERE NOT (coalesce((i->>'isGift')::boolean,false) AND (i->>'id') LIKE E'gift\\_%')
         AND i->>'id' IS NOT NULL
-      GROUP BY 1
-      ORDER BY 1
+      GROUP BY 1 ORDER BY 1
     LOOP
-      UPDATE public.products
-         SET stock = stock - r.qty
-       WHERE id::text = r.pid
-         AND (stock IS NULL OR stock >= r.qty);
-
+      UPDATE public.products SET stock = stock - r.qty
+      WHERE id::text = r.pid AND (stock IS NULL OR stock >= r.qty);
       IF NOT FOUND THEN
         RAISE EXCEPTION 'ORDER_OUT_OF_STOCK:%', r.pid USING ERRCODE='P0001';
       END IF;
-
       INSERT INTO public.inventory(product_id, order_id, quantity_change, reason)
       VALUES (r.pid::uuid, NEW.id, -r.qty, 'إعادة حجز مخزون بعد إعادة فتح الطلب #' || order_label);
     END LOOP;
   END IF;
-
   NEW.stock_restored := false;
   RETURN NEW;
 END

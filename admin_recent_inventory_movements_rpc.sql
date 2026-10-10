@@ -10,7 +10,7 @@ RETURNS TABLE (
   order_id uuid
 )
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO ''
 AS $function$
 BEGIN
@@ -26,6 +26,15 @@ BEGIN
   LIMIT greatest(1, least(coalesce(p_limit, 20), 50));
 END
 $function$;
+
+-- Allow authenticated administrators to read the ledger; the deny-all policy
+-- remains in place for anon and for non-admin authenticated users.
+GRANT SELECT ON TABLE public.inventory TO authenticated;
+DROP POLICY IF EXISTS inventory_select_admin_only ON public.inventory;
+CREATE POLICY inventory_select_admin_only
+ON public.inventory
+FOR SELECT TO authenticated
+USING (public.is_admin());
 
 REVOKE ALL ON FUNCTION public.admin_recent_inventory_movements(integer) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_recent_inventory_movements(integer) TO authenticated;

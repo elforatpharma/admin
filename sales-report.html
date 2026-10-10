@@ -205,23 +205,40 @@ async function loadReport(p){
   const subtitles={day:'مبيعات مكتملة كل ساعة',week:'مبيعات مكتملة يومياً لآخر 7 أيام',month:'مبيعات مكتملة يومياً للشهر الحالي',days30:'مبيعات مكتملة يومياً لآخر 30 يوم'};
   document.getElementById('chart-subtitle').textContent=subtitles[p];
 
-  const bars=document.getElementById('sales-chart');
   let all=[];
   try{
     const PAGE_SIZE=1000;
-    for(let pageIndex=0;;pageIndex++){
-      const from=pageIndex*PAGE_SIZE;
-      const to=from+PAGE_SIZE-1;
-      const{data,error}=await _supabase.from('orders')
-        .select('status,status_code,total,created_at,items')
-        .gte('created_at',def.prevStart.toISOString())
-        .order('created_at',{ascending:true})
-        .range(from,to);
-      if(error)throw error;
-      const batch=data||[];
-      all.push(...batch);
-      if(batch.length<PAGE_SIZE)break;
+    async function fetchPagedOrders(makeQuery){
+      const rows=[];
+      for(let pageIndex=0;;pageIndex++){
+        const from=pageIndex*PAGE_SIZE;
+        const to=from+PAGE_SIZE-1;
+        const{data,error}=await makeQuery(from,to);
+        if(error)throw error;
+        const batch=data||[];
+        rows.push(...batch);
+        if(batch.length<PAGE_SIZE)break;
+      }
+      return rows;
     }
+    const selectFields='id,status,status_code,total,created_at,delivered_at,items';
+    const [createdOrders, deliveredOrders]=await Promise.all([
+      fetchPagedOrders((from,to)=>_supabase.from('orders')
+        .select(selectFields)
+        .gte('created_at',def.prevStart.toISOString())
+        .lte('created_at',def.now.toISOString())
+        .order('created_at',{ascending:true})
+        .range(from,to)),
+      fetchPagedOrders((from,to)=>_supabase.from('orders')
+        .select(selectFields)
+        .gte('delivered_at',def.prevStart.toISOString())
+        .lte('delivered_at',def.now.toISOString())
+        .order('delivered_at',{ascending:true})
+        .range(from,to))
+    ]);
+    const byId=new Map();
+    [...createdOrders,...deliveredOrders].forEach(o=>{if(o&&o.id)byId.set(o.id,o);});
+    all=[...byId.values()];
   }catch(error){
     toast('error','فشل جلب بيانات المبيعات: '+(error.message||''));
     return;
@@ -232,39 +249,36 @@ async function loadReport(p){
   const buckets={};
 
   all.forEach(o=>{
-    const ms=Date.parse(o.created_at||'');
-    if(!ms) return;
-    const t=ms;
+    const createdAt=Date.parse(o.created_at||'');
+    const salesAt=Date.parse(o.delivered_at||o.created_at||'');
     const total=parseFloat(o.total)||0;
 
-    if(t>=def.prevStart.getTime()&&t<def.currentStart.getTime()){
-      if(isDeliveredOrder(o)) prevRevenue+=total;
-    }
-    if(t>=def.currentStart.getTime()){
+    // Order volume follows creation time; completed revenue follows delivery time.
+    if(Number.isFinite(createdAt)&&createdAt>=def.currentStart.getTime()&&createdAt<=def.now.getTime()){
       curOrders++;
-      if(isDeliveredOrder(o)){
-        curRevenue+=total; curDelivered++;
-        const k=bucketKey(t,isHour);
-        buckets[k]=(buckets[k]||0)+total;
-        // تجميع المنتجات
-        if(Array.isArray(o.items)){
-          o.items.forEach(it=>{
-            if(!it.name||it.isGift)return;
-            if(!productAgg[it.name])productAgg[it.name]={qty:0,revenue:0};
-            const qty=Number(it.qty)||1;
-            productAgg[it.name].qty+=qty;
-            const lineTotal=Number(it.total??it.line_total??it.subtotal);
-            const unitPrice=Number(it.price??it.unit_price);
-            if(Number.isFinite(lineTotal)) productAgg[it.name].revenue+=lineTotal;
-            else if(Number.isFinite(unitPrice)) productAgg[it.name].revenue+=unitPrice*qty;
-            else productAgg[it.name].revenue+=0;
-          });
-        }
-      }else if(o.status!=='ملغي'){
-        // طلبات في الطريق/غير مكتملة نضيفها للعداد الإجمالي فقط
-        if(Array.isArray(o.items)){
-          // لا نحسبها كإيراد لكن نحتفظ بالمنتجات؟ سنحسب نصيبها من المبيعات المستقبلية. نتجاهل.
-        }
+    }
+    if(!isDeliveredOrder(o)||!Number.isFinite(salesAt))return;
+
+    if(salesAt>=def.prevStart.getTime()&&salesAt<def.currentStart.getTime()){
+      prevRevenue+=total;
+    }
+    if(salesAt>=def.currentStart.getTime()&&salesAt<=def.now.getTime()){
+      curRevenue+=total;
+      curDelivered++;
+      const k=bucketKey(salesAt,isHour);
+      buckets[k]=(buckets[k]||0)+total;
+
+      if(Array.isArray(o.items)){
+        o.items.forEach(it=>{
+          if(!it.name||it.isGift)return;
+          if(!productAgg[it.name])productAgg[it.name]={qty:0,revenue:0};
+          const qty=Number(it.qty)||1;
+          productAgg[it.name].qty+=qty;
+          const lineTotal=Number(it.total??it.line_total??it.subtotal);
+          const unitPrice=Number(it.price??it.unit_price);
+          if(Number.isFinite(lineTotal))productAgg[it.name].revenue+=lineTotal;
+          else if(Number.isFinite(unitPrice))productAgg[it.name].revenue+=unitPrice*qty;
+        });
       }
     }
   });

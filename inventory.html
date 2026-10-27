@@ -515,6 +515,7 @@ function getFiltered(){
       const sExp=expDaysRemaining(p)!==null&&expDaysRemaining(p)<=90;
       if(statusF==='available'){if(sLow||sNear||sDis||sExp)return false;}
       else if(statusF==='low'){if(!sNear)return false;}
+      else if(statusF==='attention'){if(!sLow&&!sNear)return false;}
       else if(statusF==='out'){if(!sLow)return false;}
       else if(statusF==='disabled'){if(!sDis)return false;}
     }
@@ -548,7 +549,7 @@ function renderKPIs(){
       const preview=flagged.slice(0,5).map(p=>escapeHtml(p.name||'منتج')+' ('+(p._stockAlert==='نفد المخزون'?'نفد':'متبقي '+Math.max(0,Number(p.stock)||0))+')').join('، ');
       const more=flagged.length>5?'، و'+(flagged.length-5)+' أصناف أخرى':'';
       alertBox.classList.remove('hidden');
-      alertBox.innerHTML='<div class="flex items-start gap-3"><span class="material-symbols-outlined text-2xl">warning</span><div class="min-w-0 flex-1"><div class="font-bold">تنبيه المخزون: '+flagged.length+' صنف يحتاج مراجعة</div><div class="mt-1 text-sm">'+preview+more+'</div></div><button type="button" onclick="setStatusFilter(\'low\');document.getElementById(\'inventorySearch\').focus()" class="shrink-0 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-sm font-bold hover:bg-amber-100">عرض المنخفض</button></div>';
+      alertBox.innerHTML='<div class="flex items-start gap-3"><span class="material-symbols-outlined text-2xl">warning</span><div class="min-w-0 flex-1"><div class="font-bold">تنبيه المخزون: '+flagged.length+' صنف يحتاج مراجعة</div><div class="mt-1 text-sm">'+preview+more+'</div></div><button type="button" onclick="setStatusFilter(\'attention\');document.getElementById(\'inventorySearch\').focus()" class="shrink-0 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-sm font-bold hover:bg-amber-100">عرض المنخفض</button></div>';
     }
   }
 }

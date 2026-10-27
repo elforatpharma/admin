@@ -937,6 +937,24 @@ async function updateStatus(id,newStatus){
     const i=allOrders.findIndex(o=>String(o.id)===String(id));
     if(i!==-1){Object.assign(allOrders[i],patch);}
 
+    // Meta Purchase is sent only after an admin manually marks this order delivered.
+    // Payment confirmation is handled separately by confirmPayment(). The Edge Function
+    // validates the saved order status/payment status and deduplicates sent events.
+    if(statusTextToCode(newStatus)==='delivered'){
+      try{
+        const metaResult=await _supabase.functions.invoke('meta-purchase-on-payment',{body:{order_id:id}});
+        if(metaResult?.error){
+          console.error('Meta Purchase CAPI failed after manual delivery:',metaResult.error);
+        }else if(metaResult?.data?.ok===true){
+          console.log('Meta Purchase CAPI accepted after manual delivery:',{order_id:id,duplicate:!!metaResult.data.duplicate});
+        }else{
+          console.warn('Meta Purchase CAPI not confirmed after manual delivery:',metaResult?.data);
+        }
+      }catch(metaErr){
+        console.error('Meta Purchase CAPI invocation failed after manual delivery:',metaErr);
+      }
+    }
+
     // Send the status push immediately after the database update.
     // Keep it before UI rendering so a rendering exception cannot prevent the notification.
     let pushOk=false;

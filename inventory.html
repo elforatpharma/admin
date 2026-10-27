@@ -157,6 +157,8 @@
         </div>
       </div>
 
+      <div id="low-stock-alert" class="hidden mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900" role="status" aria-live="polite"></div>
+
       <!-- شبكة بطاقات المؤشرات الإحصائية الرئيسية (KPIs) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- بطاقة 1: إجمالي الأصناف المخزنة -->
@@ -526,15 +528,29 @@ function getFiltered(){
 
 function renderKPIs(){
   const n=products.length;
-  const low=products.filter(p=>HAS_STOCK&&Number(p.stock)>0&&Number(p.stock)<=lowThreshold(p)).length;
-  const out=(p=>HAS_STOCK&&Number(p.stock)<=0?1:0);
+  const lowItems=products.filter(p=>HAS_STOCK&&Number(p.stock)>0&&Number(p.stock)<=lowThreshold(p));
+  const outItems=products.filter(p=>HAS_STOCK&&Number(p.stock)<=0);
   const exp=products.filter(p=>{const d=expDaysRemaining(p);return d!==null&&d<=90;}).length;
   const val=products.reduce((s,p)=>s+(Number(p.price)||0)*(HAS_STOCK?Math.max(0,Number(p.stock)||0):1),0);
   document.getElementById('kpi-total').textContent=n;
-  document.getElementById('kpi-low').textContent=(low||out(products)).toString();
+  document.getElementById('kpi-low').textContent=lowItems.length+outItems.length;
   document.getElementById('kpi-expiring').textContent=HAS_EXPIRY?exp:0;
   document.getElementById('kpi-value').textContent=money(val);
-  document.getElementById('sync-badge').textContent='متزامن'; 
+  document.getElementById('sync-badge').textContent='متزامن';
+
+  const alertBox=document.getElementById('low-stock-alert');
+  if(alertBox){
+    const flagged=[...outItems.map(p=>({...p,_stockAlert:'نفد المخزون'})),...lowItems.map(p=>({...p,_stockAlert:'مخزون منخفض'}))];
+    if(!HAS_STOCK||!flagged.length){
+      alertBox.classList.add('hidden');
+      alertBox.innerHTML='';
+    }else{
+      const preview=flagged.slice(0,5).map(p=>escapeHtml(p.name||'منتج')+' ('+(p._stockAlert==='نفد المخزون'?'نفد':'متبقي '+Math.max(0,Number(p.stock)||0))+')').join('، ');
+      const more=flagged.length>5?'، و'+(flagged.length-5)+' أصناف أخرى':'';
+      alertBox.classList.remove('hidden');
+      alertBox.innerHTML='<div class="flex items-start gap-3"><span class="material-symbols-outlined text-2xl">warning</span><div class="min-w-0 flex-1"><div class="font-bold">تنبيه المخزون: '+flagged.length+' صنف يحتاج مراجعة</div><div class="mt-1 text-sm">'+preview+more+'</div></div><button type="button" onclick="setStatusFilter(\'low\');document.getElementById(\'inventorySearch\').focus()" class="shrink-0 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-sm font-bold hover:bg-amber-100">عرض المنخفض</button></div>';
+    }
+  }
 }
 
 function renderTable(){

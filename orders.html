@@ -433,6 +433,8 @@ header.efp-dashboard-topbar #admin-notification-btn .material-symbols-outlined{f
                   <span class="font-label-sm text-label-sm text-outline ml-2 whitespace-nowrap">تصفية سريعة:</span>
                   <button data-tag="all" onclick="setQuickTag('all')" class="px-3 py-1 rounded-full font-label-sm text-label-sm btn-brand-gradient font-semibold whitespace-nowrap shadow-sm active-tag">الكل</button>
                   <button data-tag="new" onclick="setQuickTag('new')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface whitespace-nowrap">جديدة</button>
+                  <button data-tag="payment-pending" onclick="setQuickTag('payment-pending')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-amber-50 hover:bg-amber-100 text-amber-800 whitespace-nowrap">معلقة الدفع</button>
+                  <button data-tag="paid" onclick="setQuickTag('paid')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-emerald-50 hover:bg-emerald-100 text-emerald-800 whitespace-nowrap">مدفوعة</button>
                   <button data-tag="قيد التنفيذ" onclick="setQuickTag('قيد التنفيذ')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface whitespace-nowrap">بانتظار التأكيد</button>
                   <button data-tag="قيد التجهيز" onclick="setQuickTag('قيد التجهيز')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface whitespace-nowrap">قيد التجهيز</button>
                   <button data-tag="تم التوصيل" onclick="setQuickTag('تم التوصيل')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface whitespace-nowrap">تم التوصيل</button>
@@ -740,8 +742,12 @@ function getFiltered(){
   return allOrders.filter(o=>{
     if(quickTag!=='all'){
       const s=statusCodeOf(o);
-      if(quickTag==='new'){
+      if(quickTag==='new'||quickTag==='pending'){
         if(s!=='pending')return false;
+      }else if(quickTag==='paid'){
+        if(paymentStatusOf(o)!=='paid')return false;
+      }else if(quickTag==='payment-pending'){
+        if(paymentStatusOf(o)!=='pending')return false;
       }else{
         const targetCode=TAG_TO_CODE[quickTag]||quickTag;
         if(s!==targetCode)return false;
@@ -773,8 +779,14 @@ function payBadge(o){
   const p=String(payOf(o)).toLowerCase();
   const kind=paymentKind(o);
   const ps=paymentStatusOf(o);
-  if(kind==='cod'||ps==='cod')return{html:'<span class="material-symbols-outlined text-xs">payments</span> <span>كاش — عند الاستلام</span>',cls:'bg-amber-100 text-amber-800 border border-amber-200'};
-  if(ps==='paid')return{html:'<span class="material-symbols-outlined text-xs">verified</span> <span>مدفوع</span>',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200'};
+  if(ps==='paid'){
+    if(kind==='cod')return{html:'<span class="material-symbols-outlined text-xs">verified</span> <span>كاش — تم التحصيل</span>',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200'};
+    return{html:'<span class="material-symbols-outlined text-xs">verified</span> <span>مدفوع</span>',cls:'bg-emerald-50 text-emerald-800 border border-emerald-200'};
+  }
+  if(kind==='cod'||ps==='cod'){
+    const delivered=statusCodeOf(o)==='delivered';
+    return{html:'<span class="material-symbols-outlined text-xs">payments</span> <span>'+(delivered?'كاش — لم يُحصّل':'كاش عند الاستلام')+'</span>',cls:delivered?'bg-red-50 text-red-700 border border-red-200':'bg-amber-100 text-amber-800 border border-amber-200'};
+  }
   if(ps==='pending'){
     if(kind==='instapay')return{html:'<span class="material-symbols-outlined text-xs">schedule</span> <span>بانتظار تأكيد InstaPay</span>',cls:'bg-amber-50 text-amber-800 border border-amber-200'};
     if(kind==='wallet')return{html:'<span class="material-symbols-outlined text-xs">schedule</span> <span>بانتظار تأكيد فودافون كاش</span>',cls:'bg-amber-50 text-amber-800 border border-amber-200'};
@@ -893,6 +905,10 @@ async function updateStatus(id,newStatus){
   if(!id)return;
   try{
     const o=allOrders.find(x=>String(x.id)===String(id));
+    if(statusTextToCode(newStatus)==='cancelled'&&o&&statusCodeOf(o)!=='cancelled'){
+      const confirmed=await confirmDialog('تأكيد إلغاء الطلب','سيتم إلغاء الطلب. قاعدة البيانات ستعيد الكميات المحجوزة مرة واحدة فقط.','warning');
+      if(!confirmed){renderOrders();return;}
+    }
     const patch={status:newStatus,status_code:statusTextToCode(newStatus)};
     if(newStatus==='تم التوصيل'){
       if(o&&paymentStatusOf(o)==='paid')patch.payment_status='paid';
@@ -1133,11 +1149,13 @@ function renderDetail(){
   ddate.textContent='تاريخ الإنشاء: '+fmtDate(o.created_at)+' ('+relTime(o.created_at)+')';
 
   // timeline
+  const paymentReceived=paymentStatusOf(o)==='paid';
+  const deliveredUnpaid=DELIVERED.includes(s)&&!paymentReceived;
   const steps=[{t:'استلام الطلب بنجاح',d:'تم تسجيل الطلب عبر المتجر.',done:true},
                {t:'تأكيد ومراجعة الصيدلي',d:(s==='قيد التنفيذ'||o.status==='جديد')?'في انتظار مراجعة الصيدلي لتأكيد التوفر والموافقة.':'تم تأكيد الطلب ومراجعته.',done:CANCELLED.includes(s)||PROCESSING.includes(s)||DELIVERED.includes(s),active:s==='قيد التنفيذ'||o.status==='جديد',current:s==='قيد التنفيذ'||o.status==='جديد'},
                {t:'قيد التجهيز والتعبئة الطبية',d:'تغليف معقم وفق معايير وزارة الصحة وحفظ درجات الحرارة.',done:DELIVERED.includes(s),active:PROCESSING.includes(s),current:PROCESSING.includes(s)},
                {t:'تسليم شركة الشحن',d:'إصدار بوليصة الشحن الإلكترونية وتوجيه المندوب.',done:DELIVERED.includes(s),active:false,current:false},
-               {t:'تم التوصيل واستلام القيمة',d:'تأكيد استلام العميل وتوريد النقدية.',done:DELIVERED.includes(s),active:DELIVERED.includes(s),current:DELIVERED.includes(s)}];
+               {t:'تسليم الطلب وتحصيل المبلغ',d:paymentReceived?'تم تأكيد استلام المبلغ فعليًا.':(DELIVERED.includes(s)?'تم تسجيل التسليم، لكن استلام المبلغ لم يُؤكّد بعد.':'يُؤكَّد التحصيل فقط بعد استلام المبلغ فعليًا.'),done:DELIVERED.includes(s)&&paymentReceived,active:deliveredUnpaid,current:deliveredUnpaid}];
   let timeline='<div class="flex flex-col gap-2"><span class="font-label-lg text-label-lg text-on-surface font-semibold">مراحل تنفيذ الطلب والشحن</span><div class="relative flex flex-col gap-2 pr-4 mt-2">';
   timeline+='<div class="absolute top-2 bottom-2 right-1.5 w-0.5 bg-surface-container-high"></div>';
   for(let i=0;i<steps.length;i++){

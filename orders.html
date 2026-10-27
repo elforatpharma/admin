@@ -434,6 +434,7 @@ header.efp-dashboard-topbar #admin-notification-btn .material-symbols-outlined{f
                   <button data-tag="all" onclick="setQuickTag('all')" class="px-3 py-1 rounded-full font-label-sm text-label-sm btn-brand-gradient font-semibold whitespace-nowrap shadow-sm active-tag">الكل</button>
                   <button data-tag="new" onclick="setQuickTag('new')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface whitespace-nowrap">جديدة</button>
                   <button data-tag="payment-pending" onclick="setQuickTag('payment-pending')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-amber-50 hover:bg-amber-100 text-amber-800 whitespace-nowrap">معلقة الدفع</button>
+                  <button data-tag="delivered-unpaid" onclick="setQuickTag('delivered-unpaid')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-red-50 hover:bg-red-100 text-red-700 whitespace-nowrap">تم التسليم دون تحصيل</button>
                   <button data-tag="paid" onclick="setQuickTag('paid')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-emerald-50 hover:bg-emerald-100 text-emerald-800 whitespace-nowrap">مدفوعة</button>
                   <button data-tag="قيد التنفيذ" onclick="setQuickTag('قيد التنفيذ')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface whitespace-nowrap">بانتظار التأكيد</button>
                   <button data-tag="قيد التجهيز" onclick="setQuickTag('قيد التجهيز')" class="px-3 py-1 rounded-full font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface whitespace-nowrap">قيد التجهيز</button>
@@ -748,6 +749,8 @@ function getFiltered(){
         if(paymentStatusOf(o)!=='paid')return false;
       }else if(quickTag==='payment-pending'){
         if(paymentStatusOf(o)!=='pending')return false;
+      }else if(quickTag==='delivered-unpaid'){
+        if(s!=='delivered'||paymentStatusOf(o)==='paid')return false;
       }else{
         const targetCode=TAG_TO_CODE[quickTag]||quickTag;
         if(s!==targetCode)return false;
@@ -1080,7 +1083,7 @@ function isManualPay(o){
 function payConfirmBtn(o,s){
   if(CANCELLED.includes(s)||paymentStatusOf(o)==='paid')return '';
   const manual=isManualPay(o);
-  const label=manual?('تأكيد استلام الدفع — '+escapeHtml(String(payOf(o)))):'تأكيد الدفع';
+  const label=paymentKind(o)==='cod'?'تأكيد تحصيل المبلغ نقدًا':(manual?('تأكيد استلام الدفع — '+escapeHtml(String(payOf(o)))):'تأكيد الدفع');
   const cls=manual?'btn-brand-gradient':'bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200';
   return `<button id="confirm-pay-btn" onclick="confirmPayment('${o.id}')" class="w-full h-11 ${cls} font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 transition-all mb-1"><span class="material-symbols-outlined text-lg">paid</span><span>${label}</span></button>`;
 }

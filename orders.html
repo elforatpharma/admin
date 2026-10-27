@@ -1236,7 +1236,7 @@ function renderDetail(){
   if(!subtotal)subtotal=Number(o.total)||0;
   const hasCoupon=o.coupon||o.couponCode||o.coupon_code;
   const discountAmount=Number(o.discount_amount)||Math.max(0,subtotal-(Number(o.total)||0));
-  const shippingPending = /يُحسب لاحقًا مع المتجر|يحسب لاحقا مع المتجر|رسوم الشحن[^.\n]*لاحق/i.test(String(o.notes||o.note||''));
+
   const hasShip=o.shipping!=null && !shippingPending;
   let fin=`<div class="p-4 rounded-xl bg-surface-container flex flex-col gap-2">
     <span class="font-label-lg text-label-lg text-on-surface font-semibold">ملخص الحساب والفاتورة</span>

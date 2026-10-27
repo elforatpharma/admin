@@ -1881,10 +1881,19 @@ function confirmDialog(title,text,icon){
 }
 
 window.onload=async function(){
-  renderSidebar('orders.html');
-  renderAdminNotificationBadge();
-  const ok=await requireAdmin();
-  if(ok){
+  try{
+    // Keep initialization errors visible instead of leaving the table on its initial loading row.
+    try{renderSidebar('orders.html');}catch(e){console.error('Orders sidebar initialization failed:',e);}
+    try{renderAdminNotificationBadge();}catch(e){console.warn('Admin notification badge unavailable:',e);}
+    let authTimer;
+    let ok;
+    try{
+      ok=await Promise.race([
+        requireAdmin(),
+        new Promise((_,reject)=>{authTimer=setTimeout(()=>reject(new Error('انتهت مهلة التحقق من جلسة الدخول. أعد فتح التطبيق وسجّل الدخول مرة أخرى.')),15000);})
+      ]);
+    }finally{clearTimeout(authTimer);}
+    if(ok){
     fetchOrders();
     try{
       const deepOrder = new URLSearchParams(window.location.search).get('order');
@@ -1918,6 +1927,13 @@ window.onload=async function(){
       adminRealtimeChannels.push(ordersChannel);
     }catch(e){
       console.warn('Realtime error on orders.html:', e);
+    }
+    }
+  }catch(initError){
+    console.error('Orders page initialization failed:',initError);
+    const body=document.getElementById('orders-body');
+    if(body){
+      body.innerHTML='<tr><td colspan="7" class="text-center py-10 text-error font-bold"><div>تعذر تشغيل صفحة الطلبات</div><div class="mt-2 text-sm font-normal">'+escapeHtml(String(initError?.message||initError||'خطأ غير معروف'))+'</div><button type="button" onclick="window.location.reload()" class="mt-4 px-4 py-2 rounded-lg bg-primary text-white font-bold">إعادة تحميل الصفحة</button></td></tr>';
     }
   }
 };

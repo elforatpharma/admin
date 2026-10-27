@@ -1117,9 +1117,29 @@ async function confirmPayment(id){
     if(error)throw error;
     const i=allOrders.findIndex(x=>String(x.id)===String(id));
     if(i!==-1)Object.assign(allOrders[i],patch);
+
+    // Meta Purchase is sent server-side only after the database confirms payment_status='paid'.
+    // Never fire fbq from the admin browser: that would attribute the purchase to the admin session.
+    let metaPurchaseOk=false;
+    try{
+      const metaResult=await _supabase.functions.invoke('meta-purchase-on-payment',{body:{order_id:id}});
+      if(metaResult?.error){
+        console.error('Meta Purchase CAPI failed:',metaResult.error);
+      }else if(metaResult?.data?.ok===true){
+        metaPurchaseOk=true;
+      }else{
+        console.warn('Meta Purchase CAPI did not confirm delivery:',metaResult?.data);
+      }
+    }catch(metaErr){
+      console.error('Meta Purchase CAPI invocation failed:',metaErr);
+    }
+
     renderKPIs();renderOrders();
     if(String(selectedId)===String(id))renderDetail();
-    toast('تم تأكيد الدفع','success');
+    toast(
+      metaPurchaseOk?'تم تأكيد الدفع وتسجيل حدث Meta Purchase':'تم تأكيد الدفع، لكن Meta Purchase لم يتأكد — راجع إعدادات CAPI',
+      metaPurchaseOk?'success':'warning'
+    );
   }catch(e){
     console.error(e);
     if(btn){btn.disabled=false;btn.classList.remove('opacity-60');}

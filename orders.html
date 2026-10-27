@@ -1928,7 +1928,13 @@ window.onload=async function(){
     }catch(e){
       console.warn('Realtime error on orders.html:', e);
     }
+    }else{
+      const body=document.getElementById('orders-body');
+      if(body){
+        body.innerHTML='<tr><td colspan="7" class="text-center py-10 text-error font-bold"><div>تعذر التحقق من صلاحية الدخول</div><div class="mt-2 text-sm font-normal">تم رفض جلسة الإدارة أو انتهت صلاحيتها. سجّل الدخول من جديد ثم افتح صفحة الطلبات.</div><button type="button" onclick="window.location.href=\'index.html\'" class="mt-4 px-4 py-2 rounded-lg bg-primary text-white font-bold">العودة لتسجيل الدخول</button></td></tr>';
+      }
     }
+
   }catch(initError){
     console.error('Orders page initialization failed:',initError);
     const body=document.getElementById('orders-body');

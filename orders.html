@@ -1964,7 +1964,15 @@ window.onload=async function(){
         })
         .subscribe((status) => {
           console.log('Orders realtime status:', status);
+          if(status==='SUBSCRIBED'){
+            if(window.__ordersRealtimeFallback){clearInterval(window.__ordersRealtimeFallback);window.__ordersRealtimeFallback=null;}
+          }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+            if(!window.__ordersRealtimeFallback){
+              window.__ordersRealtimeFallback=setInterval(()=>{if(!document.hidden)fetchOrders();},20000);
+            }
+          }
         });
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden)fetchOrders();});
       adminRealtimeChannels.push(ordersChannel);
     }catch(e){
       console.warn('Realtime error on orders.html:', e);

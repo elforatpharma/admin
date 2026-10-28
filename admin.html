@@ -1025,19 +1025,36 @@ window.onload=async function(){
     fetchStats();
     fetchGifts();
 
-    // تفعيل التحديث اللحظي المباشر لجميع إحصائيات وطلبات الرئيسية فوراً بدون ريفريش
+    // تحديث لحظي للطلبات وإحصائيات المخزون، مع إعادة محاولة آمنة عند انقطاع Realtime.
+    let adminRealtimeFallbackTimer=null;
+    const startAdminRealtimeFallback=()=>{
+      if(adminRealtimeFallbackTimer)return;
+      adminRealtimeFallbackTimer=setInterval(()=>{if(!document.hidden){fetchStats();fetchGifts();}},25000);
+    };
+    const stopAdminRealtimeFallback=()=>{
+      if(adminRealtimeFallbackTimer){clearInterval(adminRealtimeFallbackTimer);adminRealtimeFallbackTimer=null;}
+    };
     try {
-      _supabase
-        .channel('admin-home-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-          console.log('تحديث لحظي وارد للطلبات في الرئيسية:', payload);
-          fetchStats();
+      _supabase.channel('admin-home-orders-live-v2')
+        .on('postgres_changes',{event:'*',schema:'public',table:'orders'},(payload)=>{
+          console.log('تحديث لحظي وارد للطلبات في الرئيسية:',payload);fetchStats();
         })
-        .subscribe((status) => {
-          console.log('Realtime subscription status (admin.html):', status);
+        .subscribe((status)=>{
+          console.log('Orders realtime status (admin.html):',status);
+          if(status==='SUBSCRIBED')stopAdminRealtimeFallback();
+          else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')startAdminRealtimeFallback();
         });
+      _supabase.channel('admin-home-products-live-v2')
+        .on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{fetchStats();})
+        .subscribe((status)=>{
+          console.log('Products realtime status (admin.html):',status);
+          if(status==='SUBSCRIBED')stopAdminRealtimeFallback();
+          else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')startAdminRealtimeFallback();
+        });
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden){fetchStats();fetchGifts();}});
     } catch(e) {
-      console.warn('Realtime error on admin.html:', e);
+      console.warn('Realtime error on admin.html; fallback enabled:',e);
+      startAdminRealtimeFallback();
     }
   }
 };

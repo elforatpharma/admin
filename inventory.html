@@ -1152,10 +1152,26 @@ window.onload=async function(){
     await detectColumns();
     fetchProducts();
     try{
-      _supabase.channel('inventory-live')
+      let inventoryFallbackTimer=null;
+      const startInventoryFallback=()=>{
+        if(inventoryFallbackTimer)return;
+        inventoryFallbackTimer=setInterval(()=>{if(!document.hidden)fetchProducts();},20000);
+      };
+      const stopInventoryFallback=()=>{
+        if(inventoryFallbackTimer){clearInterval(inventoryFallbackTimer);inventoryFallbackTimer=null;}
+      };
+      _supabase.channel('inventory-live-v2')
         .on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{fetchProducts();})
-        .subscribe();
-    }catch(e){}
+        .subscribe((status)=>{
+          console.log('Inventory realtime status:',status);
+          if(status==='SUBSCRIBED')stopInventoryFallback();
+          else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')startInventoryFallback();
+        });
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden)fetchProducts();});
+    }catch(e){
+      console.warn('Inventory realtime unavailable; enabling fallback refresh:',e);
+      setInterval(()=>{if(!document.hidden)fetchProducts();},20000);
+    }
   }
 };
 document.addEventListener('keydown',e=>{

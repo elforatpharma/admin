@@ -1027,12 +1027,14 @@ window.onload=async function(){
 
     // تحديث لحظي للطلبات وإحصائيات المخزون، مع إعادة محاولة آمنة عند انقطاع Realtime.
     let adminRealtimeFallbackTimer=null;
-    const startAdminRealtimeFallback=()=>{
-      if(adminRealtimeFallbackTimer)return;
-      adminRealtimeFallbackTimer=setInterval(()=>{if(!document.hidden){fetchStats();fetchGifts();}},25000);
-    };
-    const stopAdminRealtimeFallback=()=>{
-      if(adminRealtimeFallbackTimer){clearInterval(adminRealtimeFallbackTimer);adminRealtimeFallbackTimer=null;}
+    let adminOrdersRealtimeConnected=false;
+    let adminProductsRealtimeConnected=false;
+    const updateAdminRealtimeFallback=()=>{
+      if(adminOrdersRealtimeConnected&&adminProductsRealtimeConnected){
+        if(adminRealtimeFallbackTimer){clearInterval(adminRealtimeFallbackTimer);adminRealtimeFallbackTimer=null;}
+      }else if(!adminRealtimeFallbackTimer){
+        adminRealtimeFallbackTimer=setInterval(()=>{if(!document.hidden){fetchStats();fetchGifts();}},25000);
+      }
     };
     try {
       _supabase.channel('admin-home-orders-live-v2')
@@ -1041,20 +1043,20 @@ window.onload=async function(){
         })
         .subscribe((status)=>{
           console.log('Orders realtime status (admin.html):',status);
-          if(status==='SUBSCRIBED')stopAdminRealtimeFallback();
-          else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')startAdminRealtimeFallback();
+          adminOrdersRealtimeConnected=status==='SUBSCRIBED';
+          updateAdminRealtimeFallback();
         });
       _supabase.channel('admin-home-products-live-v2')
         .on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{fetchStats();})
         .subscribe((status)=>{
           console.log('Products realtime status (admin.html):',status);
-          if(status==='SUBSCRIBED')stopAdminRealtimeFallback();
-          else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')startAdminRealtimeFallback();
+          adminProductsRealtimeConnected=status==='SUBSCRIBED';
+          updateAdminRealtimeFallback();
         });
       document.addEventListener('visibilitychange',()=>{if(!document.hidden){fetchStats();fetchGifts();}});
     } catch(e) {
       console.warn('Realtime error on admin.html; fallback enabled:',e);
-      startAdminRealtimeFallback();
+      updateAdminRealtimeFallback();
     }
   }
 };

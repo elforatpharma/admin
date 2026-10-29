@@ -3,7 +3,7 @@
  * Offline shell + cached Supabase GET responses + CDN fonts/icons.
  * Never caches POST/PATCH/DELETE requests.
  */
-const CACHE_NAME = 'elforat-pharma-v12';
+const CACHE_NAME = 'elforat-pharma-v13';
 const STATIC_ASSETS = [
   './admin.html',
   './inventory.html',
@@ -46,6 +46,17 @@ function cacheResponse(request, response) {
   caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => {});
 }
 
+function isCacheableImageRequest(request, url) {
+  if (request.destination !== 'image') return false;
+  if (url.hostname === 'www.facebook.com' || url.hostname.endsWith('.facebook.com') || url.hostname === 'connect.facebook.net') return false;
+  if (url.pathname.includes('/rest/v1/') || url.pathname.includes('/functions/v1/')) return false;
+  // Never cache signed/tokenized image URLs that may be private or user-specific.
+  for (const key of url.searchParams.keys()) {
+    if (/^(token|access_token|signature|sig|expires|authorization)$/i.test(key)) return false;
+  }
+  return true;
+}
+
 function isSupabaseGet(url) {
   return url.hostname.endsWith('.supabase.co') &&
     (url.pathname.startsWith('/rest/v1/') || url.pathname.startsWith('/storage/v1/'));
@@ -55,6 +66,25 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+
+  // Cache product thumbnails and public product images (including Supabase Storage).
+  // Cache-first avoids re-downloading the same images on every inventory visit.
+  if (isCacheableImageRequest(req, url)) {
+    event.respondWith((async () => {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      try {
+        const response = await fetch(req);
+        if (response && (response.type === 'opaque' || (response.ok && response.status === 200))) {
+          cacheResponse(req, response);
+        }
+        return response;
+      } catch (_) {
+        return Response.error();
+      }
+    })());
+    return;
+  }
 
   // Dashboard navigation: network first, cached page when offline.
   if (req.mode === 'navigate') {

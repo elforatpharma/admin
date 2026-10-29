@@ -3,7 +3,7 @@
  * Offline shell + cached Supabase GET responses + CDN fonts/icons.
  * Never caches POST/PATCH/DELETE requests.
  */
-const CACHE_NAME = 'elforat-pharma-v13';
+const CACHE_NAME = 'elforat-pharma-v14';
 const STATIC_ASSETS = [
   './admin.html',
   './inventory.html',
@@ -67,10 +67,21 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Cache product thumbnails and public product images (including Supabase Storage).
-  // Cache-first avoids re-downloading the same images on every inventory visit.
+  // Supabase Storage product images: refresh from network first so replacements
+  // show immediately; use the cached copy only if the network is unavailable.
   if (isCacheableImageRequest(req, url)) {
     event.respondWith((async () => {
+      const isSupabaseStorageImage = url.hostname.endsWith('.supabase.co') &&
+        url.pathname.startsWith('/storage/v1/object/public/');
+      if (isSupabaseStorageImage) {
+        try {
+          const response = await fetch(req, { cache: 'no-cache' });
+          await cacheResponse(req, response);
+          return response;
+        } catch (_) {
+          return (await caches.match(req)) || Response.error();
+        }
+      }
       const cached = await caches.match(req);
       if (cached) return cached;
       try {

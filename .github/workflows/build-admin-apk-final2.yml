@@ -42,7 +42,7 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/java/com/elforatpharma/admin
           test -s app/google-services.json
-          sed -i -E 's/versionCode = [0-9]+/versionCode = 32/; s/versionName = "[^"]+"/versionName = "1.7.9"/' app/build.gradle.kts
+          sed -i -E 's/versionCode = [0-9]+/versionCode = 33/; s/versionName = "[^"]+"/versionName = "1.8.0"/' app/build.gradle.kts
 
           convert ../logo.png -resize 512x512 -background none -gravity center -extent 512x512 app/src/main/res/drawable/launcher_logo.png
           # Create a monochrome transparent notification icon from the El-Forat logo.

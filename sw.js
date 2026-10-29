@@ -43,7 +43,7 @@ self.addEventListener('activate', event => {
 function cacheResponse(request, response) {
   if (!response || (!response.ok && response.type !== 'opaque')) return;
   const copy = response.clone();
-  caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => {});
+  return caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => {});
 }
 
 function isCacheableImageRequest(request, url) {
@@ -76,7 +76,7 @@ self.addEventListener('fetch', event => {
       try {
         const response = await fetch(req);
         if (response && (response.type === 'opaque' || (response.ok && response.status === 200))) {
-          cacheResponse(req, response);
+          await cacheResponse(req, response);
         }
         return response;
       } catch (_) {

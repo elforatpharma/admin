@@ -1157,20 +1157,19 @@ window.onload=async function(){
         if(inventoryFallbackTimer)return;
         inventoryFallbackTimer=setInterval(()=>{if(!document.hidden)fetchProducts();},20000);
       };
-      const stopInventoryFallback=()=>{
-        if(inventoryFallbackTimer){clearInterval(inventoryFallbackTimer);inventoryFallbackTimer=null;}
-      };
       _supabase.channel('inventory-live-v2')
         .on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{fetchProducts();})
         .subscribe((status)=>{
           console.log('Inventory realtime status:',status);
-          if(status==='SUBSCRIBED')stopInventoryFallback();
-          else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')startInventoryFallback();
+          // Keep polling as a safety net even if Realtime reports SUBSCRIBED.
         });
+      startInventoryFallback();
       document.addEventListener('visibilitychange',()=>{if(!document.hidden)fetchProducts();});
+      window.addEventListener('focus',fetchProducts);
+      window.addEventListener('pageshow',fetchProducts);
     }catch(e){
       console.warn('Inventory realtime unavailable; enabling fallback refresh:',e);
-      setInterval(()=>{if(!document.hidden)fetchProducts();},20000);
+      startInventoryFallback();
     }
   }
 };

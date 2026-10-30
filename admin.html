@@ -690,21 +690,27 @@ document.getElementById("add-form").onsubmit=async(e)=>{
     // رفع الصورة الرئيسية
     let file=document.getElementById("p-img").files[0];
     if(!file)throw new Error("يرجى اختيار صورة للمنتج");
-    if(window.resizeImage){const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);file=await dataUrlToBlob(dataUrl,'image/jpeg');}
-    const fileName=sanitizeFileName(file.name);
-    const{error:imgError}=await _supabase.storage.from('products').upload(`uploads/${fileName}`,file,{contentType:file.type||'image/jpeg'});
+    const preparedMain = window.prepareImageForUpload
+      ? await prepareImageForUpload(file,1200,1200,0.82)
+      : {blob:file,extension:(file.name.split('.').pop()||'jpg'),contentType:file.type||'image/jpeg'};
+    file = preparedMain.blob;
+    const fileName = `uploads/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${preparedMain.extension}`;
+    const{error:imgError}=await _supabase.storage.from('products').upload(fileName,file,{contentType:preparedMain.contentType,upsert:false});
     if(imgError)throw imgError;
-    const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/${fileName}`);
+    const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(fileName);
 
     // رفع صور المعرض (إن وُجدت)
     const galleryUrls=[];
     for(let i=0;i<adminGalleryFiles.length;i++){
       try{
-        let gFile=adminGalleryFiles[i].file;
-        if(window.resizeImage){const gDataUrl=await resizeImage(await blobToDataUrl(gFile),1200,1200);gFile=await dataUrlToBlob(gDataUrl,'image/jpeg');}
-        const gName=`gallery-${Date.now()}-${i}-${sanitizeFileName(adminGalleryFiles[i].file.name)}`;
-        const{error:gErr}=await _supabase.storage.from('products').upload(`uploads/gallery/${gName}`,gFile,{contentType:gFile.type||'image/jpeg'});
-        if(!gErr){const{data:{publicUrl:gUrl}}=_supabase.storage.from('products').getPublicUrl(`uploads/gallery/${gName}`);galleryUrls.push(gUrl);}
+        const originalGalleryFile=adminGalleryFiles[i].file;
+        const preparedGallery = window.prepareImageForUpload
+          ? await prepareImageForUpload(originalGalleryFile,1200,1200,0.82)
+          : {blob:originalGalleryFile,extension:(originalGalleryFile.name.split('.').pop()||'jpg'),contentType:originalGalleryFile.type||'image/jpeg'};
+        const gFile=preparedGallery.blob;
+        const gName=`uploads/gallery/${Date.now()}-${i}-${Math.random().toString(36).slice(2,8)}.${preparedGallery.extension}`;
+        const{error:gErr}=await _supabase.storage.from('products').upload(gName,gFile,{contentType:preparedGallery.contentType,upsert:false});
+        if(!gErr){const{data:{publicUrl:gUrl}}=_supabase.storage.from('products').getPublicUrl(gName);galleryUrls.push(gUrl);}
       }catch(ge){console.warn('gallery img warn:',ge);}
     }
 
@@ -1008,7 +1014,16 @@ async function fetchGifts(){
 document.getElementById('gift-form').onsubmit=async(e)=>{
   e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;btn.innerHTML='جاري الحفظ...';
   try{let imgUrl='';const file=document.getElementById('g-img').files[0];
-  if(file){let upFile=file;if(window.resizeImage){upFile=await dataUrlToBlob(await resizeImage(await blobToDataUrl(file),800,800),'image/jpeg');}const fn=`gifts/${sanitizeFileName(file.name)}`;const{error:ue}=await _supabase.storage.from('products').upload(fn,upFile,{contentType:upFile.type||'image/jpeg'});if(!ue){const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(fn);imgUrl=publicUrl;}}
+  if(file){
+    const preparedGift=window.prepareImageForUpload
+      ? await prepareImageForUpload(file,800,800,0.82)
+      : {blob:file,extension:(file.name.split('.').pop()||'jpg'),contentType:file.type||'image/jpeg'};
+    const upFile=preparedGift.blob;
+    const fn=`gifts/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${preparedGift.extension}`;
+    const{error:ue}=await _supabase.storage.from('products').upload(fn,upFile,{contentType:preparedGift.contentType,upsert:false});
+    if(!ue){const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(fn);imgUrl=publicUrl;}
+    else throw ue;
+  }
   const{error}=await _supabase.from('gifts').insert([{gift_name:document.getElementById('g-name').value,gift_img:imgUrl,trigger_product_name:document.getElementById('g-trigger-product').value,trigger_qty:parseInt(document.getElementById('g-trigger-qty').value),is_active:true}]);if(error)throw error;
   closeGiftModal();fetchGifts();toast('success','تم حفظ الهدية بنجاح!');}catch(err){toast('error','حدث خطأ: '+err.message);}
   finally{btn.disabled=false;btn.innerHTML='حفظ الهدية';}

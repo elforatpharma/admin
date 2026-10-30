@@ -3,7 +3,7 @@
  * Offline shell + cached Supabase GET responses + CDN fonts/icons.
  * Never caches POST/PATCH/DELETE requests.
  */
-const CACHE_NAME = 'elforat-pharma-v14';
+const CACHE_NAME = 'elforat-pharma-v15';
 const STATIC_ASSETS = [
   './admin.html',
   './inventory.html',

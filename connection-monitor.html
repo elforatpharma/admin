@@ -24,6 +24,13 @@ body{font-family:'Tajawal',sans-serif;background:#faf8ff;color:#131b2e}.material
 <section class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 sm:p-5 space-y-4"><div class="flex items-center justify-between gap-3"><div><h2 class="font-[Cairo] font-bold">تفاصيل آخر فحص</h2><p class="text-xs text-slate-500 mt-1">الفحص تلقائي كل 45 ثانية أثناء فتح الصفحة.</p></div><span id="connection-overall-badge" class="px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 text-xs font-bold whitespace-nowrap">جاري الفحص</span></div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">آخر فحص ناجح</div><div id="connection-last-sync" class="font-bold mt-1" dir="ltr">—</div></div><div class="rounded-xl bg-slate-50 p-3"><div class="text-xs text-slate-500">زمن استجابة قاعدة البيانات</div><div id="connection-latency" class="font-bold mt-1" dir="ltr">—</div></div></div>
 <p id="connection-monitor-message" class="hidden rounded-xl bg-red-50 text-red-700 border border-red-100 p-3 text-sm" role="status"></p><div id="connection-monitor-history" class="space-y-2" aria-live="polite"><p class="text-xs text-slate-400">سيظهر ملخص نتائج الفحص هنا.</p></div></section>
+<section class="efp-monitor-card mt-4">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+    <div><h2 class="font-bold text-lg">مراقبة أخطاء المتجر والداشبورد</h2><p class="text-xs text-slate-500 mt-1">آخر 24 ساعة مع أحدث الأخطاء المسجلة</p></div>
+    <div class="flex items-center gap-3"><span id="error-monitor-count" class="font-black text-xl" aria-live="polite">—</span><button type="button" onclick="efpLoadErrorMonitor()" class="btn-brand-gradient px-4 py-2 text-xs font-bold">تحديث الأخطاء</button></div>
+  </div>
+  <div id="error-monitor-list" class="space-y-2" aria-live="polite"><p class="text-sm text-slate-400">جار تحميل سجل الأخطاء...</p></div>
+</section>
 </div></main></div>
 <script src="layout.js"></script><script>
 let efpRealtimeStatus='CONNECTING',efpConnectionCheckRunning=false,efpLastSuccessfulCheck=null,efpRealtimeChannel=null;
@@ -33,6 +40,39 @@ function efpUpdateLastCheck(){const el=document.getElementById('connection-last-
 function efpSetMonitorMessage(message){const el=document.getElementById('connection-monitor-message');if(!el)return;el.textContent=message||'';el.classList.toggle('hidden',!message);}
 function efpAddHistory(message,state){const el=document.getElementById('connection-monitor-history');if(!el)return;const row=document.createElement('div');row.className='flex items-start gap-2 rounded-xl border border-slate-100 p-3 text-xs';const dot=document.createElement('span');dot.className='efp-status-dot '+state;dot.style.marginTop='4px';const text=document.createElement('span');text.className='min-w-0 flex-1 text-slate-600';text.textContent=new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' — '+message;row.append(dot,text);if(el.firstElementChild?.tagName==='P')el.replaceChildren();el.prepend(row);while(el.children.length>6)el.lastElementChild.remove();}
 async function runConnectionSyncCheck(manual=false){if(efpConnectionCheckRunning)return;efpConnectionCheckRunning=true;const btn=document.getElementById('connection-sync-now'),label=document.getElementById('connection-sync-button-label');if(btn)btn.disabled=true;if(label)label.textContent='جاري الفحص...';efpSetMonitorMessage('');try{if(!navigator.onLine){efpSetMonitorState('network','bad','غير متصل');efpSetMonitorState('db','bad','غير متاحة دون إنترنت');efpSetMonitorState('realtime','bad','متوقفة دون إنترنت');efpSetMonitorMessage('لا يوجد اتصال بالإنترنت. ستُستأنف الفحوصات تلقائيًا عند عودة الاتصال.');efpAddHistory('فشل الفحص: الجهاز غير متصل بالإنترنت.','bad');return;}efpSetMonitorState('network','ok','متصل');efpSetMonitorState('db','warn','جاري الاختبار...');const started=performance.now();const [ordersResult,productsResult]=await Promise.all([_supabase.from('orders').select('id').limit(1),_supabase.from('products').select('id').limit(1)]);const elapsed=Math.round(performance.now()-started);if(ordersResult.error)throw ordersResult.error;if(productsResult.error)throw productsResult.error;efpSetMonitorState('db','ok','متصلة');const latency=document.getElementById('connection-latency');if(latency)latency.textContent=elapsed+' ms';const detail=document.getElementById('connection-db-detail');if(detail)detail.textContent='نجح اختبار قراءة الطلبات والمنتجات.';efpSetMonitorState('realtime',efpRealtimeStatus==='SUBSCRIBED'?'ok':(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(efpRealtimeStatus)?'bad':'warn'),efpRealtimeStatus==='SUBSCRIBED'?'متصلة':(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(efpRealtimeStatus)?'تعذر الاتصال':'جاري الاتصال...'));efpLastSuccessfulCheck=new Date();efpUpdateLastCheck();efpAddHistory(manual?'اكتمل الفحص اليدوي بنجاح.':'اكتمل الفحص التلقائي.','ok');}catch(error){efpSetMonitorState('network',navigator.onLine?'ok':'bad',navigator.onLine?'متصل':'غير متصل');efpSetMonitorState('db','bad','فشل الاتصال');efpSetMonitorMessage('تعذر الوصول إلى قاعدة البيانات. '+(error?.message||'تحقق من الاتصال والصلاحيات ثم أعد المحاولة.'));efpAddHistory('تعذر الوصول إلى قاعدة البيانات.','bad');}finally{efpConnectionCheckRunning=false;if(btn)btn.disabled=false;if(label)label.textContent='فحص ومزامنة الآن';}}
+async function efpLoadErrorMonitor(){
+  const countEl=document.getElementById('error-monitor-count');
+  const listEl=document.getElementById('error-monitor-list');
+  if(!countEl||!listEl)return;
+  countEl.textContent='...';
+  listEl.textContent='جار تحميل الأخطاء...';
+  try{
+    const since=new Date(Date.now()-24*60*60*1000).toISOString();
+    const [countResult,listResult]=await Promise.all([
+      _supabase.from('error_logs').select('id',{count:'exact',head:true}).gte('timestamp',since),
+      _supabase.from('error_logs').select('id,error_message,context,timestamp,page_path').order('timestamp',{ascending:false}).limit(8)
+    ]);
+    if(countResult.error)throw countResult.error;
+    if(listResult.error)throw listResult.error;
+    countEl.textContent=String(countResult.count||0);
+    listEl.replaceChildren();
+    if(!listResult.data||!listResult.data.length){
+      const empty=document.createElement('p');empty.className='text-sm text-slate-500';empty.textContent='لا توجد أخطاء مسجلة.';listEl.appendChild(empty);return;
+    }
+    listResult.data.forEach(function(item){
+      const row=document.createElement('article');row.className='rounded-xl border border-slate-100 bg-slate-50 p-3';
+      const head=document.createElement('div');head.className='flex flex-wrap items-center justify-between gap-2 mb-1';
+      const context=document.createElement('strong');context.className='text-xs text-slate-800';context.textContent=item.context||'خطأ غير مصنف';
+      const time=document.createElement('time');time.className='text-[11px] text-slate-400';time.textContent=item.timestamp?new Date(item.timestamp).toLocaleString('ar-EG'):'';
+      const message=document.createElement('p');message.className='text-xs text-slate-600 break-words';message.textContent=item.error_message||'بدون تفاصيل';
+      head.append(context,time);row.append(head,message);
+      if(item.page_path){const path=document.createElement('p');path.className='text-[10px] text-slate-400 mt-1';path.textContent=item.page_path;row.appendChild(path);}
+      listEl.appendChild(row);
+    });
+  }catch(error){
+    countEl.textContent='—';listEl.textContent='تعذر تحميل سجل الأخطاء: '+(error&&error.message?error.message:'تحقق من صلاحيات الأدمن والاتصال.');
+  }
+}
 function efpSubscribeRealtime(){if(efpRealtimeChannel){try{_supabase.removeChannel(efpRealtimeChannel);}catch(_){}}efpRealtimeChannel=_supabase.channel('admin-connection-monitor').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{efpLastSuccessfulCheck=new Date();efpUpdateLastCheck();efpAddHistory('وصل تحديث لحظي جديد للطلبات.','ok');}).subscribe(status=>{efpRealtimeStatus=status;if(status==='SUBSCRIBED')efpSetMonitorState('realtime','ok','متصلة');else if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status))efpSetMonitorState('realtime',navigator.onLine?'bad':'warn',navigator.onLine?'تعذر الاتصال':'بانتظار الإنترنت');else efpSetMonitorState('realtime','warn','جاري الاتصال...');});}
-window.addEventListener('online',()=>{efpSetMonitorState('network','ok','عاد الاتصال');runConnectionSyncCheck(false);});window.addEventListener('offline',()=>{efpSetMonitorState('network','bad','غير متصل');efpSetMonitorState('db','bad','غير متاحة دون إنترنت');efpSetMonitorState('realtime','bad','متوقفة دون إنترنت');efpSetMonitorMessage('أنت غير متصل. ستعود المراقبة تلقائيًا بعد رجوع الإنترنت.');efpAddHistory('انقطع اتصال الإنترنت.','bad');});document.addEventListener('visibilitychange',()=>{if(!document.hidden)runConnectionSyncCheck(false);});window.addEventListener('beforeunload',()=>{if(efpRealtimeChannel)_supabase.removeChannel(efpRealtimeChannel);});setInterval(()=>{if(!document.hidden)runConnectionSyncCheck(false);},45000);window.addEventListener('load',async()=>{renderSidebar('connection-monitor.html');if(await requireAdmin()){efpSubscribeRealtime();runConnectionSyncCheck(false);}});
+window.addEventListener('online',()=>{efpSetMonitorState('network','ok','عاد الاتصال');runConnectionSyncCheck(false);});window.addEventListener('offline',()=>{efpSetMonitorState('network','bad','غير متصل');efpSetMonitorState('db','bad','غير متاحة دون إنترنت');efpSetMonitorState('realtime','bad','متوقفة دون إنترنت');efpSetMonitorMessage('أنت غير متصل. ستعود المراقبة تلقائيًا بعد رجوع الإنترنت.');efpAddHistory('انقطع اتصال الإنترنت.','bad');});document.addEventListener('visibilitychange',()=>{if(!document.hidden)runConnectionSyncCheck(false);});window.addEventListener('beforeunload',()=>{if(efpRealtimeChannel)_supabase.removeChannel(efpRealtimeChannel);});setInterval(()=>{if(!document.hidden)runConnectionSyncCheck(false);},45000);window.addEventListener('load',async()=>{renderSidebar('connection-monitor.html');if(await requireAdmin()){efpSubscribeRealtime();runConnectionSyncCheck(false);efpLoadErrorMonitor();}});
 </script></body></html>

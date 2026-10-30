@@ -239,9 +239,53 @@ function dataUrlToBlob(dataUrl, type = 'image/jpeg') {
     });
 }
 
+
+// ضغط الصور الجديدة إلى WebP مع الحفاظ على الشفافية، والإبقاء على الأصل إذا تعذر التحويل.
+async function prepareImageForUpload(file, maxWidth = 1200, maxHeight = 1200, quality = 0.82) {
+    if (!file || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        const ext = (file && file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'bin';
+        return { blob: file, extension: ext, contentType: file && file.type ? file.type : 'application/octet-stream' };
+    }
+    try {
+        const dataUrl = await blobToDataUrl(file);
+        const img = new Image();
+        const loaded = new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+        });
+        img.src = dataUrl;
+        await loaded;
+
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
+        const ratio = Math.min(1, maxWidth / width, maxHeight / height);
+        width = Math.max(1, Math.round(width * ratio));
+        height = Math.max(1, Math.round(height * ratio));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas is unavailable');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+        if (!blob || !blob.size) throw new Error('Image encoding failed');
+
+        const mime = blob.type || 'image/png';
+        const extension = mime === 'image/webp' ? 'webp' : (mime === 'image/jpeg' ? 'jpg' : 'png');
+        return { blob, extension, contentType: mime };
+    } catch (error) {
+        console.warn('Image optimization skipped; keeping original file:', error);
+        const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'bin';
+        return { blob: file, extension: ext, contentType: file.type || 'application/octet-stream' };
+    }
+}
+
 // تصدير الدوال للاستخدام العام
 window.ImageUploader = ImageUploader;
 window.cropImage = cropImage;
 window.resizeImage = resizeImage;
 window.blobToDataUrl = blobToDataUrl;
 window.dataUrlToBlob = dataUrlToBlob;
+window.prepareImageForUpload = prepareImageForUpload;

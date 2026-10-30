@@ -97,9 +97,11 @@ async function fetchAll(buildQuery, { pageSize = 1000, maxRows = 50000 } = {}) {
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined' || typeof _supabase === 'undefined') return;
   const IDLE_LIMIT_MS = 30 * 60 * 1000;
+  const ACTIVITY_KEY = 'elforat_admin_last_activity';
   let idleTimer = null;
   let active = false;
   let signingOut = false;
+  let lastActivityAt = Date.now();
 
   function stopTimer() {
     if (idleTimer) window.clearTimeout(idleTimer);
@@ -111,37 +113,58 @@ async function fetchAll(buildQuery, { pageSize = 1000, maxRows = 50000 } = {}) {
     signingOut = true;
     stopTimer();
     try { await _supabase.auth.signOut(); } catch (error) { console.error('Admin idle sign-out failed:', error); }
+    try { window.sessionStorage.removeItem(ACTIVITY_KEY); } catch (_) {}
     window.location.replace('index.html?reason=idle');
   }
 
-  function refreshTimer() {
+  function armTimer() {
     if (!active || signingOut) return;
     stopTimer();
-    idleTimer = window.setTimeout(expireSession, IDLE_LIMIT_MS);
+    const remaining = IDLE_LIMIT_MS - (Date.now() - lastActivityAt);
+    if (remaining <= 0) { expireSession(); return; }
+    idleTimer = window.setTimeout(expireSession, remaining);
+  }
+
+  function recordActivity() {
+    if (!active || signingOut) return;
+    lastActivityAt = Date.now();
+    try { window.sessionStorage.setItem(ACTIVITY_KEY, String(lastActivityAt)); } catch (_) {}
+    armTimer();
   }
 
   ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (eventName) {
-    window.addEventListener(eventName, refreshTimer, { passive: true });
+    window.addEventListener(eventName, recordActivity, { passive: true });
   });
 
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) refreshTimer();
+    if (!document.hidden) armTimer();
   });
 
   _supabase.auth.getSession().then(function (result) {
     if (result && result.data && result.data.session) {
       active = true;
-      refreshTimer();
+      try {
+        const saved = Number(window.sessionStorage.getItem(ACTIVITY_KEY));
+        if (Number.isFinite(saved) && saved > 0) lastActivityAt = saved;
+        else {
+          lastActivityAt = Date.now();
+          window.sessionStorage.setItem(ACTIVITY_KEY, String(lastActivityAt));
+        }
+      } catch (_) { lastActivityAt = Date.now(); }
+      armTimer();
     }
   }).catch(function () {});
 
   _supabase.auth.onAuthStateChange(function (event) {
     if (event === 'SIGNED_IN') {
       active = true;
-      refreshTimer();
+      lastActivityAt = Date.now();
+      try { window.sessionStorage.setItem(ACTIVITY_KEY, String(lastActivityAt)); } catch (_) {}
+      armTimer();
     } else if (event === 'SIGNED_OUT') {
       active = false;
       stopTimer();
+      try { window.sessionStorage.removeItem(ACTIVITY_KEY); } catch (_) {}
     }
   });
 })();

@@ -226,14 +226,13 @@ function setupBrandingUploaders(){
 
 // ---- رفع صورة واحدة إلى Supabase Storage وإرجاع الرابط العام ----
 async function uploadBrandingImage(file,folder){
-  let upFile=file;
-  if(window.resizeImage){
-    const dataUrl=await resizeImage(await blobToDataUrl(file),1200,1200);
-    upFile=await dataUrlToBlob(dataUrl,'image/jpeg');
-  }
-  const fileName=sanitizeFileName(file.name);
+  const prepared=window.prepareImageForUpload
+    ? await prepareImageForUpload(file,1200,1200,0.84)
+    : {blob:file,extension:(file.name.split('.').pop()||'jpg'),contentType:file.type||'image/jpeg'};
+  const upFile=prepared.blob;
+  const fileName=`${Date.now()}-${Math.random().toString(36).slice(2,8)}.${prepared.extension}`;
   const path=`${folder}/${fileName}`;
-  const{error}=await _supabase.storage.from('products').upload(path,upFile,{contentType:upFile.type||'image/jpeg'});
+  const{error}=await _supabase.storage.from('products').upload(path,upFile,{contentType:prepared.contentType,upsert:false});
   if(error) throw error;
   const{data:{publicUrl}}=_supabase.storage.from('products').getPublicUrl(path);
   return publicUrl;

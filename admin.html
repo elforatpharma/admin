@@ -527,7 +527,7 @@ function renderPaymentChannels(paidOrders){
 }
 
 let salesChart=null;
-function renderSalesChart(labels,curSeries,prevSeries,curLabel='الفترة الحالية',prevLabel='الفترة السابقة'){
+function renderSalesChart(labels,curSeries,prevSeries,curLabel='قيمة الطلبات غير الملغاة',prevLabel='المبيعات المكتملة'){
   const canvas=document.getElementById('dashboard-sales-chart');
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
@@ -895,7 +895,7 @@ async function fetchStats(){
       document.getElementById('low-stock-text').textContent='';
     }
 
-    // الرسم البياني يستخدم البيانات المجمعة من قاعدة البيانات، وليس أول 1000 طلب.
+    // الجراف يعرض قيمة الطلبات المنشأة غير الملغاة مقابل المبيعات المكتملة، من تجميع قاعدة البيانات.
     const daily=Array.isArray(stats.daily_chart)?stats.daily_chart:[];
     const weekly=Array.isArray(stats.weekly_chart)?stats.weekly_chart:[];
     const monthly=Array.isArray(stats.monthly_chart)?stats.monthly_chart:[];
@@ -904,22 +904,22 @@ async function fetchStats(){
         labels:daily.map(x=>String(x.day)),
         cur:daily.map(x=>n(x.cur)),
         prev:daily.map(x=>n(x.prev)),
-        curLabel:'الشهر الحالي',
-        prevLabel:'الشهر السابق'
+        curLabel:'قيمة الطلبات غير الملغاة',
+        prevLabel:'المبيعات المكتملة'
       },
       weekly:{
         labels:weekly.map((x,i)=>'أسبوع '+(i+1)),
         cur:weekly.map(x=>n(x.cur)),
         prev:weekly.map(x=>n(x.prev)),
-        curLabel:'آخر 8 أسابيع',
-        prevLabel:'الـ8 أسابيع السابقة'
+        curLabel:'قيمة الطلبات غير الملغاة',
+        prevLabel:'المبيعات المكتملة'
       },
       monthly:{
         labels:monthly.map(x=>['ينا','فبر','مار','أبر','ماي','يون','يول','أغس','سبت','أكت','نوف','ديس'][n(x.month)-1]||''),
         cur:monthly.map(x=>n(x.cur)),
         prev:monthly.map(x=>n(x.prev)),
-        curLabel:new Date().getFullYear()+' (السنة الحالية)',
-        prevLabel:(new Date().getFullYear()-1)+' (السنة السابقة)'
+        curLabel:'قيمة الطلبات غير الملغاة',
+        prevLabel:'المبيعات المكتملة'
       }
     };
     renderDashboardChartData(chartData);

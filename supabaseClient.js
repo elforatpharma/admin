@@ -91,3 +91,57 @@ async function fetchAll(buildQuery, { pageSize = 1000, maxRows = 50000 } = {}) {
   }
   return rows;
 }
+
+
+// Admin security: sign out after 30 minutes of inactivity on every dashboard page.
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined' || typeof _supabase === 'undefined') return;
+  const IDLE_LIMIT_MS = 30 * 60 * 1000;
+  let idleTimer = null;
+  let active = false;
+  let signingOut = false;
+
+  function stopTimer() {
+    if (idleTimer) window.clearTimeout(idleTimer);
+    idleTimer = null;
+  }
+
+  async function expireSession() {
+    if (!active || signingOut) return;
+    signingOut = true;
+    stopTimer();
+    try { await _supabase.auth.signOut(); } catch (error) { console.error('Admin idle sign-out failed:', error); }
+    window.location.replace('index.html?reason=idle');
+  }
+
+  function refreshTimer() {
+    if (!active || signingOut) return;
+    stopTimer();
+    idleTimer = window.setTimeout(expireSession, IDLE_LIMIT_MS);
+  }
+
+  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(function (eventName) {
+    window.addEventListener(eventName, refreshTimer, { passive: true });
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refreshTimer();
+  });
+
+  _supabase.auth.getSession().then(function (result) {
+    if (result && result.data && result.data.session) {
+      active = true;
+      refreshTimer();
+    }
+  }).catch(function () {});
+
+  _supabase.auth.onAuthStateChange(function (event) {
+    if (event === 'SIGNED_IN') {
+      active = true;
+      refreshTimer();
+    } else if (event === 'SIGNED_OUT') {
+      active = false;
+      stopTimer();
+    }
+  });
+})();
